@@ -6,6 +6,7 @@
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
 #include <iostream>
+#include <ctime>
 
 #include "pathTracer.cuh"
 
@@ -106,11 +107,9 @@ void NGLScene::initializeGL()
 	validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLTextureBuffer, m_texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	startTimer(10);
 }
 
-void NGLScene::timerEvent(QTimerEvent)
+void NGLScene::timerEvent(QTimerEvent *_event)
 {
 	update();
 }
@@ -119,8 +118,7 @@ void NGLScene::paintGL()
 {
 	static float t = 0;
 	t += 0.1f;
-	float c = cos(t);
-	std::cout << c << "\n";
+	float c = std::abs(cos(t));
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0,0,m_win.width,m_win.height);
@@ -168,6 +166,8 @@ void NGLScene::paintGL()
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+
+	startTimer(10);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

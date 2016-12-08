@@ -12,8 +12,10 @@ __global__ void cuda_T(cudaSurfaceObject_t tex, unsigned int w, unsigned int h, 
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
 	if(x < w || y < h) {
-		unsigned char d = (unsigned char)(c*255);
-		uchar4 data = make_uchar4(d, d, d, 0xff);
+		unsigned char r = (unsigned char)(c*255);
+		unsigned char g = (unsigned char)((x/(float)w) * 255);
+		unsigned char b = (unsigned char)((y/(float)h) * 255);
+		uchar4 data = make_uchar4(r, g, b, 0xff);
 //		float4 data = make_float4(1.0, 1.0, 1.0, 1.0);
 		surf2Dwrite(data, tex, x*sizeof(uchar4), y);
 	}

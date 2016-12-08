@@ -77,7 +77,7 @@ private:
     /// @param _event the Qt Event structure
     //----------------------------------------------------------------------------------------------------------------------
     void wheelEvent( QWheelEvent *_event);
-		void timerEvent(QTimerEvent);
+		void timerEvent(QTimerEvent *_event);
     /// @brief windows parameters for mouse control etc.
     WinParams m_win;
     /// position for our model
