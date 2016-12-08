@@ -1,8 +1,10 @@
 #ifndef NGLSCENE_H_
 #define NGLSCENE_H_
+#include <iostream>
 #include <ngl/Vec3.h>
 
 #include <QOpenGLWindow>
+#include <cuda_gl_interop.h>
 #include "WindowParams.h"
 //----------------------------------------------------------------------------------------------------------------------
 /// @file NGLScene.h
@@ -26,7 +28,8 @@ class NGLScene : public QOpenGLWindow
     //----------------------------------------------------------------------------------------------------------------------
     NGLScene();
     //----------------------------------------------------------------------------------------------------------------------
-    /// @brief dtor must close down ngl and release OpenGL resources
+		/// @brief dtor must close down n
+#include <cuda_gl_interop.h>gl and release OpenGL resources
     //----------------------------------------------------------------------------------------------------------------------
     ~NGLScene();
     //----------------------------------------------------------------------------------------------------------------------
@@ -74,11 +77,23 @@ private:
     /// @param _event the Qt Event structure
     //----------------------------------------------------------------------------------------------------------------------
     void wheelEvent( QWheelEvent *_event);
+		void timerEvent(QTimerEvent);
     /// @brief windows parameters for mouse control etc.
     WinParams m_win;
     /// position for our model
     ngl::Vec3 m_modelPos;
 
+		void validateCuda(cudaError_t _err) {
+			if(_err != cudaSuccess) {
+				std::cerr << "Failed to perform a cuda operation\n";
+				exit(0);
+			}
+		}
+
+		/// VerterArrayObject and VertexBufferObject for our screen quad
+		GLuint m_vao, m_vbo, m_texture;
+		cudaGraphicsResource_t m_cudaGLTextureBuffer;
+		cudaArray *m_cudaImgArray;
 };
 
 

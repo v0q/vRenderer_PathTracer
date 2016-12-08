@@ -1,9 +1,13 @@
 #include <QMouseEvent>
 #include <QGuiApplication>
+#include <ngl/ShaderLib.h>
+#include <cuda_runtime.h>
 
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
 #include <iostream>
+
+#include "pathTracer.cuh"
 
 NGLScene::NGLScene()
 {
@@ -11,18 +15,16 @@ NGLScene::NGLScene()
   setTitle("Blank NGL");
 }
 
-
 NGLScene::~NGLScene()
 {
+	cudaGraphicsUnregisterResource(m_cudaGLTextureBuffer);
   std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
 }
-
-
 
 void NGLScene::resizeGL(int _w , int _h)
 {
   m_win.width  = static_cast<int>( _w * devicePixelRatio() );
-  m_win.height = static_cast<int>( _h * devicePixelRatio() );
+	m_win.height = static_cast<int>( _h * devicePixelRatio() );
 }
 
 
@@ -38,16 +40,134 @@ void NGLScene::initializeGL()
   // enable multisampling for smoother drawing
   glEnable(GL_MULTISAMPLE);
 
+	ngl::ShaderLib *shader = ngl::ShaderLib::instance();
+
+	shader->createShaderProgram("Screen Quad");
+
+	shader->attachShader("VertexShader", ngl::ShaderType::VERTEX);
+	shader->attachShader("FragmentShader", ngl::ShaderType::FRAGMENT);
+
+	shader->loadShaderSource("VertexShader", "shaders/screenQuad.vert");
+	shader->loadShaderSource("FragmentShader", "shaders/screenQuad.frag");
+
+	shader->compileShader("VertexShader");
+	shader->compileShader("FragmentShader");
+
+	shader->attachShaderToProgram("Screen Quad", "VertexShader");
+	shader->attachShaderToProgram("Screen Quad", "FragmentShader");
+
+	shader->linkProgramObject("Screen Quad");
+
+	shader->use("Screen Quad");
+
+	glGenVertexArrays(1, &m_vao);
+	glBindVertexArray(m_vao);
+
+	float vertices[] = {
+		// First triangle
+		-1.0f,  1.0f,
+		-1.0f, -1.0f,
+		 1.0f,  1.0f,
+		// Second triangle
+		-1.0f, -1.0f,
+		 1.0f, -1.0f,
+		 1.0f,  1.0f
+	};
+
+	float uvs[] = {
+		0.0f, 1.0f,
+		0.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f
+	};
+
+	glGenBuffers(1, &m_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices)+sizeof(uvs), 0, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), &vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(uvs), &uvs);
+
+	glGenTextures(1, &m_texture);
+	glBindTexture(GL_TEXTURE_2D, m_texture);
+
+	// set basic parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// Create texture data (4-component unsigned byte)
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	// Unbind the texture
+
+	validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLTextureBuffer, m_texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	startTimer(10);
 }
 
-
+void NGLScene::timerEvent(QTimerEvent)
+{
+	update();
+}
 
 void NGLScene::paintGL()
 {
+	static float t = 0;
+	t += 0.1f;
+	float c = cos(t);
+	std::cout << c << "\n";
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glViewport(0,0,m_win.width,m_win.height);
+	glViewport(0,0,m_win.width,m_win.height);
 
+	validateCuda(cudaGraphicsMapResources(1, &m_cudaGLTextureBuffer));
+	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaImgArray, m_cudaGLTextureBuffer, 0, 0));
+
+	cudaResourceDesc wdsc;
+	wdsc.resType = cudaResourceTypeArray;
+	wdsc.res.array.array = m_cudaImgArray;
+	cudaSurfaceObject_t writeSurface;
+	validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc));
+	cu_ModifyTexture(writeSurface, width(), height(), c);
+	validateCuda(cudaDestroySurfaceObject(writeSurface));
+	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer));
+	validateCuda(cudaStreamSynchronize(0));
+
+	ngl::ShaderLib *shader = ngl::ShaderLib::instance();
+	shader->use("Screen Quad");
+
+	glBindVertexArray(m_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+
+	GLuint posLocation = shader->getAttribLocation("Screen Quad", "a_Position");
+	GLuint uvLocation = shader->getAttribLocation("Screen Quad", "a_FragCoord");
+
+	glEnableVertexAttribArray(posLocation);
+	glEnableVertexAttribArray(uvLocation);
+
+	glVertexAttribPointer(posLocation, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(uvLocation, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid *)(12*sizeof(float)));
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_texture);
+
+	shader->setRegisteredUniform1i("u_ptResult", 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	// Clean up
+	shader->useNullProgram();
+	glDisableVertexAttribArray(posLocation);
+//	glDisableVertexAttribArray(uvLocation);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

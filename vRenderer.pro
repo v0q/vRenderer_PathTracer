@@ -27,7 +27,9 @@ INCLUDEPATH +=./include
 # where our exe is going to live (root of project)
 DESTDIR=./
 # add the glsl shader files
-OTHER_FILES += README.md
+OTHER_FILES += README.md \
+               shaders/screenQuad.vert \
+               shaders/screenQuad.frag
 # were are going to default to a console app
 CONFIG += console
 # note each command you add needs a ; as it will be run as a single line
@@ -61,8 +63,8 @@ else{ # note brace must be here
 # ------------
 
 # Project specific
-#CUDA_SOURCES += $$PWD/cuda/src/vectorfill.cu
-#CUDA_HEADERS += $$PWD/cuda/include/vectorfill.cuh
+CUDA_SOURCES += $$PWD/cuda/src/pathTracer.cu
+CUDA_HEADERS += $$PWD/cuda/include/pathTracer.cuh
 CUDA_OBJECTS_DIR = $$PWD/cuda/obj
 
 INCLUDEPATH += $$PWD/cuda/include
@@ -78,7 +80,7 @@ NVCC_OPTIONS = ''
 # System type
 OS_SIZE = 64
 # Compute capabilities that you want the project to be compiled for
-SMS = 20 30 32 35 37 50
+SMS = 52
 
 # Generate gencode flags from the cc list
 for(sm, SMS) {
