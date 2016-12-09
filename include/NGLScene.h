@@ -28,8 +28,7 @@ class NGLScene : public QOpenGLWindow
     //----------------------------------------------------------------------------------------------------------------------
     NGLScene();
     //----------------------------------------------------------------------------------------------------------------------
-		/// @brief dtor must close down n
-#include <cuda_gl_interop.h>gl and release OpenGL resources
+		/// @brief dtor must close down ngl and release OpenGL resources
     //----------------------------------------------------------------------------------------------------------------------
     ~NGLScene();
     //----------------------------------------------------------------------------------------------------------------------
@@ -94,6 +93,8 @@ private:
 		GLuint m_vao, m_vbo, m_texture;
 		cudaGraphicsResource_t m_cudaGLTextureBuffer;
 		cudaArray *m_cudaImgArray;
+		float3 *m_colorArray;
+		unsigned int m_frame;
 };
 
 

@@ -1,6 +1,7 @@
 #include "NGLScene.h"
+#include "PathTracer.cuh"
+#include <cuda_runtime.h>
 #include <QMouseEvent>
-
 
 //----------------------------------------------------------------------------------------------------------------------
 void NGLScene::mouseMoveEvent( QMouseEvent* _event )
@@ -16,17 +17,23 @@ void NGLScene::mouseMoveEvent( QMouseEvent* _event )
     m_win.spinYFace += static_cast<int>( 0.5f * diffx );
     m_win.origX = _event->x();
     m_win.origY = _event->y();
+		m_frame = 1;
+		cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), width()*height());
+		cudaDeviceSynchronize();
     update();
   }
   // right mouse translate code
   else if ( m_win.translate && _event->buttons() == Qt::RightButton )
   {
-    int diffX      = static_cast<int>( _event->x() - m_win.origXPos );
-    int diffY      = static_cast<int>( _event->y() - m_win.origYPos );
+		int diffX      = static_cast<int>( _event->x() - m_win.origXPos );
+		int diffY      = static_cast<int>( _event->y() - m_win.origYPos );
     m_win.origXPos = _event->x();
     m_win.origYPos = _event->y();
-    m_modelPos.m_x += INCREMENT * diffX;
-    m_modelPos.m_y -= INCREMENT * diffY;
+		m_modelPos.m_x += INCREMENT * diffX;
+		m_modelPos.m_y -= INCREMENT * diffY;
+		m_frame = 1;
+		cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), width()*height());
+		cudaDeviceSynchronize();
     update();
   }
 }

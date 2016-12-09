@@ -1,6 +1,7 @@
-# Executables
+# Executables/Misc
 
 vRenderer
+*.ppm
 
 # C++ objects and libs
 

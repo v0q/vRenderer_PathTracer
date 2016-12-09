@@ -1,16 +1,17 @@
 #include <QMouseEvent>
 #include <QGuiApplication>
 #include <ngl/ShaderLib.h>
+#include <iostream>
+#include <chrono>
 #include <cuda_runtime.h>
+#include <thrust/device_vector.h>
 
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
-#include <iostream>
-#include <ctime>
 
-#include "pathTracer.cuh"
+#include "PathTracer.cuh"
 
-NGLScene::NGLScene()
+NGLScene::NGLScene() : m_frame(1), m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
   setTitle("Blank NGL");
@@ -18,6 +19,7 @@ NGLScene::NGLScene()
 
 NGLScene::~NGLScene()
 {
+	cudaFree(m_colorArray);
 	cudaGraphicsUnregisterResource(m_cudaGLTextureBuffer);
   std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
 }
@@ -105,8 +107,14 @@ void NGLScene::initializeGL()
 	// Unbind the texture
 
 	validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLTextureBuffer, m_texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
+	unsigned int sz = width()*height();
+	validateCuda(cudaMalloc(&m_colorArray, sizeof(float3)*sz));
+	cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), sz);
+//	validateCuda(cudaMemcpy(m_colorArray, &zeros, width()*height(), cudaMemcpyHostToDevice));
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	startTimer(10);
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)
@@ -116,12 +124,20 @@ void NGLScene::timerEvent(QTimerEvent *_event)
 
 void NGLScene::paintGL()
 {
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	static float t = 0;
 	t += 0.1f;
-	float c = std::abs(cos(t));
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0,0,m_win.width,m_win.height);
+
+	ngl::Mat4 rot;
+	rot.rotateX(m_win.spinXFace/25.f);
+	rot.rotateY(m_win.spinYFace/25.f);
+
+	ngl::Vec4 cam = rot*ngl::Vec4(50, 52, 295.6);
+	ngl::Vec4 dir = ngl::Vec4(m_modelPos.m_x/5., m_modelPos.m_y/5., 0.0f) + ngl::Vec4(0, -0.042612, -1);
+	dir = dir.normalize();
 
 	validateCuda(cudaGraphicsMapResources(1, &m_cudaGLTextureBuffer));
 	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaImgArray, m_cudaGLTextureBuffer, 0, 0));
@@ -131,7 +147,11 @@ void NGLScene::paintGL()
 	wdsc.res.array.array = m_cudaImgArray;
 	cudaSurfaceObject_t writeSurface;
 	validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc));
-	cu_ModifyTexture(writeSurface, width(), height(), c);
+	cu_ModifyTexture(writeSurface,
+									 m_colorArray,
+									 make_float3(cam.m_x, cam.m_y, cam.m_z),
+									 make_float3(dir.m_x, dir.m_y, dir.m_z),
+									 width(), height(), m_frame++, std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
 	validateCuda(cudaDestroySurfaceObject(writeSurface));
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer));
 	validateCuda(cudaStreamSynchronize(0));
@@ -167,7 +187,11 @@ void NGLScene::paintGL()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	startTimer(10);
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+
+	std::cout << "Took " << duration << "ms to path trace the scene with 2048 SPP\n";
 }
 
 //----------------------------------------------------------------------------------------------------------------------
