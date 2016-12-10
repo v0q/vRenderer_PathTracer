@@ -47,23 +47,14 @@ struct Sphere {
 };
 
 __constant__ Sphere spheres[] = {			//Scene: radius, position, emission, color, material
-//	 {1e5, { 1e5+1, 40.8, 81.6 }, {},								{.75,.25,.25}, 			DIFF},	//Left
-//	 {1e5, {-1e5+99,40.8,81.6}, 	{},								{.25,.25,.75}, 			DIFF},	//Rght
-//	 {1e5, {50,40.8, 1e5},      	{},								{.75,.75,.75}, 			DIFF},	//Back
-//	 {1e5, {50,40.8,-1e5+170},  	{},								{},           			DIFF},	//Frnt
-//	 {1e5, {50, 1e5, 81.6},     	{},								{.75,.75,.75},			DIFF},	//Botm
-//	 {1e5, {50,-1e5+81.6,81.6}, 	{},								{.75,.75,.75},			DIFF},	//Top
-//	 {16.5,{27,16.5,47},        	{},								{.999, .999, .999},	DIFF},	//Mirr
-//	 {16.5,{73,16.5,78},        	{},								{.999, .999, .999},	DIFF},	//Glas
-//	 {600, {50,681.6-.27,81.6}, 	{12., 12., 12.},  {}, 								DIFF} 	//Light
-	{ 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { 0.75f, 0.25f, 0.25f }, DIFF }, //Left
-	{ 1e5f, { -1e5f + 99.0f, 40.8f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .25f, .25f, .75f }, DIFF }, //Right
+	{ 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f }, { 0.075f, 0.f, 0.f }, { 0.75f, 0.0f, 0.0f }, DIFF }, //Left
+	{ 1e5f, { -1e5f + 99.0f, 40.8f, 81.6f }, { 0.f, 0.075f, 0.f }, { 0.0f, 0.75f, 0.0f }, DIFF }, //Right
 	{ 1e5f, { 50.0f, 40.8f, 1e5f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f }, DIFF }, //Back
 	{ 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f }, { 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f }, DIFF }, //Frnt
 	{ 1e5f, { 50.0f, 1e5f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f }, DIFF }, //Botm
 	{ 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f }, DIFF }, //Top
-	{ 16.5f, { 27.0f, 16.5f, 47.0f }, { 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, DIFF }, // small sphere 1
-	{ 16.5f, { 73.0f, 16.5f, 78.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, DIFF }, // small sphere 2
+	{ 16.5f, { 27.0f, 16.5f, 47.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, SPEC }, // small sphere 1
+	{ 16.5f, { 73.0f, 16.5f, 78.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, REFR }, // small sphere 2
 	{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f }, { 2.0f, 1.8f, 1.6f }, { 0.0f, 0.0f, 0.0f }, DIFF }  // Light
 };
 
@@ -82,21 +73,11 @@ __device__ inline bool intersectScene(const Ray &_r, float &_t, int &_id)
 	return _t < inf;
 }
 
-__device__ static float getrandom(unsigned int *seed0, unsigned int *seed1) {
+__device__ static unsigned int hash(unsigned int *seed0, unsigned int *seed1) {
  *seed0 = 36969 * ((*seed0) & 65535) + ((*seed0) >> 16);  // hash the seeds using bitwise AND and bitshifts
  *seed1 = 18000 * ((*seed1) & 65535) + ((*seed1) >> 16);
 
- unsigned int ires = ((*seed0) << 16) + (*seed1);
-
- // Convert to float
- union {
-	float f;
-	unsigned int ui;
- } res;
-
- res.ui = (ires & 0x007fffff) | 0x40000000;  // bitwise AND, bitwise OR
-
- return (res.f - 2.f) / 2.f;
+	return *seed0**seed1;
 }
 
 __device__ float3 radiance(Ray &_r, unsigned int *s0, unsigned int *s1)
@@ -112,27 +93,70 @@ __device__ float3 radiance(Ray &_r, unsigned int *s0, unsigned int *s1)
 			return make_float3(0.0, 0.0, 0.0);			// if miss, return black
 		}
 
+		unsigned int seed = hash(s0, s1);
+		thrust::default_random_engine rng(seed);
+		thrust::random::uniform_real_distribution<float> uniformDist(0, 1);
+
 		const Sphere &obj = spheres[id];  // hitobject
 		float3 x = _r.m_origin + _r.m_dir*t;						// hitpoint
 		float3 n = normalize(x - obj.m_pos);						// normal, unsigned int *_s0, unsigned int *_s1
 		float3 nl = dot(n, _r.m_dir) < 0 ? n : n * -1;	// front facing normal
 
 		color += mask * obj.m_emission;
-		float r1 = 2 * M_PI * getrandom(s0, s1); // pick random number on unit circle (radius = 1, circumference = 2*Pi) for azimuth
-		float r2 = getrandom(s0, s1);
-		float r2s = sqrtf(r2);
-		float3 w = nl;
-		float3 u = normalize(cross((fabs(w.x) > .1 ? make_float3(0, 1, 0) : make_float3(1, 0, 0)), w));
-		float3 v = cross(w, u);
+		if(obj.m_refl == DIFF) {
+			float r1 = 2 * M_PI * uniformDist(rng);
+			float r2 = uniformDist(rng);
+			float r2s = sqrtf(r2);
+			float3 w = nl;
+			float3 u = normalize(cross((fabs(w.x) > .1 ? make_float3(0, 1, 0) : make_float3(1, 0, 0)), w));
+			float3 v = cross(w, u);
 
-		float3 d = normalize(( u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrtf(1 - r2)));
+			float3 d = normalize(( u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrtf(1 - r2)));
 
-		_r.m_origin = x + nl*0.05f; // offset ray origin slightly to prevent self intersection
-		_r.m_dir = d;
+			_r.m_origin = x + nl*0.05f; // offset ray origin slightly to prevent self intersection
+			_r.m_dir = d;
 
-		mask *= obj.m_col;
-		mask *= dot(d, nl);
-		mask *= 2;
+			mask *= obj.m_col;
+			mask *= dot(d, nl);
+			mask *= 2;
+		} else if(obj.m_refl == SPEC) {
+			_r.m_origin = x + nl*0.05f; // offset ray origin slightly to prevent self intersection
+			_r.m_dir = _r.m_dir - n*2*dot(n, _r.m_dir);
+		} else if(obj.m_refl == REFR) {
+			bool into = dot(n, nl) > 0; // is ray entering or leaving refractive material?
+			float nc = 1.0f;  // Index of Refraction air
+			float nt = 1.33f;  // Index of Refraction glass/water
+			float nnt = into ? nc / nt : nt / nc;  // IOR ratio of refractive materials
+			float ddn = dot(_r.m_dir, nl);
+			float cos2t = 1.0f - nnt*nnt * (1.f - ddn*ddn);
+
+			if(cos2t < 0.0f) {
+				_r.m_dir = _r.m_dir - 2.0f * n * dot(n, _r.m_dir);
+				_r.m_origin = x + nl * 0.01f;
+			}	else {
+				// compute direction of transmission ray
+				float3 tdir = normalize(_r.m_dir * nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrtf(cos2t))));
+
+				float R0 = (nt - nc)*(nt - nc) / ((nt + nc)*(nt + nc));
+				float c = 1.f - (into ? -ddn : dot(tdir, n));
+				float Re = R0 + (1.f - R0) * c * c * c * c * c;
+				float Tr = 1 - Re; // Transmission
+				float P = .25f + .5f * Re;
+				float RP = Re / P;
+				float TP = Tr / (1.f - P);
+
+				// randomly choose reflection or transmission ray
+				if(uniformDist(rng) < 0.25f) {
+					mask *= RP;
+					_r.m_dir = _r.m_dir - 2.0f * n * dot(n, _r.m_dir);
+					_r.m_origin = x + nl * 0.02f;
+				}	else {
+					mask *= TP;
+					_r.m_dir = tdir; //r = Ray(x, tdir);
+					_r.m_origin = x + nl * 0.05f; // epsilon must be small to avoid artefacts
+				}
+			}
+		}
 	}
 	return color;
 }

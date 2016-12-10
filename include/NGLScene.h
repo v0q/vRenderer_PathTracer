@@ -100,6 +100,7 @@ private:
 		float3 *m_camdir;
 		float3 *m_colorArray;
 		unsigned int m_frame;
+		bool m_renderTexture;
 
 		//----------------------------------------------------------------------------------------------------------------------
 		/// @brief class for text rendering

@@ -4,7 +4,6 @@
 #include <iostream>
 #include <chrono>
 #include <cuda_runtime.h>
-#include <thrust/device_vector.h>
 
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
@@ -15,6 +14,7 @@ NGLScene::NGLScene() : m_frame(1), m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
   setTitle("Blank NGL");
+	m_renderTexture = false;
 	m_fpsTimer = startTimer(0);
 	m_fps = 0;
 	m_frames = 0;
@@ -197,11 +197,16 @@ void NGLScene::paintGL()
 	// Clean up
 	shader->useNullProgram();
 	glDisableVertexAttribArray(posLocation);
-//	glDisableVertexAttribArray(uvLocation);
+	glDisableVertexAttribArray(uvLocation);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+
+	if(m_renderTexture) {
+		// TODO
+		m_renderTexture = false;
+	}
 
 	++m_frames;
 	m_text->setColour(1, 1, 1);
@@ -227,9 +232,10 @@ void NGLScene::keyPressEvent(QKeyEvent *_event)
       m_modelPos.set(ngl::Vec3::zero());
 
   break;
+	case Qt::Key_R: m_renderTexture = true; break;
   default : break;
   }
   // finally update the GLWindow and re-draw
 
-    update();
+		update();
 }
