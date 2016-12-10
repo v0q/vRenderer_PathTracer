@@ -82,7 +82,7 @@ NVCC_OPTIONS = --use_fast_math
 # System type
 OS_SIZE = 64
 # Compute capabilities that you want the project to be compiled for
-SMS = 52
+SMS = 50 52
 
 # Generate gencode flags from the cc list
 for(sm, SMS) {

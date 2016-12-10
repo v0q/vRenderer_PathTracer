@@ -15,11 +15,17 @@ NGLScene::NGLScene() : m_frame(1), m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
   setTitle("Blank NGL");
+	m_fpsTimer = startTimer(0);
+	m_fps = 0;
+	m_frames = 0;
+	m_timer.start();
 }
 
 NGLScene::~NGLScene()
 {
 	cudaFree(m_colorArray);
+	cudaFree(m_camera);
+	cudaFree(m_camdir);
 	cudaGraphicsUnregisterResource(m_cudaGLTextureBuffer);
   std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
 }
@@ -109,16 +115,34 @@ void NGLScene::initializeGL()
 	validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLTextureBuffer, m_texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
 	unsigned int sz = width()*height();
 	validateCuda(cudaMalloc(&m_colorArray, sizeof(float3)*sz));
+	validateCuda(cudaMalloc(&m_camera, sizeof(float3)));
+	validateCuda(cudaMalloc(&m_camdir, sizeof(float3)));
+
+	float3 cam = make_float3(50, 52, 295.6);
+	float3 camdir = make_float3(0, -0.042612, -1);
+
+	validateCuda(cudaMemcpy(m_camera, &cam, sizeof(float3), cudaMemcpyHostToDevice));
+	validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float3), cudaMemcpyHostToDevice));
 	cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), sz);
 //	validateCuda(cudaMemcpy(m_colorArray, &zeros, width()*height(), cudaMemcpyHostToDevice));
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	startTimer(10);
+	m_text.reset(new ngl::Text(QFont("Arial",14)));
+	m_text->setScreenSize(width(), height());
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)
 {
+	if(_event->timerId() == m_fpsTimer)
+	{
+		if(m_timer.elapsed() > 1000.0)
+		{
+			m_fps = m_frames;
+			m_frames = 0;
+			m_timer.restart();
+		}
+	}
 	update();
 }
 
@@ -131,14 +155,6 @@ void NGLScene::paintGL()
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0,0,m_win.width,m_win.height);
 
-	ngl::Mat4 rot;
-	rot.rotateX(m_win.spinXFace/25.f);
-	rot.rotateY(m_win.spinYFace/25.f);
-
-	ngl::Vec4 cam = rot*ngl::Vec4(50, 52, 295.6);
-	ngl::Vec4 dir = ngl::Vec4(m_modelPos.m_x/5., m_modelPos.m_y/5., 0.0f) + ngl::Vec4(0, -0.042612, -1);
-	dir = dir.normalize();
-
 	validateCuda(cudaGraphicsMapResources(1, &m_cudaGLTextureBuffer));
 	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaImgArray, m_cudaGLTextureBuffer, 0, 0));
 
@@ -149,8 +165,8 @@ void NGLScene::paintGL()
 	validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc));
 	cu_ModifyTexture(writeSurface,
 									 m_colorArray,
-									 make_float3(cam.m_x, cam.m_y, cam.m_z),
-									 make_float3(dir.m_x, dir.m_y, dir.m_z),
+									 m_camera,
+									 m_camdir,
 									 width(), height(), m_frame++, std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
 	validateCuda(cudaDestroySurfaceObject(writeSurface));
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer));
@@ -187,11 +203,12 @@ void NGLScene::paintGL()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
-
-	std::cout << "Took " << duration << "ms to path trace the scene with 2048 SPP\n";
+	++m_frames;
+	m_text->setColour(1, 1, 1);
+	QString text = QString("%1 fps").arg(m_fps);
+	m_text->renderText(10, 20, text);
+	text = QString("%1SPP").arg(m_frame*8);
+	m_text->renderText(10, 40, text);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

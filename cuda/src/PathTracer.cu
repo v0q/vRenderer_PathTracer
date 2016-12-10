@@ -19,7 +19,7 @@
 struct Ray {
 	float3 m_origin;
 	float3 m_dir;
-	__device__ Ray(const float3 &_o, const float3 &_d) : m_origin(_o), m_dir(_d) {}
+	__device__ Ray(float3 _o, float3 _d) : m_origin(_o), m_dir(_d) {}
 };
 
 enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance()
@@ -62,7 +62,7 @@ __constant__ Sphere spheres[] = {			//Scene: radius, position, emission, color, 
 	{ 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f }, { 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f }, DIFF }, //Frnt
 	{ 1e5f, { 50.0f, 1e5f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f }, DIFF }, //Botm
 	{ 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f }, DIFF }, //Top
-	{ 16.5f, { 27.0f, 16.5f, 47.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, DIFF }, // small sphere 1
+	{ 16.5f, { 27.0f, 16.5f, 47.0f }, { 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, DIFF }, // small sphere 1
 	{ 16.5f, { 73.0f, 16.5f, 78.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, DIFF }, // small sphere 2
 	{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f }, { 2.0f, 1.8f, 1.6f }, { 0.0f, 0.0f, 0.0f }, DIFF }  // Light
 };
@@ -82,16 +82,6 @@ __device__ inline bool intersectScene(const Ray &_r, float &_t, int &_id)
 	return _t < inf;
 }
 
-__device__ unsigned int randhash(unsigned int a) {
-	a = (a+0x7ed55d16) + (a<<12);
-	a = (a^0xc761c23c) ^ (a>>19);
-	a = (a+0x165667b1) + (a<<5);
-	a = (a+0xd3a2646c) ^ (a<<9);
-	a = (a+0xfd7046c5) + (a<<3);
-	a = (a^0xb55a4f09) ^ (a>>16);
-	return a;
-}
-
 __device__ static float getrandom(unsigned int *seed0, unsigned int *seed1) {
  *seed0 = 36969 * ((*seed0) & 65535) + ((*seed0) >> 16);  // hash the seeds using bitwise AND and bitshifts
  *seed1 = 18000 * ((*seed1) & 65535) + ((*seed1) >> 16);
@@ -109,11 +99,8 @@ __device__ static float getrandom(unsigned int *seed0, unsigned int *seed1) {
  return (res.f - 2.f) / 2.f;
 }
 
-__device__ float3 radiance(Ray &_r, unsigned int s0, unsigned int s1, unsigned int s2, unsigned int s3)
+__device__ float3 radiance(Ray &_r, unsigned int *s0, unsigned int *s1)
 {
-	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
-
 	float3 color = make_float3(0.0, 0.0, 0.0);
 	float3 mask = make_float3(1.0, 1.0, 1.0);
 
@@ -125,18 +112,14 @@ __device__ float3 radiance(Ray &_r, unsigned int s0, unsigned int s1, unsigned i
 			return make_float3(0.0, 0.0, 0.0);			// if miss, return black
 		}
 
-		thrust::default_random_engine rng(randhash(s0)*randhash(s1)*randhash(s2)*randhash(s3));
-		thrust::random::uniform_real_distribution<float> uniformDist(0, 1);
 		const Sphere &obj = spheres[id];  // hitobject
-		float3 x = _r.m_origin + _r.m_dir*t;          // hitpoint
-		float3 n = normalize(x - obj.m_pos);    // normal, unsigned int *_s0, unsigned int *_s1
-		float3 nl = dot(n, _r.m_dir) < 0 ? n : n * -1; // front facing normal
+		float3 x = _r.m_origin + _r.m_dir*t;						// hitpoint
+		float3 n = normalize(x - obj.m_pos);						// normal, unsigned int *_s0, unsigned int *_s1
+		float3 nl = dot(n, _r.m_dir) < 0 ? n : n * -1;	// front facing normal
 
 		color += mask * obj.m_emission;
-		float r1 = 2 * M_PI * uniformDist(rng);
-		float r2 = uniformDist(rng);
-//		float r1 = 2 * M_PI * getrandom(s0, s1); // pick random number on unit circle (radius = 1, circumference = 2*Pi) for azimuth
-//		float r2 = getrandom(s0, s1);
+		float r1 = 2 * M_PI * getrandom(s0, s1); // pick random number on unit circle (radius = 1, circumference = 2*Pi) for azimuth
+		float r2 = getrandom(s0, s1);
 		float r2s = sqrtf(r2);
 		float3 w = nl;
 		float3 u = normalize(cross((fabs(w.x) > .1 ? make_float3(0, 1, 0) : make_float3(1, 0, 0)), w));
@@ -154,7 +137,7 @@ __device__ float3 radiance(Ray &_r, unsigned int s0, unsigned int s1, unsigned i
 	return color;
 }
 
-__global__ void render(cudaSurfaceObject_t _tex, float3 *_colors, float3 _cam, float3 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__global__ void render(cudaSurfaceObject_t _tex, float3 *_colors, float3 *_cam, float3 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -162,39 +145,36 @@ __global__ void render(cudaSurfaceObject_t _tex, float3 *_colors, float3 _cam, f
 	if(x < _w && y < _h) {
 
 		unsigned int ind = x + y*_w;
-		unsigned int s1 = x;
-		unsigned int s2 = y;
+		unsigned int s1 = x * _frame;
+		unsigned int s2 = y * _time;
 
-//		Ray camera(make_float3(50, 52, 295.6), normalize(make_float3(0, -52/2, -295.6)));
-		Ray camera(_cam, _dir);
+		Ray camera(*_cam, *_dir);
 
 		float3 cx = make_float3(_w * .5135 / _h, 0.0f, 0.0f); // ray direction offset in x direction
 		float3 cy = normalize(cross(cx, camera.m_dir)) * .5135; // ray direction offset in y direction (.5135 is field of view angle)
-		float3 color = make_float3(0.0, 0.0, 0.0);
 
 		unsigned int samps = 8;
 		for(unsigned int s = 0; s < samps; s++) {  // samples per pixel
 			// compute primary ray direction
 			float3 d = camera.m_dir + cx*((.25 + x) / _w - .5) + cy*((.25 + y) / _h - .5);
 			// create primary ray, add incoming radiance to pixelcolor
-			Ray derp(camera.m_origin + d * 40, normalize(d));
-			color = color + radiance(derp, x*_frame, ind/_frame, s, _time);
-//			color = color + radiance(derp, &s1, &s2, s, _time);
+			Ray newcam(camera.m_origin + d * 40, normalize(d));
+			_colors[ind] += radiance(newcam, &s1, &s2);
 		}
-		_colors[ind] += color;
 
-		unsigned char r = (unsigned char)(powf(clamp(_colors[ind].x/(samps*_frame), 0.0, 1.0), invGamma) * 255);
-		unsigned char g = (unsigned char)(powf(clamp(_colors[ind].y/(samps*_frame), 0.0, 1.0), invGamma) * 255);
-		unsigned char b = (unsigned char)(powf(clamp(_colors[ind].z/(samps*_frame), 0.0, 1.0), invGamma) * 255);
+		float coef = 1.f/(samps*_frame);
+		unsigned char r = (unsigned char)(powf(clamp(_colors[ind].x*coef, 0.0, 1.0), invGamma) * 255);
+		unsigned char g = (unsigned char)(powf(clamp(_colors[ind].y*coef, 0.0, 1.0), invGamma) * 255);
+		unsigned char b = (unsigned char)(powf(clamp(_colors[ind].z*coef, 0.0, 1.0), invGamma) * 255);
 
 		uchar4 data = make_uchar4(r, g, b, 0xff);
 		surf2Dwrite(data, _tex, x*sizeof(uchar4), y);
 	}
 }
 
-void cu_ModifyTexture(cudaSurfaceObject_t _texture, float3 *_colorArr, float3 _cam, float3 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+void cu_ModifyTexture(cudaSurfaceObject_t _texture, float3 *_colorArr, float3 *_cam, float3 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
-	dim3 dimBlock(32, 32);
+	dim3 dimBlock(16, 16);
 	dim3 dimGrid((_w / dimBlock.x),
 							 (_h / dimBlock.y));
 
