@@ -9,13 +9,6 @@
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
 
-#ifdef __VRENDERER_CUDA__
-  #include <cuda_runtime.h>
-  #include "PathTracer.cuh"
-#elif __VRENDERER_OPENCL__
-  #include <CL/cl.hpp>
-#endif
-
 NGLScene::NGLScene() :
   m_frame(1),
   m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
@@ -31,14 +24,6 @@ NGLScene::NGLScene() :
 
 NGLScene::~NGLScene()
 {
-#ifdef __VRENDERER_CUDA__
-	cudaFree(m_colorArray);
-	cudaFree(m_camera);
-	cudaFree(m_camdir);
-	cudaGraphicsUnregisterResource(m_cudaGLTextureBuffer);
-#elif __VRENDERER_OPENCL__
-
-#endif
   std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
 }
 
@@ -123,22 +108,14 @@ void NGLScene::initializeGL()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 #ifdef __VRENDERER_CUDA__
-	validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLTextureBuffer, m_texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
-	unsigned int sz = width()*height();
-	validateCuda(cudaMalloc(&m_colorArray, sizeof(float3)*sz));
-	validateCuda(cudaMalloc(&m_camera, sizeof(float3)));
-	validateCuda(cudaMalloc(&m_camdir, sizeof(float3)));
-
-	float3 cam = make_float3(50, 52, 295.6);
-	float3 camdir = make_float3(0, -0.042612, -1);
-
-	validateCuda(cudaMemcpy(m_camera, &cam, sizeof(float3), cudaMemcpyHostToDevice));
-	validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float3), cudaMemcpyHostToDevice));
-	cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), sz);
-//	validateCuda(cudaMemcpy(m_colorArray, &zeros, width()*height(), cudaMemcpyHostToDevice));
+  m_renderer.reset(new vRendererCuda);
 #elif __VRENDERER_OPENCL__
   m_renderer.reset(new vRendererCL);
 #endif
+
+  m_renderer->init((unsigned int)width(), (unsigned int)height());
+  m_renderer->registerTextureBuffer(m_texture);
+
   // Unbind the texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -169,26 +146,7 @@ void NGLScene::paintGL()
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0,0,m_win.width,m_win.height);
 
-#ifdef __VRENDERER_CUDA__
-	validateCuda(cudaGraphicsMapResources(1, &m_cudaGLTextureBuffer));
-	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaImgArray, m_cudaGLTextureBuffer, 0, 0));
-
-	cudaResourceDesc wdsc;
-	wdsc.resType = cudaResourceTypeArray;
-	wdsc.res.array.array = m_cudaImgArray;
-	cudaSurfaceObject_t writeSurface;
-	validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc));
-	cu_ModifyTexture(writeSurface,
-									 m_colorArray,
-									 m_camera,
-									 m_camdir,
-									 width(), height(), m_frame++, std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
-	validateCuda(cudaDestroySurfaceObject(writeSurface));
-	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer));
-	validateCuda(cudaStreamSynchronize(0));
-#elif __VRENDERER_OPENCL__
-
-#endif
+  m_renderer->render();
 
 	ngl::ShaderLib *shader = ngl::ShaderLib::instance();
 	shader->use("Screen Quad");

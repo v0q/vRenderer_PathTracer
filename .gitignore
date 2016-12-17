@@ -2,6 +2,7 @@
 
 vRenderer
 *.ppm
+errorlog.txt
 
 # C++ objects and libs
 

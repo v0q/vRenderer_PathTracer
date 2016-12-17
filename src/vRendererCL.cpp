@@ -6,19 +6,24 @@
 
 #include "vRendererCL.h"
 
-vRendererCL::vRendererCL()
+vRendererCL::vRendererCL() :
+  m_initialised(false)
 {
-  std::cout << "Child ctor called\n";
-  init();
+  std::cout << "OpenCL vRenderer ctor called\n";
 }
 
 vRendererCL::~vRendererCL()
 {
-
+  std::cout << "OpenCL vRenderer dtor called\n";
+  cleanUp();
 }
 
-void vRendererCL::init()
+void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 {
+  assert(_w != 0 && _h != 0);
+  m_width = _w;
+  m_height = _h;
+
   std::vector<cl::Platform> platforms;
   cl::Platform::get(&platforms);
 
@@ -50,40 +55,50 @@ void vRendererCL::init()
 
   m_context = cl::Context(m_device);
 
-  std::ifstream clFile("cl/src/PathTracer.cl");
-  if(!clFile)
-  {
-    std::cerr << "Could not find 'cl/src/PathTracer.cl'\n";
-    exit(0);
-  }
-  std::string pathTracerSrc((std::istreambuf_iterator<char>(clFile)),
-                             std::istreambuf_iterator<char>());
+//  std::ifstream clFile("cl/src/PathTracer.cl");
+//  if(!clFile)
+//  {
+//    std::cerr << "Could not find 'cl/src/PathTracer.cl'\n";
+//    exit(0);
+//  }
+//  std::string pathTracerSrc((std::istreambuf_iterator<char>(clFile)),
+//                             std::istreambuf_iterator<char>());
 
-  std::cout << pathTracerSrc << "\n";
+//  m_program = cl::Program(m_context, pathTracerSrc.c_str());
+//  cl_int result = m_program.build({ m_device });
+//  if(result)
+//  {
+//    std::cerr << "Failed compile the program: " << result << "\n";
+//    if(result == CL_BUILD_PROGRAM_FAILURE)
+//    {
+//      std::string buildlog = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device);
+//      FILE *log = fopen("errorlog.txt", "w");
+//      fprintf(log, "%s\n", buildlog.c_str());
 
-  m_program = cl::Program(m_context, pathTracerSrc.c_str());
-  cl_int result = m_program.build({ m_device });
-  if(result)
-  {
-    std::cerr << "Failed compile the program: " << result << "\n";
-    if(result == CL_BUILD_PROGRAM_FAILURE)
-    {
-      std::string buildlog = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device);
-      FILE *log = fopen("errorlog.txt", "w");
-      fprintf(log, "%s\n", buildlog.c_str());
+//      std::cerr << "Build log saved to errorlog.txt:\n";
+//    }
+//    exit(0);
+//  }
 
-      std::cerr << "Build log saved to errorlog.txt:\n";
-    }
-    exit(0);
-  }
+  m_initialised = true;
 }
 
-void vRendererCL::registerTextureBuffer(GLint &_texture)
+void vRendererCL::registerTextureBuffer(GLuint &_texture)
 {
+  assert(m_initialised);
+
   (void)_texture;
+}
+
+void vRendererCL::render()
+{
+  std::cout << "Rendering...\n";
 }
 
 void vRendererCL::cleanUp()
 {
+  if(m_initialised)
+  {
 
+  }
 }

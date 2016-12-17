@@ -9,10 +9,8 @@
 #include <QTime>
 #ifdef __VRENDERER_CUDA__
   #include "vRendererCuda.h"
-  #include <cuda_gl_interop.h>
 #elif __VRENDERER_OPENCL__
   #include "vRendererCL.h"
-  #include <CL/cl.hpp>
 #endif
 
 #include "vRenderer.h"
@@ -29,12 +27,6 @@
 /// @brief our main glwindow widget for NGL applications all drawing elements are
 /// put in this file
 //----------------------------------------------------------------------------------------------------------------------
-
-struct float3 {
-  float x;
-  float y;
-  float z;
-};
 
 class NGLScene : public QOpenGLWindow
 {
@@ -99,26 +91,8 @@ private:
     /// position for our model
     ngl::Vec3 m_modelPos;
 
-#ifdef __VRENDERER_CUDA__
-		void validateCuda(cudaError_t _err) {
-			if(_err != cudaSuccess) {
-				std::cerr << "Failed to perform a cuda operation\n";
-				exit(0);
-			}
-		}
-
-		cudaGraphicsResource_t m_cudaGLTextureBuffer;
-		cudaArray *m_cudaImgArray;
-#elif __VRENDERER_OPENCL__
-    cl::Platform m_platform;
-    cl::Device m_device;
-    cl::Context m_context;
-#endif
     /// VerterArrayObject and VertexBufferObject for our screen quad
     GLuint m_vao, m_vbo, m_texture;
-		float3 *m_camera;
-		float3 *m_camdir;
-		float3 *m_colorArray;
 		unsigned int m_frame;
 		bool m_renderTexture;
 
