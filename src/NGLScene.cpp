@@ -2,15 +2,23 @@
 #include <QGuiApplication>
 #include <ngl/ShaderLib.h>
 #include <iostream>
+#include <vector>
+#include <assert.h>
 #include <chrono>
-#include <cuda_runtime.h>
 
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
 
-#include "PathTracer.cuh"
+#ifdef __VRENDERER_CUDA__
+  #include <cuda_runtime.h>
+  #include "PathTracer.cuh"
+#elif __VRENDERER_OPENCL__
+  #include <CL/cl.hpp>
+#endif
 
-NGLScene::NGLScene() : m_frame(1), m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
+NGLScene::NGLScene() :
+  m_frame(1),
+  m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
   setTitle("Blank NGL");
@@ -23,10 +31,14 @@ NGLScene::NGLScene() : m_frame(1), m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
 
 NGLScene::~NGLScene()
 {
+#ifdef __VRENDERER_CUDA__
 	cudaFree(m_colorArray);
 	cudaFree(m_camera);
 	cudaFree(m_camdir);
 	cudaGraphicsUnregisterResource(m_cudaGLTextureBuffer);
+#elif __VRENDERER_OPENCL__
+
+#endif
   std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
 }
 
@@ -110,8 +122,7 @@ void NGLScene::initializeGL()
 	// Create texture data (4-component unsigned byte)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-	// Unbind the texture
-
+#ifdef __VRENDERER_CUDA__
 	validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLTextureBuffer, m_texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
 	unsigned int sz = width()*height();
 	validateCuda(cudaMalloc(&m_colorArray, sizeof(float3)*sz));
@@ -125,7 +136,10 @@ void NGLScene::initializeGL()
 	validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float3), cudaMemcpyHostToDevice));
 	cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), sz);
 //	validateCuda(cudaMemcpy(m_colorArray, &zeros, width()*height(), cudaMemcpyHostToDevice));
-
+#elif __VRENDERER_OPENCL__
+  m_renderer.reset(new vRendererCL);
+#endif
+  // Unbind the texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	m_text.reset(new ngl::Text(QFont("Arial",14)));
@@ -155,6 +169,7 @@ void NGLScene::paintGL()
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0,0,m_win.width,m_win.height);
 
+#ifdef __VRENDERER_CUDA__
 	validateCuda(cudaGraphicsMapResources(1, &m_cudaGLTextureBuffer));
 	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaImgArray, m_cudaGLTextureBuffer, 0, 0));
 
@@ -171,6 +186,9 @@ void NGLScene::paintGL()
 	validateCuda(cudaDestroySurfaceObject(writeSurface));
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer));
 	validateCuda(cudaStreamSynchronize(0));
+#elif __VRENDERER_OPENCL__
+
+#endif
 
 	ngl::ShaderLib *shader = ngl::ShaderLib::instance();
 	shader->use("Screen Quad");

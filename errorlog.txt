@@ -1,0 +1,270 @@
+<program source>:6:3: error: type name requires a specifier or qualifier
+  Ray(float3 _o, float3 _d) : m_origin(_o), m_dir(_d) {}
+  ^
+<program source>:6:31: warning: implicit declaration of function 'm_origin' is invalid in C99
+  Ray(float3 _o, float3 _d) : m_origin(_o), m_dir(_d) {}
+                              ^
+<program source>:6:40: error: use of undeclared identifier '_o'
+  Ray(float3 _o, float3 _d) : m_origin(_o), m_dir(_d) {}
+                                       ^
+<program source>:6:57: warning: expected ';' at end of declaration list
+  Ray(float3 _o, float3 _d) : m_origin(_o), m_dir(_d) {}
+                                                        ^
+                                                        ;
+<program source>:16:3: error: must use 'enum' tag to refer to type 'Refl_t'
+  Refl_t m_refl;
+  ^
+  enum 
+<program source>:18:25: error: must use 'struct' tag to refer to type 'Ray'
+  float intersect(const Ray &_r) const
+                        ^
+                        struct 
+<program source>:18:29: error: expected ')'
+  float intersect(const Ray &_r) const
+                            ^
+<program source>:18:18: note: to match this '('
+  float intersect(const Ray &_r) const
+                 ^
+<program source>:18:33: error: expected ';' at end of declaration list
+  float intersect(const Ray &_r) const
+                                ^
+                                ;
+<program source>:18:9: error: field 'intersect' declared as a function
+  float intersect(const Ray &_r) const
+        ^
+<program source>:33:12: error: must use 'struct' tag to refer to type 'Sphere'
+__constant Sphere spheres[] = {                 //Scene: radius, position, emission, color, material
+           ^
+           struct 
+<program source>:45:34: error: must use 'struct' tag to refer to type 'Ray'
+inline bool intersectScene(const Ray &_r, float &_t, int &_id)
+                                 ^
+                                 struct 
+<program source>:45:38: error: expected ')'
+inline bool intersectScene(const Ray &_r, float &_t, int &_id)
+                                     ^
+<program source>:45:27: note: to match this '('
+inline bool intersectScene(const Ray &_r, float &_t, int &_id)
+                          ^
+<program source>:45:38: error: parameter name omitted
+inline bool intersectScene(const Ray &_r, float &_t, int &_id)
+                                     ^
+<program source>:47:36: error: use of undeclared identifier 'Sphere'; did you mean 'spheres'?
+  float n = sizeof(spheres)/sizeof(Sphere);
+                                   ^~~~~~
+                                   spheres
+<program source>:33:19: note: 'spheres' declared here
+__constant Sphere spheres[] = {                 //Scene: radius, position, emission, color, material
+                  ^
+<program source>:49:15: error: use of undeclared identifier '_t'
+  float inf = _t = 1e20;
+              ^
+<program source>:51:34: error: use of undeclared identifier '_r'
+    if((d = spheres[i].intersect(_r)) && d < _t)
+                                 ^
+<program source>:51:46: error: use of undeclared identifier '_t'
+    if((d = spheres[i].intersect(_r)) && d < _t)
+                                             ^
+<program source>:53:7: error: use of undeclared identifier '_t'
+      _t = d;
+      ^
+<program source>:54:7: error: use of undeclared identifier '_id'
+      _id = i;
+      ^
+<program source>:57:10: error: use of undeclared identifier '_t'
+  return _t < inf;
+         ^
+<program source>:67:17: error: must use 'struct' tag to refer to type 'Ray'
+float3 radiance(Ray &_r, unsigned int *s0, unsigned int *s1)
+                ^
+                struct 
+<program source>:67:21: error: expected ')'
+float3 radiance(Ray &_r, unsigned int *s0, unsigned int *s1)
+                    ^
+<program source>:67:16: note: to match this '('
+float3 radiance(Ray &_r, unsigned int *s0, unsigned int *s1)
+               ^
+<program source>:67:8: warning: no previous prototype for function 'radiance'
+float3 radiance(Ray &_r, unsigned int *s0, unsigned int *s1)
+       ^
+<program source>:67:21: error: parameter name omitted
+float3 radiance(Ray &_r, unsigned int *s0, unsigned int *s1)
+                    ^
+<program source>:76:24: error: use of undeclared identifier '_r'
+    if(!intersectScene(_r, t, id)) {
+                       ^
+<program source>:80:30: error: use of undeclared identifier 's0'
+    unsigned int seed = hash(s0, s1);
+                             ^
+<program source>:81:12: error: expected expression
+    thrust::default_random_engine rng(seed);
+           ^
+<program source>:82:12: error: expected expression
+    thrust::random::uniform_real_distribution<float> uniformDist(0, 1);
+           ^
+<program source>:82:5: error: redefinition of label 'thrust'
+    thrust::random::uniform_real_distribution<float> uniformDist(0, 1);
+    ^
+<program source>:81:5: note: previous definition is here
+    thrust::default_random_engine rng(seed);
+    ^
+<program source>:84:11: error: must use 'struct' tag to refer to type 'Sphere'
+    const Sphere &obj = spheres[id];  // hitobject
+          ^
+          struct 
+<program source>:84:18: error: expected identifier or '('
+    const Sphere &obj = spheres[id];  // hitobject
+                 ^
+<program source>:85:16: error: use of undeclared identifier '_r'
+    float3 x = _r.m_origin + _r.m_dir*t;                                                // hitpoint
+               ^
+<program source>:85:30: error: use of undeclared identifier '_r'
+    float3 x = _r.m_origin + _r.m_dir*t;                                                // hitpoint
+                             ^
+<program source>:86:30: error: use of undeclared identifier 'obj'
+    float3 n = normalize(x - obj.m_pos);                                                // normal, unsigned int *_s0, unsigned int *_s1
+                             ^
+<program source>:87:24: error: use of undeclared identifier '_r'
+    float3 nl = dot(n, _r.m_dir) < 0 ? n : n * -1;      // front facing normal
+                       ^
+<program source>:89:21: error: use of undeclared identifier 'obj'
+    color += mask * obj.m_emission;
+                    ^
+<program source>:90:8: error: use of undeclared identifier 'obj'
+    if(obj.m_refl == DIFF) {
+       ^
+<program source>:91:29: warning: implicit declaration of function 'uniformDist' is invalid in C99
+      float r1 = 2 * M_PI * uniformDist(rng);
+                            ^
+<program source>:91:41: error: use of undeclared identifier 'rng'
+      float r1 = 2 * M_PI * uniformDist(rng);
+                                        ^
+<program source>:92:30: error: use of undeclared identifier 'rng'
+      float r2 = uniformDist(rng);
+                             ^
+<program source>:100:7: error: use of undeclared identifier '_r'
+      _r.m_origin = x + nl*0.05f; // offset ray origin slightly to prevent self intersection
+      ^
+<program source>:101:7: error: use of undeclared identifier '_r'
+      _r.m_dir = d;
+      ^
+<program source>:103:15: error: use of undeclared identifier 'obj'
+      mask *= obj.m_col;
+              ^
+<program source>:106:15: error: use of undeclared identifier 'obj'
+    } else if(obj.m_refl == SPEC) {
+              ^
+<program source>:107:7: error: use of undeclared identifier '_r'
+      _r.m_origin = x + nl*0.05f; // offset ray origin slightly to prevent self intersection
+      ^
+<program source>:108:7: error: use of undeclared identifier '_r'
+      _r.m_dir = _r.m_dir - n*2*dot(n, _r.m_dir);
+      ^
+<program source>:108:18: error: use of undeclared identifier '_r'
+      _r.m_dir = _r.m_dir - n*2*dot(n, _r.m_dir);
+                 ^
+<program source>:108:40: error: use of undeclared identifier '_r'
+      _r.m_dir = _r.m_dir - n*2*dot(n, _r.m_dir);
+                                       ^
+<program source>:109:15: error: use of undeclared identifier 'obj'
+    } else if(obj.m_refl == REFR) {
+              ^
+<program source>:114:23: error: use of undeclared identifier '_r'
+      float ddn = dot(_r.m_dir, nl);
+                      ^
+<program source>:118:9: error: use of undeclared identifier '_r'
+        _r.m_dir = _r.m_dir - 2.0f * n * dot(n, _r.m_dir);
+        ^
+<program source>:118:20: error: use of undeclared identifier '_r'
+        _r.m_dir = _r.m_dir - 2.0f * n * dot(n, _r.m_dir);
+                   ^
+<program source>:118:49: error: use of undeclared identifier '_r'
+        _r.m_dir = _r.m_dir - 2.0f * n * dot(n, _r.m_dir);
+                                                ^
+<program source>:119:9: error: use of undeclared identifier '_r'
+        _r.m_origin = x + nl * 0.01f;
+        ^
+<program source>:122:33: error: use of undeclared identifier '_r'
+        float3 tdir = normalize(_r.m_dir * nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrtf(cos2t))));
+                                ^
+<program source>:133:24: error: use of undeclared identifier 'rng'
+        if(uniformDist(rng) < 0.25f) {
+                       ^
+<program source>:135:11: error: use of undeclared identifier '_r'
+          _r.m_dir = _r.m_dir - 2.0f * n * dot(n, _r.m_dir);
+          ^
+<program source>:135:22: error: use of undeclared identifier '_r'
+          _r.m_dir = _r.m_dir - 2.0f * n * dot(n, _r.m_dir);
+                     ^
+<program source>:135:51: error: use of undeclared identifier '_r'
+          _r.m_dir = _r.m_dir - 2.0f * n * dot(n, _r.m_dir);
+                                                  ^
+<program source>:136:11: error: use of undeclared identifier '_r'
+          _r.m_origin = x + nl * 0.02f;
+          ^
+<program source>:139:11: error: use of undeclared identifier '_r'
+          _r.m_dir = tdir; //r = Ray(x, tdir);
+          ^
+<program source>:140:11: error: use of undeclared identifier '_r'
+          _r.m_origin = x + nl * 0.05f; // epsilon must be small to avoid artefacts
+          ^
+<program source>:148:56: error: kernel pointer arguments must have a global, local, or constant address space qualifier
+__kernel void render(__global float3 *_colors, float3 *_cam, float3 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+                                                       ^
+<program source>:148:70: error: kernel pointer arguments must have a global, local, or constant address space qualifier
+__kernel void render(__global float3 *_colors, float3 *_cam, float3 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+                                                                     ^
+<program source>:158:5: error: must use 'struct' tag to refer to type 'Ray'
+    Ray camera(*_cam, *_dir);
+    ^
+    struct 
+<program source>:158:17: warning: type specifier missing, defaults to 'int'
+    Ray camera(*_cam, *_dir);
+               ~^
+<program source>:158:24: warning: type specifier missing, defaults to 'int'
+    Ray camera(*_cam, *_dir);
+                      ~^
+<program source>:161:43: error: member reference base type 'struct Ray (int *, int *)' is not a structure or union
+    float3 cy = normalize(cross(cx, camera.m_dir)) * .5135; // ray direction offset in y direction (.5135 is field of view angle)
+                                    ~~~~~~^~~~~~
+<program source>:166:24: error: member reference base type 'struct Ray (int *, int *)' is not a structure or union
+      float3 d = camera.m_dir + cx*((.25 + x) / _w - .5) + cy*((.25 + y) / _h - .5);
+                 ~~~~~~^~~~~~
+<program source>:166:35: error: Cannot downconvert and widen scalar type 'double' to vector type '__float3'
+      float3 d = camera.m_dir + cx*((.25 + x) / _w - .5) + cy*((.25 + y) / _h - .5);
+                                ~~^~~~~~~~~~~~~~~~~~~~~~
+<program source>:166:62: error: Cannot downconvert and widen scalar type 'double' to vector type '__float3'
+      float3 d = camera.m_dir + cx*((.25 + x) / _w - .5) + cy*((.25 + y) / _h - .5);
+                                                           ~~^~~~~~~~~~~~~~~~~~~~~~
+<program source>:168:7: error: must use 'struct' tag to refer to type 'Ray'
+      Ray newcam(camera.m_origin + d * 40, normalize(d));
+      ^
+      struct 
+<program source>:168:18: error: unknown type name 'camera'
+      Ray newcam(camera.m_origin + d * 40, normalize(d));
+                 ^
+<program source>:168:24: error: expected ')'
+      Ray newcam(camera.m_origin + d * 40, normalize(d));
+                       ^
+<program source>:168:17: note: to match this '('
+      Ray newcam(camera.m_origin + d * 40, normalize(d));
+                ^
+<program source>:169:15: error: use of undeclared identifier 'ind'
+      _colors[ind] += radiance(newcam, &s1, &s2);
+              ^
+<program source>:173:58: error: use of undeclared identifier 'ind'
+    unsigned char r = (unsigned char)(powf(clamp(_colors[ind].x*coef, 0.0, 1.0), invGamma) * 255);
+                                                         ^
+<program source>:174:58: error: use of undeclared identifier 'ind'
+    unsigned char g = (unsigned char)(powf(clamp(_colors[ind].y*coef, 0.0, 1.0), invGamma) * 255);
+                                                         ^
+<program source>:175:58: error: use of undeclared identifier 'ind'
+    unsigned char b = (unsigned char)(powf(clamp(_colors[ind].z*coef, 0.0, 1.0), invGamma) * 255);
+                                                         ^
+<program source>:178:5: warning: implicit declaration of function 'surf2Dwrite' is invalid in C99
+    surf2Dwrite(data, _tex, x*sizeof(uchar4), y);
+    ^
+<program source>:178:23: error: use of undeclared identifier '_tex'
+    surf2Dwrite(data, _tex, x*sizeof(uchar4), y);
+                      ^
+

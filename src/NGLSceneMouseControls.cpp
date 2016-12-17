@@ -1,9 +1,14 @@
 #include "NGLScene.h"
-#include "PathTracer.cuh"
 #include <ngl/Mat4.h>
 #include <ngl/Vec4.h>
-#include <cuda_runtime.h>
 #include <QMouseEvent>
+
+#ifdef __VRENDERER_CUDA__
+  #include <cuda_runtime.h>
+  #include "PathTracer.cuh"
+#elif __VRENDERER_OPENCL__
+
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 void NGLScene::mouseMoveEvent( QMouseEvent* _event )
@@ -26,12 +31,15 @@ void NGLScene::mouseMoveEvent( QMouseEvent* _event )
 		rot.rotateY(m_win.spinYFace/25.f);
 
 		ngl::Vec4 cam = rot*ngl::Vec4(50, 52, 295.6);
-		validateCuda(cudaMemcpy(m_camera, &cam.m_openGL[0], sizeof(float3), cudaMemcpyHostToDevice));
 
-//		make_float3(dir.m_x, dir.m_y, dir.m_z);
-//		make_float3(dir.m_x, dir.m_y, dir.m_z);
+#ifdef __VRENDERER_CUDA__
+		validateCuda(cudaMemcpy(m_camera, &cam.m_openGL[0], sizeof(float3), cudaMemcpyHostToDevice));
 		cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), width()*height());
 		cudaDeviceSynchronize();
+#elif __VRENDERER_OPENCL__
+
+#endif
+
     update();
   }
   // right mouse translate code
@@ -48,10 +56,14 @@ void NGLScene::mouseMoveEvent( QMouseEvent* _event )
 		ngl::Vec4 dir = ngl::Vec4(m_modelPos.m_x/5., m_modelPos.m_y/5., 0.0f) + ngl::Vec4(0, -0.042612, -1);
 		dir = dir.normalize();
 
+#ifdef __VRENDERER_CUDA__
 		validateCuda(cudaMemcpy(m_camdir, &dir.m_openGL[0], sizeof(float3), cudaMemcpyHostToDevice));
-
 		cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), width()*height());
 		cudaDeviceSynchronize();
+#elif __VRENDERER_OPENCL__
+
+#endif
+
     update();
   }
 }
