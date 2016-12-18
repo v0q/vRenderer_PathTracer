@@ -6,7 +6,8 @@ vrenderer_cl {
   SOURCES += $$PWD/src/vRendererCL.cpp
   HEADERS += $$PWD/include/vRendererCL.h
 
-  CL_SOURCES += $$PWD/cl/src/PathTracer.cl
+  CL_SOURCES += $$PWD/cl/src/PathTracer.cl \
+                $$PWD/cl/src/CL_UVRender.cl
   CL_HEADERS += $$PWD/cl/include/PathTracer.h
 
   INCLUDEPATH += $$PWD/cl/include

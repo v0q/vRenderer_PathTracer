@@ -25,10 +25,13 @@ private:
   cl::Device m_device;
   cl::Context m_context;
   cl::Program m_program;
+  cl::Kernel m_kernel;
+  cl::Memory m_colorArray;
+  cl::CommandQueue m_queue;
+  std::vector<cl::Memory> m_GLBuffers;
 
   float3 *m_camera;
   float3 *m_camdir;
-  float3 *m_colorArray;
 
   unsigned int m_width;
   unsigned int m_height;
