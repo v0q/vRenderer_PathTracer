@@ -1,9 +1,11 @@
+#include <chrono>
 #include <cuda_gl_interop.h>
 
 #include "vRendererCuda.h"
 #include "PathTracer.cuh"
 
 vRendererCuda::vRendererCuda() :
+  m_frame(0),
   m_initialised(false)
 {
   std::cout << "Cuda vRenderer ctor called\n";
@@ -45,6 +47,7 @@ void vRendererCuda::registerTextureBuffer(GLuint &_texture)
 
 void vRendererCuda::render()
 {
+  std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
   std::cout << "Rendering...\n";
 
   validateCuda(cudaGraphicsMapResources(1, &m_cudaGLTextureBuffer));

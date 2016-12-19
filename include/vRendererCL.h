@@ -20,13 +20,15 @@ public:
   void registerTextureBuffer(GLuint &_texture) override;
   void render() override;
   void cleanUp() override;
+  unsigned int getFrameCount() const override { return m_frame; }
 private:
   cl::Platform m_platform;
   cl::Device m_device;
   cl::Context m_context;
   cl::Program m_program;
   cl::Kernel m_kernel;
-  cl::Memory m_colorArray;
+  cl::Memory m_glTexture;
+  cl::Buffer m_colorArray;
   cl::CommandQueue m_queue;
   std::vector<cl::Memory> m_GLBuffers;
 
@@ -35,6 +37,7 @@ private:
 
   unsigned int m_width;
   unsigned int m_height;
+  unsigned int m_frame;
 
   bool m_initialised;
 };

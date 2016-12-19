@@ -40,6 +40,15 @@ void NGLScene::initializeGL()
   // be done once we have a valid GL context but before we call any GL commands. If we dont do
   // this everything will crash
   ngl::NGLInit::instance();
+
+#ifdef __VRENDERER_CUDA__
+  m_renderer.reset(new vRendererCuda);
+#elif __VRENDERER_OPENCL__
+  m_renderer.reset(new vRendererCL);
+#endif
+
+  m_renderer->init((unsigned int)width(), (unsigned int)height());
+
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);			   // Grey Background
   // enable depth testing for drawing
   glEnable(GL_DEPTH_TEST);
@@ -105,15 +114,8 @@ void NGLScene::initializeGL()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// Create texture data (4-component unsigned byte)
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-#ifdef __VRENDERER_CUDA__
-  m_renderer.reset(new vRendererCuda);
-#elif __VRENDERER_OPENCL__
-  m_renderer.reset(new vRendererCL);
-#endif
-
-  m_renderer->init((unsigned int)width(), (unsigned int)height());
   m_renderer->registerTextureBuffer(m_texture);
 
   // Unbind the texture
@@ -139,7 +141,6 @@ void NGLScene::timerEvent(QTimerEvent *_event)
 
 void NGLScene::paintGL()
 {
-	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	static float t = 0;
 	t += 0.1f;
   // clear the screen and depth buffer
@@ -188,7 +189,7 @@ void NGLScene::paintGL()
 	m_text->setColour(1, 1, 1);
 	QString text = QString("%1 fps").arg(m_fps);
 	m_text->renderText(10, 20, text);
-	text = QString("%1SPP").arg(m_frame*8);
+  text = QString("%1SPP").arg(m_renderer->getFrameCount()*8);
 	m_text->renderText(10, 40, text);
 }
 

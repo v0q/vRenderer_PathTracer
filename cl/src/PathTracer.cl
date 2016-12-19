@@ -1,161 +1,175 @@
 #include "cl/include/PathTracer.h"
 
 __constant float invGamma = 1.f/2.2f;
-__constant struct Sphere spheres[] = {			//Scene: radius, position, emission, color, material
-  { 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f }, { 0.075f, 0.f, 0.f }, { 0.75f, 0.0f, 0.0f }, DIFF }, //Left
-  { 1e5f, { -1e5f + 99.0f, 40.8f, 81.6f }, { 0.f, 0.075f, 0.f }, { 0.0f, 0.75f, 0.0f }, DIFF }, //Right
-  { 1e5f, { 50.0f, 40.8f, 1e5f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f }, DIFF }, //Back
-  { 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f }, { 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f }, DIFF }, //Frnt
-  { 1e5f, { 50.0f, 1e5f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f }, DIFF }, //Botm
-  { 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f }, DIFF }, //Top
-  { 16.5f, { 27.0f, 16.5f, 47.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, SPEC }, // small sphere 1
-  { 16.5f, { 73.0f, 16.5f, 78.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, REFR }, // small sphere 2
-  { 600.0f, { 50.0f, 681.6f - .77f, 81.6f }, { 2.0f, 1.8f, 1.6f }, { 0.0f, 0.0f, 0.0f }, DIFF }  // Light
+__constant float PI = 3.14159265359f;
+__constant float EPSILON = 0.0000003f;
+__constant Sphere spheres[] = {			//Scene: radius, position, emission, color, material
+  { 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f }, { 0.075f, 0.f, 0.f }, { 0.75f, 0.0f, 0.0f } }, //Left
+  { 1e5f, { -1e5f + 99.0f, 40.8f, 81.6f }, { 0.f, 0.075f, 0.f }, { 0.0f, 0.75f, 0.0f } }, //Right
+  { 1e5f, { 50.0f, 40.8f, 1e5f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f } }, //Back
+  { 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f }, { 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f } }, //Frnt
+  { 1e5f, { 50.0f, 1e5f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f } }, //Botm
+  { 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f } }, //Top
+  { 16.5f, { 27.0f, 16.5f, 47.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }, // small sphere 1
+  { 16.5f, { 73.0f, 16.5f, 78.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }, // small sphere 2
+  { 600.0f, { 50.0f, 681.6f - .77f, 81.6f }, { 2.0f, 1.8f, 1.6f }, { 0.0f, 0.0f, 0.0f } }  // Light
 };
 
-struct Ray createRay(float3 _o, float3 _d)
+Ray createRay(float3 _o, float3 _d)
 {
-  struct Ray t;
-  t.m_origin = _o;
-  t.m_dir = _d;
-  return t;
+  Ray ray;
+  ray.m_origin = _o;
+  ray.m_dir = _d;
+  return ray;
 }
 
-float intersectSphere(const struct Sphere _sphere, const struct Ray _r)
-{ // returns distance, 0 if nohit
-  float3 op = _sphere.m_pos - _r.m_origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
-  float t;
-  float eps = 1e-4;
-  float b = dot(op, _r.m_dir);
-  float det = b*b - dot(op, op) + _sphere.m_r*_sphere.m_r;
-  if(det < 0)
-    return 0;
-  else
-    det = sqrtf(det);
-  return (t = b-det) > eps ? t : ((t = b+det) > eps ? t : 0.0);
+float intersect_sphere(const Sphere *_sphere, const Ray *_ray) /* version using local copy of sphere */
+{
+  float3 rayToCenter = _sphere->m_pos - _ray->m_origin;
+  float b = dot(rayToCenter, _ray->m_dir);
+  float c = dot(rayToCenter, rayToCenter) - _sphere->m_r*_sphere->m_r;
+  float disc = b * b - c;
+
+  if (disc < 0.0f) return 0.0f;
+  else disc = sqrt(disc);
+
+  if ((b - disc) > EPSILON) return b - disc;
+  if ((b + disc) > EPSILON) return b + disc;
+
+  return 0.0f;
 }
 
-inline bool intersectScene(const struct Ray _r, float *_t, int *_id)
+bool intersect_scene(const Ray *_ray, float *_t, int *_id)
 {
-  float n = sizeof(spheres)/sizeof(struct Sphere);
-  float d;
-  float inf = *_t = 1e20;
-  for(int i = int(n); i--;) {
-    if((d = intersectSphere(spheres[i], _r)) && d < *_t)
-    {
-      *_t = d;
+  /* initialise t to a very large number,
+  so t will be guaranteed to be smaller
+  when a hit with the scene occurs */
+
+  int n = sizeof(spheres)/sizeof(Sphere);;
+  float inf = 1e20f;
+  *_t = inf;
+
+  /* check if the ray intersects each sphere in the scene */
+  for(int i = 0; i < n; i++)  {
+
+    Sphere sphere = spheres[i]; /* create local copy of sphere */
+
+    /* float hitdistance = intersect_sphere(&spheres[i], ray); */
+    float hitdistance = intersect_sphere(&sphere, _ray);
+    /* keep track of the closest intersection and hitobject found so far */
+    if(hitdistance != 0.0f && hitdistance < *_t) {
+      *_t = hitdistance;
       *_id = i;
     }
   }
-  return *_t < inf;
+  return *_t < inf; /* true when ray interesects the scene */
 }
 
-static unsigned int hash(unsigned int *seed0, unsigned int *seed1) {
-  *seed0 = 36969 * ((*seed0) & 65535) + ((*seed0) >> 16);  // hash the seeds using bitwise AND and bitshifts
-  *seed1 = 18000 * ((*seed1) & 65535) + ((*seed1) >> 16);
-
-  return *seed0**seed1;
-}
-
-float3 radiance(struct Ray *_r, unsigned int *s0, unsigned int *s1)
+static float get_random(unsigned int *_seed0, unsigned int *_seed1)
 {
-  float3 color = make_float3(0.0, 0.0, 0.0);
-  float3 mask = make_float3(1.0, 1.0, 1.0);
+  /* hash the seeds using bitwise AND operations and bitshifts */
+  *_seed0 = 36969 * ((*_seed0) & 65535) + ((*_seed0) >> 16);
+  *_seed1 = 18000 * ((*_seed1) & 65535) + ((*_seed1) >> 16);
 
-  for(unsigned int bounces = 0; bounces < 4; bounces++)
+  unsigned int ires = ((*_seed0) << 16) + (*_seed1);
+
+  /* use union struct to convert int to float */
+  union {
+    float f;
+    unsigned int ui;
+  } res;
+
+  res.ui = (ires & 0x007fffff) | 0x40000000;  /* bitwise AND, bitwise OR */
+  return (res.f - 2.0f) / 2.0f;
+}
+
+float3 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *_seed1)
+{
+  Ray ray = *_camray;
+
+  float3 accum_color = (float3)(0.0f, 0.0f, 0.0f);
+  float3 mask = (float3)(1.0f, 1.0f, 1.0f);
+
+  for (int bounces = 0; bounces < 4; bounces++)
   {
-    float t;																	// distance to intersection
-    int id = 0;																// id of intersected object
-    if(!intersectScene(*_r, &t, &id)) {
-      return make_float3(0.0, 0.0, 0.0);			// if miss, return black
+    float t;   /* distance to intersection */
+    int hitsphere_id = 0; /* index of intersected sphere */
+
+    /* if ray misses scene, return background colour */
+    if(!intersect_scene(&ray, &t, &hitsphere_id)) {
+      return make_float3(0.f, 0.f, 0.f);
     }
 
-    unsigned int seed = hash(s0, s1);
+    /* else, we've got a hit! Fetch the closest hit sphere */
+    Sphere hitsphere = spheres[hitsphere_id]; /* version with local copy of sphere */
 
-    const struct Sphere obj = spheres[id];          // hitobject
-    float3 x = _r->m_origin + _r->m_dir*t;          // hitpoint
-    float3 n = normalize(x - obj.m_pos);						// normal, unsigned int *_s0, unsigned int *_s1
-    float3 nl = dot(n, _r->m_dir) < 0 ? n : n * -1;	// front facing normal
+    /* compute the hitpoint using the ray equation */
+    float3 hitpoint = ray.m_origin + ray.m_dir * t;
 
-    color += mask * obj.m_emission;
-    if(obj.m_refl == DIFF) {
-      float r1 = 2 * M_PI * 0.1;
-      float r2 = 0.5; // NEED RANDOM HERE
-      float r2s = sqrtf(r2);
-      float3 w = nl;
-      float3 u = normalize(cross((fabs(w.x) > .1 ? make_float3(0, 1, 0) : make_float3(1, 0, 0)), w));
-      float3 v = cross(w, u);
+    /* compute the surface normal and flip it if necessary to face the incoming ray */
+    float3 normal = normalize(hitpoint - hitsphere.m_pos);
+    float3 normal_facing = dot(normal, ray.m_dir) < 0.0f ? normal : normal * (-1.0f);
 
-      float3 d = normalize(( u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrtf(1 - r2)));
+    /* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
+    float rand1 = 2.0f * PI * get_random(_seed0, _seed1);
+    float rand2 = get_random(_seed0, _seed1);
+    float rand2s = sqrt(rand2);
 
-      _r->m_origin = x + nl*0.05f; // offset ray origin slightly to prevent self intersection
-      _r->m_dir = d;
+    /* create a local orthogonal coordinate frame centered at the hitpoint */
+    float3 w = normal_facing;
+    float3 axis = fabs(w.x) > 0.1f ? (float3)(0.0f, 1.0f, 0.0f) : (float3)(1.0f, 0.0f, 0.0f);
+    float3 u = normalize(cross(axis, w));
+    float3 v = cross(w, u);
 
-      mask *= obj.m_col;
-      mask *= dot(d, nl);
-      mask *= 2;
-    } else if(obj.m_refl == SPEC) {
-      _r->m_origin = x + nl*0.05f; // offset ray origin slightly to prevent self intersection
-      _r->m_dir = _r->m_dir - n*2*dot(n, _r->m_dir);
-    } else if(obj.m_refl == REFR) {
-      bool into = dot(n, nl) > 0; // is ray entering or leaving refractive material?
-      float nc = 1.0f;  // Index of Refraction air
-      float nt = 1.33f;  // Index of Refraction glass/water
-      float nnt = into ? nc / nt : nt / nc;  // IOR ratio of refractive materials
-      float ddn = dot(_r->m_dir, nl);
-      float cos2t = 1.0f - nnt*nnt * (1.f - ddn*ddn);
+    /* use the coordinte frame and random numbers to compute the next ray direction */
+    float3 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
 
-      if(cos2t < 0.0f) {
-        _r->m_dir = _r->m_dir - 2.0f * n * dot(n, _r->m_dir);
-        _r->m_origin = x + nl * 0.01f;
-      }	else {
-        // compute direction of transmission ray
-        float3 tdir = normalize(_r->m_dir * nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrtf(cos2t))));
+    /* add a very small offset to the hitpoint to prevent self intersection */
+    ray.m_origin = hitpoint + normal_facing * 0.05f;
+    ray.m_dir = newdir;
 
-        float R0 = (nt - nc)*(nt - nc) / ((nt + nc)*(nt + nc));
-        float c = 1.f - (into ? -ddn : dot(tdir, n));
-        float Re = R0 + (1.f - R0) * c * c * c * c * c;
-        float Tr = 1 - Re; // Transmission
-        float P = .25f + .5f * Re;
-        float RP = Re / P;
-        float TP = Tr / (1.f - P);
+    /* add the colour and light contributions to the accumulated colour */
+    accum_color += mask * hitsphere.m_emission;
 
-        // randomly choose reflection or transmission ray
-        if(0.5f < 0.25f) {
-          mask *= RP;
-          _r->m_dir = _r->m_dir - 2.0f * n * dot(n, _r->m_dir);
-          _r->m_origin = x + nl * 0.02f;
-        }	else {
-          mask *= TP;
-          _r->m_dir = tdir; //r = Ray(x, tdir);
-          _r->m_origin = x + nl * 0.05f; // epsilon must be small to avoid artefacts
-        }
-      }
-    }
+    /* the mask colour picks up surface colours at each bounce */
+    mask *= hitsphere.m_col;
+
+    /* perform cosine-weighted importance sampling for diffuse surfaces*/
+    mask *= dot(newdir, normal_facing);
+    mask *= 2;
   }
-  return color;
+
+  return accum_color;
 }
 
-__kernel void render(__global float3 *_colors, __global float3 *_cam, __global float3 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+
+__kernel void render(__write_only image2d_t _texture, __global float3 *_colors, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
-  const int work_id = get_global_id(0);
-  unsigned int x = work_id%_w;
-  unsigned int y = work_id/_w;
+  const unsigned int x = get_global_id(0);
+  const unsigned int y = get_global_id(1);
 
-  if(x < _w && y < _h) {
-    unsigned int s1 = x * _frame;
-    unsigned int s2 = y * _time;
+  if(x < _w && y < _h)
+  {
+    unsigned int ind = y*_w + x;
+    unsigned int seed0 = x * _frame;
+    unsigned int seed1 = y * _time;
+    if(_frame == 0) {
+      _colors[ind] = make_float3(0.f, 0.f, 0.f);
+    }
 
-    struct Ray camera = createRay(*_cam, *_dir);
+    float3 _cam = make_float3(50.f, 52.f, 295.6f);
+    float3 _dir = make_float3(0.f, -0.042612f, -1.f);
+    Ray camera = createRay(_cam, _dir);
 
     float3 cx = make_float3(_w * .5135 / _h, 0.0f, 0.0f); // ray direction offset in x direction
     float3 cy = normalize(cross(cx, camera.m_dir)); // ray direction offset in y direction (.5135 is field of view angle)
-    cy.x *= .5135;
-    cy.y *= .5135;
-    cy.z *= .5135;
+    cy.x *= .5135f;
+    cy.y *= .5135f;
+    cy.z *= .5135f;
 
     unsigned int samps = 8;
-    for(unsigned int s = 0; s < samps; s++) {  // samples per pixel
+    for(unsigned int s = 0; s < samps; s++)
+    {
       // compute primary ray direction
       float3 d = camera.m_dir + make_float3(cx.x*((.25 + x) / _w - .5),
                                             cx.y*((.25 + x) / _w - .5),
@@ -164,16 +178,15 @@ __kernel void render(__global float3 *_colors, __global float3 *_cam, __global f
                                             cy.y*((.25 + y) / _h - .5),
                                             cy.z*((.25 + y) / _h - .5));
       // create primary ray, add incoming radiance to pixelcolor
-      struct Ray newcam = createRay(camera.m_origin + d * 40, normalize(d));
-      _colors[work_id] += radiance(&newcam, &s1, &s2);
+      Ray newcam = createRay(camera.m_origin + d * 40, normalize(d));
+
+      _colors[ind] += trace(&newcam, &seed0, &seed1);
     }
-
     float coef = 1.f/(samps*_frame);
-    unsigned char r = (unsigned char)(powf(clamp(_colors[work_id].x*coef, 0.0f, 1.0f), invGamma) * 255);
-    unsigned char g = (unsigned char)(powf(clamp(_colors[work_id].y*coef, 0.0f, 1.0f), invGamma) * 255);
-    unsigned char b = (unsigned char)(powf(clamp(_colors[work_id].z*coef, 0.0f, 1.0f), invGamma) * 255);
 
-    /*uchar4 data = make_uchar4(r, g, b, 0xff);
-    surf2Dwrite(data, _tex, x*sizeof(uchar4), y);*/
+    write_imagef(_texture, (int2)(x, y), make_float4(pow(clamp(_colors[ind].x * coef, 0.f, 1.f), invGamma),
+                                                     pow(clamp(_colors[ind].y * coef, 0.f, 1.f), invGamma),
+                                                     pow(clamp(_colors[ind].z * coef, 0.f, 1.f), invGamma),
+                                                     1.f));
   }
 }

@@ -7,6 +7,7 @@
 #include <fstream>
 #include <streambuf>
 #include <vector>
+#include <chrono>
 
 #ifdef __APPLE__
   #include <GL/glew.h>
@@ -17,6 +18,7 @@
 #include "vRendererCL.h"
 
 vRendererCL::vRendererCL() :
+  m_frame(0),
   m_initialised(false)
 {
   std::cout << "OpenCL vRenderer ctor called\n";
@@ -87,10 +89,10 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 
   m_context = cl::Context(m_device, properties);
 
-  std::ifstream clFile("cl/src/CL_UVRender.cl");
+  std::ifstream clFile("cl/src/PathTracer.cl");
   if(!clFile)
   {
-    std::cerr << "Could not find 'cl/src/CL_UVRender.cl'\n";
+    std::cerr << "Could not find 'cl/src/PathTracer.cl'\n";
     exit(0);
   }
   std::string pathTracerSrc((std::istreambuf_iterator<char>(clFile)),
@@ -114,6 +116,7 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 
   m_kernel = cl::Kernel(m_program, "render");
   m_queue = cl::CommandQueue(m_context, m_device);
+  m_colorArray = cl::Buffer(m_context, CL_MEM_WRITE_ONLY, m_width*m_height*sizeof(cl_float3));
 
   m_initialised = true;
 }
@@ -122,21 +125,24 @@ void vRendererCL::registerTextureBuffer(GLuint &_texture)
 {
   assert(m_initialised);
   cl_int err;
-  m_colorArray = cl::ImageGL(m_context, CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, _texture, &err);
+  m_glTexture = cl::ImageGL(m_context, CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, _texture, &err);
   if(err != CL_SUCCESS)
   {
     std::cout << "Failed to create OpenGL texture reference!" << err << "\n";
     exit(EXIT_FAILURE);
   }
-  m_GLBuffers.push_back(m_colorArray);
+  m_GLBuffers.push_back(m_glTexture);
 }
 
 void vRendererCL::render()
 {
   cl::Event event;
-  cl::NDRange globalRange = cl::NDRange(256, 256);
+  cl::NDRange globalRange = cl::NDRange(m_width, m_height);
   cl::NDRange localRange = cl::NDRange(16, 16);
   cl_int err;
+
+  glFinish();
+  std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
   std::cout << "Rendering...\n";
 
   if((err = m_queue.enqueueAcquireGLObjects(&m_GLBuffers, nullptr, &event)) != CL_SUCCESS)
@@ -147,15 +153,21 @@ void vRendererCL::render()
 
   event.wait();
 
-  m_kernel.setArg(0, &m_colorArray);
-  m_kernel.setArg(0, m_width);
-  m_kernel.setArg(1, m_height);
+  m_kernel.setArg(0, m_glTexture);
+  m_kernel.setArg(1, m_colorArray);
+  m_kernel.setArg(2, m_width);
+  m_kernel.setArg(3, m_height);
+  m_kernel.setArg(4, m_frame++);
+  m_kernel.setArg(5, std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
+
   if((err = m_queue.enqueueNDRangeKernel(m_kernel, cl::NullRange, globalRange, localRange, nullptr, &event)) != CL_SUCCESS)
   {
     std::cout << "Failed to enqueue the kernel: " << err << "\n";
     exit(EXIT_FAILURE);
   }
   event.wait();
+
+  cl::finish();
 
   if((err = m_queue.enqueueReleaseGLObjects(&m_GLBuffers, nullptr, &event)) != CL_SUCCESS)
   {
