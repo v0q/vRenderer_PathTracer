@@ -143,7 +143,7 @@ float3 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *_seed1)
 }
 
 
-__kernel void render(__write_only image2d_t _texture, __global float3 *_colors, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__kernel void render(__write_only image2d_t _texture, __global float3 *_colors, float3 _cam, float3 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
   const unsigned int x = get_global_id(0);
   const unsigned int y = get_global_id(1);
@@ -153,12 +153,10 @@ __kernel void render(__write_only image2d_t _texture, __global float3 *_colors, 
     unsigned int ind = y*_w + x;
     unsigned int seed0 = x * _frame;
     unsigned int seed1 = y * _time;
-    if(_frame == 0) {
+    if(_frame == 1) {
       _colors[ind] = make_float3(0.f, 0.f, 0.f);
     }
 
-    float3 _cam = make_float3(50.f, 52.f, 295.6f);
-    float3 _dir = make_float3(0.f, -0.042612f, -1.f);
     Ray camera = createRay(_cam, _dir);
 
     float3 cx = make_float3(_w * .5135 / _h, 0.0f, 0.0f); // ray direction offset in x direction

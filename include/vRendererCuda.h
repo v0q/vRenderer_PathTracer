@@ -13,6 +13,7 @@ public:
   void registerTextureBuffer(GLuint &_texture) override;
   void render() override;
   void cleanUp() override;
+  void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) override;
   unsigned int getFrameCount() const override { return m_frame; }
 private:
   void validateCuda(cudaError_t _err);

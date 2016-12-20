@@ -169,8 +169,12 @@ __global__ void render(cudaSurfaceObject_t _tex, float3 *_colors, float3 *_cam, 
 	if(x < _w && y < _h) {
 
 		unsigned int ind = x + y*_w;
-		unsigned int s1 = x * _frame;
+    unsigned int s1 = x * _frame;
 		unsigned int s2 = y * _time;
+
+    if(_frame == 1) {
+      _colors[ind] = make_float3(0.f, 0.f, 0.f);
+    }
 
 		Ray camera(*_cam, *_dir);
 
@@ -196,17 +200,11 @@ __global__ void render(cudaSurfaceObject_t _tex, float3 *_colors, float3 *_cam, 
 	}
 }
 
-void cu_ModifyTexture(cudaSurfaceObject_t _texture, float3 *_colorArr, float3 *_cam, float3 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+void cu_runRenderKernel(cudaSurfaceObject_t _texture, float3 *_colorArr, float3 *_cam, float3 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	dim3 dimBlock(16, 16);
 	dim3 dimGrid((_w / dimBlock.x),
 							 (_h / dimBlock.y));
 
 	render<<<dimGrid, dimBlock>>>(_texture, _colorArr, _cam, _dir, _w, _h, _frame, _time);
-}
-
-void cu_fillFloat3(float3 *d_ptr, float3 _val, unsigned int _size)
-{
-	thrust::device_ptr<float3> ptr = thrust::device_pointer_cast(d_ptr);
-	thrust::fill(ptr, ptr + _size, _val);
 }

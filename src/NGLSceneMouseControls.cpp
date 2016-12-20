@@ -24,7 +24,6 @@ void NGLScene::mouseMoveEvent( QMouseEvent* _event )
     m_win.spinYFace += static_cast<int>( 0.5f * diffx );
     m_win.origX = _event->x();
     m_win.origY = _event->y();
-		m_frame = 1;
 
 		ngl::Mat4 rot;
 		rot.rotateX(m_win.spinXFace/25.f);
@@ -32,10 +31,9 @@ void NGLScene::mouseMoveEvent( QMouseEvent* _event )
 
 		ngl::Vec4 cam = rot*ngl::Vec4(50, 52, 295.6);
 
+    m_renderer->updateCamera(cam.openGL());
 #ifdef __VRENDERER_CUDA__
-		validateCuda(cudaMemcpy(m_camera, &cam.m_openGL[0], sizeof(float3), cudaMemcpyHostToDevice));
-		cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), width()*height());
-		cudaDeviceSynchronize();
+
 #elif __VRENDERER_OPENCL__
 
 #endif
@@ -50,12 +48,12 @@ void NGLScene::mouseMoveEvent( QMouseEvent* _event )
     m_win.origXPos = _event->x();
     m_win.origYPos = _event->y();
 		m_modelPos.m_x += INCREMENT * diffX;
-		m_modelPos.m_y -= INCREMENT * diffY;
-		m_frame = 1;
+    m_modelPos.m_y -= INCREMENT * diffY;
 
 		ngl::Vec4 dir = ngl::Vec4(m_modelPos.m_x/5., m_modelPos.m_y/5., 0.0f) + ngl::Vec4(0, -0.042612, -1);
 		dir = dir.normalize();
 
+    m_renderer->updateCamera(nullptr, dir.openGL());
 #ifdef __VRENDERER_CUDA__
 		validateCuda(cudaMemcpy(m_camdir, &dir.m_openGL[0], sizeof(float3), cudaMemcpyHostToDevice));
 		cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), width()*height());

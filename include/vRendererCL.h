@@ -3,13 +3,6 @@
 #include <cl/cl.hpp>
 #include "vRenderer.h"
 
-struct float3
-{
-  float x;
-  float y;
-  float z;
-};
-
 class vRendererCL : public vRenderer
 {
 public:
@@ -20,6 +13,7 @@ public:
   void registerTextureBuffer(GLuint &_texture) override;
   void render() override;
   void cleanUp() override;
+  void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) override;
   unsigned int getFrameCount() const override { return m_frame; }
 private:
   cl::Platform m_platform;
@@ -32,8 +26,8 @@ private:
   cl::CommandQueue m_queue;
   std::vector<cl::Memory> m_GLBuffers;
 
-  float3 *m_camera;
-  float3 *m_camdir;
+  cl_float3 m_camera;
+  cl_float3 m_camdir;
 
   unsigned int m_width;
   unsigned int m_height;

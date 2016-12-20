@@ -5,7 +5,7 @@
 #include "PathTracer.cuh"
 
 vRendererCuda::vRendererCuda() :
-  m_frame(0),
+  m_frame(1),
   m_initialised(false)
 {
   std::cout << "Cuda vRenderer ctor called\n";
@@ -77,6 +77,20 @@ void vRendererCuda::cleanUp()
     cudaFree(m_camdir);
     cudaGraphicsUnregisterResource(m_cudaGLTextureBuffer);
   }
+}
+
+void vRendererCuda::updateCamera(const float *_cam, const float *_dir)
+{
+  if(_cam != nullptr)
+  {
+    validateCuda(cudaMemcpy(m_camera, _cam, sizeof(float3), cudaMemcpyHostToDevice));
+  }
+  if(_dir != nullptr)
+  {
+    validateCuda(cudaMemcpy(m_camdir, _dir, sizeof(float3), cudaMemcpyHostToDevice));
+  }
+
+  m_frame = 1;
 }
 
 void vRendererCuda::validateCuda(int _err)

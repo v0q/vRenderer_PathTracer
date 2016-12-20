@@ -18,7 +18,7 @@
 #include "vRendererCL.h"
 
 vRendererCL::vRendererCL() :
-  m_frame(0),
+  m_frame(1),
   m_initialised(false)
 {
   std::cout << "OpenCL vRenderer ctor called\n";
@@ -118,6 +118,14 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
   m_queue = cl::CommandQueue(m_context, m_device);
   m_colorArray = cl::Buffer(m_context, CL_MEM_WRITE_ONLY, m_width*m_height*sizeof(cl_float3));
 
+  m_camera.x = 50.f;
+  m_camera.y = 52.f;
+  m_camera.z = 295.6f;
+
+  m_camdir.x = 0.f;
+  m_camdir.y = -0.042612f;
+  m_camdir.z = -1.f;
+
   m_initialised = true;
 }
 
@@ -155,10 +163,12 @@ void vRendererCL::render()
 
   m_kernel.setArg(0, m_glTexture);
   m_kernel.setArg(1, m_colorArray);
-  m_kernel.setArg(2, m_width);
-  m_kernel.setArg(3, m_height);
-  m_kernel.setArg(4, m_frame++);
-  m_kernel.setArg(5, std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
+  m_kernel.setArg(2, m_camera);
+  m_kernel.setArg(3, m_camdir);
+  m_kernel.setArg(4, m_width);
+  m_kernel.setArg(5, m_height);
+  m_kernel.setArg(6, m_frame++);
+  m_kernel.setArg(7, std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
 
   if((err = m_queue.enqueueNDRangeKernel(m_kernel, cl::NullRange, globalRange, localRange, nullptr, &event)) != CL_SUCCESS)
   {
@@ -183,4 +193,22 @@ void vRendererCL::cleanUp()
   {
     m_GLBuffers.clear();
   }
+}
+
+void vRendererCL::updateCamera(const float *_cam, const float *_dir)
+{
+  if(_cam != nullptr)
+  {
+    m_camera.x = _cam[0];
+    m_camera.y = _cam[1];
+    m_camera.z = _cam[2];
+  }
+  if(_dir != nullptr)
+  {
+    m_camdir.x = _dir[0];
+    m_camdir.y = _dir[1];
+    m_camdir.z = _dir[2];
+  }
+
+  m_frame = 1;
 }
