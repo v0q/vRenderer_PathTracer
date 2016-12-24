@@ -90,7 +90,7 @@ float3 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *_seed1)
   float3 accum_color = (float3)(0.0f, 0.0f, 0.0f);
   float3 mask = (float3)(1.0f, 1.0f, 1.0f);
 
-  for (int bounces = 0; bounces < 4; bounces++)
+  for(int bounces = 0; bounces < 4; bounces++)
   {
     float t;   /* distance to intersection */
     int hitsphere_id = 0; /* index of intersected sphere */
@@ -102,41 +102,46 @@ float3 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *_seed1)
 
     /* else, we've got a hit! Fetch the closest hit sphere */
     Sphere hitsphere = spheres[hitsphere_id]; /* version with local copy of sphere */
+      /* compute the hitpoint using the ray equation */
+      float3 hitpoint = ray.m_origin + ray.m_dir * t;
 
-    /* compute the hitpoint using the ray equation */
-    float3 hitpoint = ray.m_origin + ray.m_dir * t;
+      /* compute the surface normal and flip it if necessary to face the incoming ray */
+      float3 normal = normalize(hitpoint - hitsphere.m_pos);
+      float3 normal_facing = dot(normal, ray.m_dir) < 0.0f ? normal : normal * (-1.0f);
 
-    /* compute the surface normal and flip it if necessary to face the incoming ray */
-    float3 normal = normalize(hitpoint - hitsphere.m_pos);
-    float3 normal_facing = dot(normal, ray.m_dir) < 0.0f ? normal : normal * (-1.0f);
 
-    /* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
-    float rand1 = 2.0f * PI * get_random(_seed0, _seed1);
-    float rand2 = get_random(_seed0, _seed1);
-    float rand2s = sqrt(rand2);
+    if(hitsphere_id == 6) {
+      ray.m_origin = hitpoint + normal_facing*0.05f; // offset ray origin slightly to prevent self intersection
+      ray.m_dir = ray.m_dir - normal*2*dot(normal, ray.m_dir);
+    } else {
+      /* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
+      float rand1 = 2.0f * PI * get_random(_seed0, _seed1);
+      float rand2 = get_random(_seed0, _seed1);
+      float rand2s = sqrt(rand2);
 
-    /* create a local orthogonal coordinate frame centered at the hitpoint */
-    float3 w = normal_facing;
-    float3 axis = fabs(w.x) > 0.1f ? (float3)(0.0f, 1.0f, 0.0f) : (float3)(1.0f, 0.0f, 0.0f);
-    float3 u = normalize(cross(axis, w));
-    float3 v = cross(w, u);
+      /* create a local orthogonal coordinate frame centered at the hitpoint */
+      float3 w = normal_facing;
+      float3 axis = fabs(w.x) > 0.1f ? (float3)(0.0f, 1.0f, 0.0f) : (float3)(1.0f, 0.0f, 0.0f);
+      float3 u = normalize(cross(axis, w));
+      float3 v = cross(w, u);
 
-    /* use the coordinte frame and random numbers to compute the next ray direction */
-    float3 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
+      /* use the coordinte frame and random numbers to compute the next ray direction */
+      float3 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
 
-    /* add a very small offset to the hitpoint to prevent self intersection */
-    ray.m_origin = hitpoint + normal_facing * 0.05f;
-    ray.m_dir = newdir;
+      /* add a very small offset to the hitpoint to prevent self intersection */
+      ray.m_origin = hitpoint + normal_facing * 0.05f;
+      ray.m_dir = newdir;
 
-    /* add the colour and light contributions to the accumulated colour */
-    accum_color += mask * hitsphere.m_emission;
+      /* add the colour and light contributions to the accumulated colour */
+      accum_color += mask * hitsphere.m_emission;
 
-    /* the mask colour picks up surface colours at each bounce */
-    mask *= hitsphere.m_col;
+      /* the mask colour picks up surface colours at each bounce */
+      mask *= hitsphere.m_col;
 
-    /* perform cosine-weighted importance sampling for diffuse surfaces*/
-    mask *= dot(newdir, normal_facing);
-    mask *= 2;
+      /* perform cosine-weighted importance sampling for diffuse surfaces*/
+      mask *= dot(newdir, normal_facing);
+      mask *= 2;
+    }
   }
 
   return accum_color;
@@ -164,6 +169,11 @@ __kernel void render(__write_only image2d_t _texture, __global float3 *_colors, 
     cy.x *= .5135f;
     cy.y *= .5135f;
     cy.z *= .5135f;
+
+//    write_imagef(_texture, (int2)(x, y), make_float4(_tris[ind%1024].x,
+//                                                     _tris[ind%1024].y,
+//                                                     _tris[ind%1024].z,
+//                                                     1.f));
 
     unsigned int samps = 8;
     for(unsigned int s = 0; s < samps; s++)

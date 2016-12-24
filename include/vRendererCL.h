@@ -3,6 +3,17 @@
 #include <cl/cl.hpp>
 #include "vRenderer.h"
 
+typedef struct vVert {
+  cl_float3 m_vert;
+  cl_float3 m_normal;
+} vVert;
+
+typedef struct vTriangle {
+  vVert m_v1;
+  vVert m_v2;
+  vVert m_v3;
+} vTriangle;
+
 class vRendererCL : public vRenderer
 {
 public:
@@ -14,6 +25,7 @@ public:
   void render() override;
   void cleanUp() override;
   void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) override;
+  void initMesh(const std::vector<float3> &_vertData) override;
   unsigned int getFrameCount() const override { return m_frame; }
 private:
   cl::Platform m_platform;
@@ -24,6 +36,7 @@ private:
   cl::Memory m_glTexture;
   cl::Buffer m_colorArray;
   cl::CommandQueue m_queue;
+  std::vector<cl::BufferGL> m_meshes;
   std::vector<cl::Memory> m_GLBuffers;
 
   cl_float3 m_camera;

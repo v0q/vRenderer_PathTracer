@@ -9,8 +9,9 @@
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
 
+#include "MeshLoader.h"
+
 NGLScene::NGLScene() :
-  m_frame(1),
   m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
@@ -24,6 +25,7 @@ NGLScene::NGLScene() :
 
 NGLScene::~NGLScene()
 {
+  glDeleteBuffers(1, &m_vbo);
   std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
 }
 
@@ -121,8 +123,10 @@ void NGLScene::initializeGL()
   // Unbind the texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	m_text.reset(new ngl::Text(QFont("Arial",14)));
+  m_text.reset(new ngl::Text(QFont("Arial", 14)));
 	m_text->setScreenSize(width(), height());
+
+  m_renderer->initMesh(vMeshLoader::loadMesh("models/teapot1.obj"));
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)

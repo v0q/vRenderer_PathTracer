@@ -14,6 +14,17 @@ typedef struct Sphere {
   float3 m_col;
 } Sphere;
 
+typedef struct vVert {
+  float3 m_vert;
+  float3 m_normal;
+} vVert;
+
+typedef struct vTriangle {
+  vVert m_v1;
+  vVert m_v2;
+  vVert m_v3;
+} vTriangle;
+
 Ray createRay(float3 _o, float3 _d);
 float intersect_sphere(const Sphere *_sphere, const Ray *_ray);
 bool intersect_scene(const Ray *_ray, float *_t, int *_id);
