@@ -10,8 +10,8 @@ __constant Sphere spheres[] = {			//Scene: radius, position, emission, color, ma
   { 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f }, { 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f } }, //Frnt
   { 1e5f, { 50.0f, 1e5f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f } }, //Botm
   { 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f }, { 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f } }, //Top
-  { 16.5f, { 27.0f, 16.5f, 47.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }, // small sphere 1
-  { 16.5f, { 73.0f, 16.5f, 78.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }, // small sphere 2
+//  { 16.5f, { 27.0f, 16.5f, 47.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }, // small sphere 1
+//  { 16.5f, { 73.0f, 16.5f, 78.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }, // small sphere 2
   { 600.0f, { 50.0f, 681.6f - .77f, 81.6f }, { 2.0f, 1.8f, 1.6f }, { 0.0f, 0.0f, 0.0f } }  // Light
 };
 
@@ -23,7 +23,54 @@ Ray createRay(float3 _o, float3 _d)
   return ray;
 }
 
-float intersect_sphere(const Sphere *_sphere, const Ray *_ray) /* version using local copy of sphere */
+float intersectTriangle(const float3 _v1, const float3 _v2, const float3 _v3, const Ray *_ray)
+{
+  float3 e1, e2;  //Edge1, Edge2
+  float3 p, q, t;
+  float det, inv_det, u, v;
+  float dist;
+
+  //Find vectors for two edges sharing V1
+  e1 = _v2 - _v1;
+  e2 = _v3 - _v1;
+  //Begin calculating determinant - also used to calculate u parameter
+
+  p = cross(_ray->m_dir, e2);
+  //if determinant is near zero, ray lies in plane of triangle or ray is parallel to plane of triangle
+  det = dot(e1, p);
+  //NOT CULLING
+  if(det > -EPSILON && det < EPSILON)
+    return 0.f;
+  inv_det = 1.f / det;
+
+  //calculate distance from V1 to ray origin
+  t = _ray->m_origin - _v1;
+
+  //Calculate u parameter and test bound
+  u = dot(t, p) * inv_det;
+  //The intersection lies outside of the triangle
+  if(u < 0.f || u > 1.f)
+    return 0.f;
+
+  //Prepare to test v parameter
+  q = cross(t, e1);
+
+  //Calculate V parameter and test bound
+  v = dot(_ray->m_dir, q) * inv_det;
+  //The intersection lies outside of the triangle
+  if(v < 0.f || u + v  > 1.f)
+    return 0.f;
+
+  dist = dot(e2, q) * inv_det;
+
+  if(dist > EPSILON)
+    return dist;
+
+  // No hit, no win
+  return 0.f;
+}
+
+float intersectSphere(const Sphere *_sphere, const Ray *_ray) /* version using local copy of sphere */
 {
   float3 rayToCenter = _sphere->m_pos - _ray->m_origin;
   float b = dot(rayToCenter, _ray->m_dir);
@@ -39,7 +86,7 @@ float intersect_sphere(const Sphere *_sphere, const Ray *_ray) /* version using 
   return 0.0f;
 }
 
-bool intersect_scene(const Ray *_ray, float *_t, int *_id)
+bool intersectScene(const Ray *_ray, __global const vTriangle *_scene, unsigned int _triCount, vHitData *_hitData)
 {
   /* initialise t to a very large number,
   so t will be guaranteed to be smaller
@@ -47,22 +94,35 @@ bool intersect_scene(const Ray *_ray, float *_t, int *_id)
 
   int n = sizeof(spheres)/sizeof(Sphere);;
   float inf = 1e20f;
-  *_t = inf;
+  float t = inf;
 
   /* check if the ray intersects each sphere in the scene */
   for(int i = 0; i < n; i++)  {
-
+    /* float hitdistance = intersectSphere(&spheres[i], ray); */
     Sphere sphere = spheres[i]; /* create local copy of sphere */
-
-    /* float hitdistance = intersect_sphere(&spheres[i], ray); */
-    float hitdistance = intersect_sphere(&sphere, _ray);
+    float dist = intersectSphere(&sphere, _ray);
     /* keep track of the closest intersection and hitobject found so far */
-    if(hitdistance != 0.0f && hitdistance < *_t) {
-      *_t = hitdistance;
-      *_id = i;
+    if(dist != 0.0f && dist < t) {
+      t = dist;
+      _hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+      _hitData->m_normal = normalize(_hitData->m_hitPoint - sphere.m_pos);
+      _hitData->m_color = sphere.m_col;
+      _hitData->m_emission = sphere.m_emission;
     }
   }
-  return *_t < inf; /* true when ray interesects the scene */
+  for(unsigned int i = 0; i < _triCount; ++i)
+  {
+    float dist = intersectTriangle(_scene[i].m_v1.m_vert, _scene[i].m_v2.m_vert, _scene[i].m_v3.m_vert, _ray);
+    if(dist != 0.0f && dist < t) {
+      t = dist;
+      _hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+      _hitData->m_normal = _scene[i].m_v1.m_normal;
+      _hitData->m_color = (float3)(0.f, 1.f, 0.f);
+      _hitData->m_emission = (float3)(0.f, 0.25f, 0.75f);
+    }
+  }
+
+  return t < inf; /* true when ray interesects the scene */
 }
 
 static float get_random(unsigned int *_seed0, unsigned int *_seed1)
@@ -83,7 +143,7 @@ static float get_random(unsigned int *_seed0, unsigned int *_seed1)
   return (res.f - 2.0f) / 2.0f;
 }
 
-float3 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *_seed1)
+float3 trace(const Ray *_camray, __global const vTriangle *_scene, unsigned int _triCount, unsigned int *_seed0, unsigned int *_seed1)
 {
   Ray ray = *_camray;
 
@@ -92,28 +152,20 @@ float3 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *_seed1)
 
   for(int bounces = 0; bounces < 4; bounces++)
   {
-    float t;   /* distance to intersection */
-    int hitsphere_id = 0; /* index of intersected sphere */
+    vHitData hitData;
 
     /* if ray misses scene, return background colour */
-    if(!intersect_scene(&ray, &t, &hitsphere_id)) {
+    if(!intersectScene(&ray, _scene, _triCount, &hitData)) {
       return make_float3(0.f, 0.f, 0.f);
     }
 
-    /* else, we've got a hit! Fetch the closest hit sphere */
-    Sphere hitsphere = spheres[hitsphere_id]; /* version with local copy of sphere */
-      /* compute the hitpoint using the ray equation */
-      float3 hitpoint = ray.m_origin + ray.m_dir * t;
+    /* compute the surface normal and flip it if necessary to face the incoming ray */
+    float3 normal_facing = dot(hitData.m_normal, ray.m_dir) < 0.0f ? hitData.m_normal : hitData.m_normal * (-1.0f);
 
-      /* compute the surface normal and flip it if necessary to face the incoming ray */
-      float3 normal = normalize(hitpoint - hitsphere.m_pos);
-      float3 normal_facing = dot(normal, ray.m_dir) < 0.0f ? normal : normal * (-1.0f);
-
-
-    if(hitsphere_id == 6) {
-      ray.m_origin = hitpoint + normal_facing*0.05f; // offset ray origin slightly to prevent self intersection
-      ray.m_dir = ray.m_dir - normal*2*dot(normal, ray.m_dir);
-    } else {
+//    if(hitsphere_id == 6) {
+//      ray.m_origin = hitpoint + normal_facing*0.05f; // offset ray origin slightly to prevent self intersection
+//      ray.m_dir = ray.m_dir - hitData.m_normal*2*dot(hitData.m_normal, ray.m_dir);
+//    } else {
       /* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
       float rand1 = 2.0f * PI * get_random(_seed0, _seed1);
       float rand2 = get_random(_seed0, _seed1);
@@ -129,26 +181,26 @@ float3 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *_seed1)
       float3 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
 
       /* add a very small offset to the hitpoint to prevent self intersection */
-      ray.m_origin = hitpoint + normal_facing * 0.05f;
+      ray.m_origin = hitData.m_hitPoint + normal_facing * 0.05f;
       ray.m_dir = newdir;
 
       /* add the colour and light contributions to the accumulated colour */
-      accum_color += mask * hitsphere.m_emission;
+      accum_color += mask * hitData.m_emission;
 
       /* the mask colour picks up surface colours at each bounce */
-      mask *= hitsphere.m_col;
+      mask *= hitData.m_color;
 
       /* perform cosine-weighted importance sampling for diffuse surfaces*/
       mask *= dot(newdir, normal_facing);
       mask *= 2;
-    }
+//    }
   }
 
   return accum_color;
 }
 
 
-__kernel void render(__write_only image2d_t _texture, __global float3 *_colors, float3 _cam, float3 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__kernel void render(__write_only image2d_t _texture, __global const vTriangle *_scene, unsigned int _triCount, __global float3 *_colors, float3 _cam, float3 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
   const unsigned int x = get_global_id(0);
   const unsigned int y = get_global_id(1);
@@ -188,7 +240,7 @@ __kernel void render(__write_only image2d_t _texture, __global float3 *_colors, 
       // create primary ray, add incoming radiance to pixelcolor
       Ray newcam = createRay(camera.m_origin + d * 40, normalize(d));
 
-      _colors[ind] += trace(&newcam, &seed0, &seed1);
+      _colors[ind] += trace(&newcam, _scene, _triCount, &seed0, &seed1);
     }
     float coef = 1.f/(samps*_frame);
 

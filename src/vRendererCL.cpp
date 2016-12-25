@@ -19,6 +19,7 @@
 
 vRendererCL::vRendererCL() :
   m_frame(1),
+  m_triCount(0),
   m_initialised(false)
 {
   std::cout << "OpenCL vRenderer ctor called\n";
@@ -151,7 +152,7 @@ void vRendererCL::render()
 
   glFinish();
   std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-  std::cout << "Rendering...\n";
+//  std::cout << "Rendering...\n";
 
   if((err = m_queue.enqueueAcquireGLObjects(&m_GLBuffers, nullptr, &event)) != CL_SUCCESS)
   {
@@ -162,15 +163,16 @@ void vRendererCL::render()
   event.wait();
 
   m_kernel.setArg(0, m_glTexture);
-  m_kernel.setArg(1, m_colorArray);
-  m_kernel.setArg(2, m_camera);
-  m_kernel.setArg(3, m_camdir);
-  m_kernel.setArg(4, m_width);
-  m_kernel.setArg(5, m_height);
-  m_kernel.setArg(6, m_frame++);
-  m_kernel.setArg(7, std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
-//  if(m_meshes.size())
-//    m_kernel.setArg(8, m_mesh);
+  if(m_meshes.size())
+    m_kernel.setArg(1, m_meshes[0]);
+  m_kernel.setArg(2, m_triCount);
+  m_kernel.setArg(3, m_colorArray);
+  m_kernel.setArg(4, m_camera);
+  m_kernel.setArg(5, m_camdir);
+  m_kernel.setArg(6, m_width);
+  m_kernel.setArg(7, m_height);
+  m_kernel.setArg(8, m_frame++);
+  m_kernel.setArg(9, std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
 
   if((err = m_queue.enqueueNDRangeKernel(m_kernel, cl::NullRange, globalRange, localRange, nullptr, &event)) != CL_SUCCESS)
   {
@@ -218,33 +220,37 @@ void vRendererCL::updateCamera(const float *_cam, const float *_dir)
 void vRendererCL::initMesh(const std::vector<float3> &_vertData)
 {
   cl_int err;
-  vTriangle *triangles = new vTriangle[_vertData.size()/2];
+  unsigned int sz = _vertData.size()/6;
+  float scale = 15.f;
+  float offset = 50.f;
+  m_triCount = sz;
+  vTriangle *triangles = new vTriangle[sz];
   for(unsigned int i = 0; i < _vertData.size(); i += 6)
   {
     vVert v1, v2, v3;
-    v1.m_vert.x = _vertData[i].x;
-    v1.m_vert.y = _vertData[i].y;
-    v1.m_vert.z = _vertData[i].z;
+    v1.m_vert.x = _vertData[i].x * scale + offset;
+    v1.m_vert.y = _vertData[i].y * scale + offset/2;
+    v1.m_vert.z = _vertData[i].z * scale + offset;
     v1.m_normal.x = _vertData[i+1].x;
     v1.m_normal.y = _vertData[i+1].y;
     v1.m_normal.z = _vertData[i+1].z;
-    v2.m_vert.x = _vertData[i+2].x;
-    v2.m_vert.y = _vertData[i+2].y;
-    v2.m_vert.z = _vertData[i+2].z;
+    v2.m_vert.x = _vertData[i+2].x * scale + offset;
+    v2.m_vert.y = _vertData[i+2].y * scale + offset/2;
+    v2.m_vert.z = _vertData[i+2].z * scale + offset;
     v2.m_normal.x = _vertData[i+3].x;
     v2.m_normal.y = _vertData[i+3].y;
     v2.m_normal.z = _vertData[i+3].z;
-    v3.m_vert.x = _vertData[i+4].x;
-    v3.m_vert.y = _vertData[i+4].y;
-    v3.m_vert.z = _vertData[i+4].z;
+    v3.m_vert.x = _vertData[i+4].x * scale + offset;
+    v3.m_vert.y = _vertData[i+4].y * scale + offset/2;
+    v3.m_vert.z = _vertData[i+4].z * scale + offset;
     v3.m_normal.x = _vertData[i+5].x;
     v3.m_normal.y = _vertData[i+5].y;
     v3.m_normal.z = _vertData[i+5].z;
-    triangles[i/2].m_v1 = v1;
-    triangles[i/2].m_v2 = v2;
-    triangles[i/2].m_v3 = v3;
+    triangles[i/6].m_v1 = v1;
+    triangles[i/6].m_v2 = v2;
+    triangles[i/6].m_v3 = v3;
   }
+  m_meshes.push_back(cl::Buffer(m_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sz*sizeof(vTriangle), &triangles[0], &err));
+
   delete [] triangles;
-//  cl_float3 *vertexData = new cl_float3[_vertData.size()];
-//  m_meshes.push_back(cl::BufferGL(m_context, CL_MEM_READ_ONLY, _vertData, &err));
 }

@@ -36,7 +36,7 @@ private:
   cl::Memory m_glTexture;
   cl::Buffer m_colorArray;
   cl::CommandQueue m_queue;
-  std::vector<cl::BufferGL> m_meshes;
+  std::vector<cl::Buffer> m_meshes;
   std::vector<cl::Memory> m_GLBuffers;
 
   cl_float3 m_camera;
@@ -45,6 +45,7 @@ private:
   unsigned int m_width;
   unsigned int m_height;
   unsigned int m_frame;
+  unsigned int m_triCount;
 
   bool m_initialised;
 };

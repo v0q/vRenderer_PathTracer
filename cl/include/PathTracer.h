@@ -25,10 +25,18 @@ typedef struct vTriangle {
   vVert m_v3;
 } vTriangle;
 
+typedef struct vHitData {
+  float3 m_hitPoint;
+  float3 m_normal;
+  float3 m_emission;
+  float3 m_color;
+} vHitData;
+
 Ray createRay(float3 _o, float3 _d);
-float intersect_sphere(const Sphere *_sphere, const Ray *_ray);
-bool intersect_scene(const Ray *_ray, float *_t, int *_id);
+float intersectTriangle(const float3 _v1, const float3 _v2, const float3 _v3, const Ray *_ray);
+float intersectSphere(const Sphere *_sphere, const Ray *_ray);
+bool intersectScene(const Ray *_ray, __global const vTriangle *_scene, unsigned int _triCount, vHitData *_hitData);
 static float get_random(unsigned int *_seed0, unsigned int *_seed1);
-float3 trace(const Ray* _camray, unsigned int *_seed0, unsigned int *_seed1);
+float3 trace(const Ray* _camray, __global const vTriangle *_scene, unsigned int _triCount, unsigned int *_seed0, unsigned int *_seed1);
 //float intersectSphere(const struct Sphere _sphere, const struct Ray _r);
 //float3 radiance(struct Ray *_r, unsigned int *s0, unsigned int *s1);
