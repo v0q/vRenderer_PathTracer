@@ -12,12 +12,18 @@ vrenderer_cl {
 
   INCLUDEPATH += $$PWD/cl/include
   OTHER_FILES += $$CL_SOURCES $$CL_HEADERS
+
+  OTHER_FILES += $$PWD/src/vRendererCuda.cpp
+  OTHER_FILES += $$PWD/include/vRendererCuda.h
 }
 vrenderer_cuda {
   message("Using Cuda");
   DEFINES += __VRENDERER_CUDA__
   SOURCES += $$PWD/src/vRendererCuda.cpp
   HEADERS += $$PWD/include/vRendererCuda.h
+
+  OTHER_FILES += $$PWD/src/vRendererCL.cpp
+  OTHER_FILES += $$PWD/include/vRendererCL.h
   # ------------
   # Cuda related
   # ------------

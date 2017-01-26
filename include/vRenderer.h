@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iostream>
 #include <GL/glew.h>
+#include <iostream>
 #include <assert.h>
 
 class vRenderer
@@ -14,5 +14,6 @@ public:
   virtual void registerTextureBuffer(GLuint &_texture) = 0;
   virtual void render() = 0;
   virtual void cleanUp() = 0;
+	virtual void updateCamera(float *_cam, float *_dir) = 0;
   virtual unsigned int getFrameCount() const = 0;
 };

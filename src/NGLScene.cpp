@@ -9,6 +9,12 @@
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
 
+#ifdef __VRENDERER_CUDA__
+	#include "vRendererCuda.h"
+#elif __VRENDERER_OPENCL__
+	#include "vRendererCL.h"
+#endif
+
 NGLScene::NGLScene() :
   m_frame(1),
   m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))

@@ -18,7 +18,7 @@
 #include "vRendererCL.h"
 
 vRendererCL::vRendererCL() :
-  m_frame(0),
+	m_frame(1),
   m_initialised(false)
 {
   std::cout << "OpenCL vRenderer ctor called\n";
@@ -119,6 +119,18 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
   m_colorArray = cl::Buffer(m_context, CL_MEM_WRITE_ONLY, m_width*m_height*sizeof(cl_float3));
 
   m_initialised = true;
+}
+
+void vRendererCL::updateCamera(float *_cam, float *_dir)
+{
+	if(_cam != nullptr)
+	{
+	}
+	if(_dir != nullptr)
+	{
+	}
+
+	m_frame = 1;
 }
 
 void vRendererCL::registerTextureBuffer(GLuint &_texture)

@@ -5,7 +5,6 @@ basic OpenGL demo modified from http://qt-project.org/doc/qt-5.0/qtgui/openglwin
 #include <iostream>
 #include "NGLScene.h"
 
-
 int main(int argc, char **argv)
 {
   QGuiApplication app(argc, argv);

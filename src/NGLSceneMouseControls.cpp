@@ -4,10 +4,9 @@
 #include <QMouseEvent>
 
 #ifdef __VRENDERER_CUDA__
-  #include <cuda_runtime.h>
-  #include "PathTracer.cuh"
+	#include "vRendererCuda.h"
 #elif __VRENDERER_OPENCL__
-
+	#include "vRendererCL.h"
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -32,15 +31,9 @@ void NGLScene::mouseMoveEvent( QMouseEvent* _event )
 
 		ngl::Vec4 cam = rot*ngl::Vec4(50, 52, 295.6);
 
-#ifdef __VRENDERER_CUDA__
-		validateCuda(cudaMemcpy(m_camera, &cam.m_openGL[0], sizeof(float3), cudaMemcpyHostToDevice));
-		cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), width()*height());
-		cudaDeviceSynchronize();
-#elif __VRENDERER_OPENCL__
+		m_renderer->updateCamera(&cam.m_openGL[0], nullptr);
 
-#endif
-
-    update();
+		update();
   }
   // right mouse translate code
   else if ( m_win.translate && _event->buttons() == Qt::RightButton )
@@ -56,13 +49,7 @@ void NGLScene::mouseMoveEvent( QMouseEvent* _event )
 		ngl::Vec4 dir = ngl::Vec4(m_modelPos.m_x/5., m_modelPos.m_y/5., 0.0f) + ngl::Vec4(0, -0.042612, -1);
 		dir = dir.normalize();
 
-#ifdef __VRENDERER_CUDA__
-		validateCuda(cudaMemcpy(m_camdir, &dir.m_openGL[0], sizeof(float3), cudaMemcpyHostToDevice));
-		cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), width()*height());
-		cudaDeviceSynchronize();
-#elif __VRENDERER_OPENCL__
-
-#endif
+		m_renderer->updateCamera(nullptr, &dir.m_openGL[0]);
 
     update();
   }
