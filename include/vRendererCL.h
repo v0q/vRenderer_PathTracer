@@ -1,6 +1,11 @@
 #pragma once
 
-#include <cl/cl.hpp>
+#ifdef __APPLE__
+	#include <cl/cl.hpp>
+#else
+	#include <cuda/CL/cl.hpp>
+#endif
+
 #include "vRenderer.h"
 
 struct float3
@@ -19,7 +24,8 @@ public:
   void init(const unsigned int &_w, const unsigned int &_h) override;
   void registerTextureBuffer(GLuint &_texture) override;
   void render() override;
-  void cleanUp() override;
+	void cleanUp() override;
+	void updateCamera(float *_cam, float *_dir) override;
   unsigned int getFrameCount() const override { return m_frame; }
 private:
   cl::Platform m_platform;
