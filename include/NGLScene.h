@@ -7,14 +7,11 @@
 
 #include <QOpenGLWindow>
 #include <QTime>
-#ifdef __VRENDERER_CUDA__
-  #include "vRendererCuda.h"
-#elif __VRENDERER_OPENCL__
-  #include "vRendererCL.h"
-#endif
 
-#include "vRenderer.h"
 #include "WindowParams.h"
+
+class vRenderer;
+
 //----------------------------------------------------------------------------------------------------------------------
 /// @file NGLScene.h
 /// @brief this class inherits from the Qt OpenGLWindow and allows us to use NGL to draw OpenGL
@@ -118,9 +115,5 @@ private:
 		//----------------------------------------------------------------------------------------------------------------------
 		QTime m_timer;
 };
-
-
-
-#elif __VRENDERER_OPENCL__
 
 #endif

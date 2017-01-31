@@ -10,6 +10,11 @@
 #include <ngl/NGLInit.h>
 
 #include "MeshLoader.h"
+#ifdef __VRENDERER_CUDA__
+	#include "vRendererCuda.h"
+#elif __VRENDERER_OPENCL__
+	#include "vRendererCL.h"
+#endif
 
 NGLScene::NGLScene() :
   m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
@@ -189,12 +194,12 @@ void NGLScene::paintGL()
 		m_renderTexture = false;
 	}
 
-	++m_frames;
 	m_text->setColour(1, 1, 1);
 	QString text = QString("%1 fps").arg(m_fps);
 	m_text->renderText(10, 20, text);
-  text = QString("%1SPP").arg(m_renderer->getFrameCount()*8);
+	text = QString("%1SPP").arg(m_renderer->getFrameCount()*8);
 	m_text->renderText(10, 40, text);
+	++m_frames;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

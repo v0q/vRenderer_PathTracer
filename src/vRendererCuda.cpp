@@ -1,8 +1,8 @@
-#include <chrono>
-#include <cuda_gl_interop.h>
-
 #include "vRendererCuda.h"
 #include "PathTracer.cuh"
+
+#include <chrono>
+#include <cuda_gl_interop.h>
 
 vRendererCuda::vRendererCuda() :
   m_frame(1),
@@ -17,7 +17,7 @@ vRendererCuda::~vRendererCuda()
   cleanUp();
 }
 
-void vRendererCuda::init(unsigned int &_w, unsigned int &_h)
+void vRendererCuda::init(const unsigned int &_w, const unsigned int &_h)
 {
   assert(_w != 0 && _h != 0);
   m_width = _w;
@@ -33,7 +33,8 @@ void vRendererCuda::init(unsigned int &_w, unsigned int &_h)
 
   validateCuda(cudaMemcpy(m_camera, &cam, sizeof(float3), cudaMemcpyHostToDevice));
   validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float3), cudaMemcpyHostToDevice));
-  cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), sz);
+	cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), sz);
+	cudaDeviceSynchronize();
 
   m_initialised = true;
 }
@@ -42,13 +43,28 @@ void vRendererCuda::registerTextureBuffer(GLuint &_texture)
 {
   assert(m_initialised);
 
-  validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLTextureBuffer, _texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
+	validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLTextureBuffer, _texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
+}
+
+void vRendererCuda::updateCamera(float *_cam, float *_dir)
+{
+	if(_cam != nullptr)
+	{
+		validateCuda(cudaMemcpy(m_camera, _cam, sizeof(float3), cudaMemcpyHostToDevice));
+	}
+	if(_dir != nullptr)
+	{
+		validateCuda(cudaMemcpy(m_camdir, _dir, sizeof(float3), cudaMemcpyHostToDevice));
+	}
+
+	m_frame = 1;
+	cu_fillFloat3(m_colorArray, make_float3(0.0f, 0.0f, 0.0f), m_width*m_height);
+	cudaDeviceSynchronize();
 }
 
 void vRendererCuda::render()
 {
-  std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-  std::cout << "Rendering...\n";
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
   validateCuda(cudaGraphicsMapResources(1, &m_cudaGLTextureBuffer));
   validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaImgArray, m_cudaGLTextureBuffer, 0, 0));
@@ -58,11 +74,11 @@ void vRendererCuda::render()
   wdsc.res.array.array = m_cudaImgArray;
   cudaSurfaceObject_t writeSurface;
   validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc));
-  cu_ModifyTexture(writeSurface,
-                   m_colorArray,
-                   m_camera,
-                   m_camdir,
-                   width(), height(), m_frame++, std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
+	cu_ModifyTexture(writeSurface,
+									 m_colorArray,
+									 m_camera,
+									 m_camdir,
+									 m_width, m_height, m_frame++, std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
   validateCuda(cudaDestroySurfaceObject(writeSurface));
   validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer));
   validateCuda(cudaStreamSynchronize(0));
@@ -93,7 +109,12 @@ void vRendererCuda::updateCamera(const float *_cam, const float *_dir)
   m_frame = 1;
 }
 
-void vRendererCuda::validateCuda(int _err)
+void vRendererCuda::initMesh(const std::vector<float3> &_vertData)
+{
+
+}
+
+void vRendererCuda::validateCuda(cudaError_t _err)
 {
   if(_err != cudaSuccess)
   {

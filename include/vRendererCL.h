@@ -1,6 +1,11 @@
 #pragma once
 
-#include <cl/cl.hpp>
+#ifdef __APPLE__
+	#include <cl/cl.hpp>
+#else
+	#include <cuda/CL/cl.hpp>
+#endif
+
 #include "vRenderer.h"
 
 typedef struct vVert {

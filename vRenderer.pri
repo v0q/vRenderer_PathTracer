@@ -2,7 +2,7 @@ vrenderer_cl {
   message("Using OpenCL");
   DEFINES += __VRENDERER_OPENCL__
   macx: LIBS += -framework OpenCL
-  linux: LIBS += -lOpenCL
+  linux: LIBS += -L/usr/lib64/nvidia -lOpenCL
   SOURCES += $$PWD/src/vRendererCL.cpp
   HEADERS += $$PWD/include/vRendererCL.h
 
@@ -12,19 +12,24 @@ vrenderer_cl {
 
   INCLUDEPATH += $$PWD/cl/include
   OTHER_FILES += $$CL_SOURCES $$CL_HEADERS
+
+  OTHER_FILES += $$PWD/src/vRendererCuda.cpp
+  OTHER_FILES += $$PWD/include/vRendererCuda.h
 }
 vrenderer_cuda {
   message("Using Cuda");
   DEFINES += __VRENDERER_CUDA__
   SOURCES += $$PWD/src/vRendererCuda.cpp
   HEADERS += $$PWD/include/vRendererCuda.h
+
+  OTHER_FILES += $$PWD/src/vRendererCL.cpp
+  OTHER_FILES += $$PWD/include/vRendererCL.h
   # ------------
   # Cuda related
   # ------------
 
   # Project specific
   CUDA_SOURCES += $$PWD/cuda/src/PathTracer.cu
-                  #$$PWD/cuda/src/TutorialPathTracer.cu
   CUDA_HEADERS += $$PWD/cuda/include/PathTracer.cuh \
                   $$PWD/cuda/include/MathHelpers.cuh
   CUDA_OBJECTS_DIR = $$PWD/cuda/obj

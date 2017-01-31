@@ -9,10 +9,15 @@
 #include <vector>
 #include <chrono>
 
+
 #ifdef __APPLE__
   #include <GL/glew.h>
   #include <OpenCL/cl_gl_ext.h>
   #include <OpenGL.h>
+#else
+	#include <cuda/CL/cl_gl_ext.h>
+	#include <GL/glew.h>
+	#include <GL/glx.h>
 #endif
 
 #include "vRendererCL.h"
@@ -90,7 +95,7 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 
   m_context = cl::Context(m_device, properties);
 
-  std::ifstream clFile("cl/src/PathTracer.cl");
+	std::ifstream clFile("cl/src/PathTracer.cl");
   if(!clFile)
   {
     std::cerr << "Could not find 'cl/src/PathTracer.cl'\n";
