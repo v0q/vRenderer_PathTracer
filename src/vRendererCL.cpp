@@ -100,7 +100,7 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
                              std::istreambuf_iterator<char>());
 
   m_program = cl::Program(m_context, pathTracerSrc.c_str());
-  cl_int result = m_program.build({ m_device });
+  cl_int result = m_program.build({ m_device }, "-cl-fast-relaxed-math");
   if(result)
   {
     std::cerr << "Failed compile the program: " << result << "\n";
@@ -151,6 +151,7 @@ void vRendererCL::render()
   cl_int err;
 
   glFinish();
+  static std::chrono::high_resolution_clock::time_point t0;
   std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 //  std::cout << "Rendering...\n";
 
@@ -189,6 +190,8 @@ void vRendererCL::render()
     exit(EXIT_FAILURE);
   }
   event.wait();
+  std::cout << (t1 - t0).count() << "\n";
+  t0 = t1;
 }
 
 void vRendererCL::cleanUp()
