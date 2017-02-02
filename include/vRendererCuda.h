@@ -2,6 +2,7 @@
 
 #include <cuda_runtime.h>
 #include "vRenderer.h"
+#include "PathTracer.cuh"
 
 class vRendererCuda : public vRenderer
 {
@@ -14,21 +15,23 @@ public:
   void render() override;
   void cleanUp() override;
   void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) override;
-  void initMesh(const std::vector<float3> &_vertData) override;
+	void initMesh(const std::vector<vFloat3> &_vertData) override;
   unsigned int getFrameCount() const override { return m_frame; }
 private:
-  void validateCuda(cudaError_t _err);
+	void validateCuda(cudaError_t _err, const std::string &_msg = "");
 
   cudaGraphicsResource_t m_cudaGLTextureBuffer;
   cudaArray *m_cudaImgArray;
+	std::vector<vTriangle *> m_meshes;
 
-  float3 *m_camera;
-  float3 *m_camdir;
-  float3 *m_colorArray;
+	float4 *m_camera;
+	float4 *m_camdir;
+	float4 *m_colorArray;
 
   unsigned int m_width;
   unsigned int m_height;
   unsigned int m_frame;
+	unsigned int m_triCount;
 
   bool m_initialised;
 };

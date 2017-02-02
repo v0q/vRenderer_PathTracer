@@ -124,10 +124,12 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
   m_camera.x = 50.f;
   m_camera.y = 52.f;
   m_camera.z = 295.6f;
+	m_camera.w = 0.f;
 
   m_camdir.x = 0.f;
-  m_camdir.y = -0.042612f;
-  m_camdir.z = -1.f;
+	m_camdir.y = -0.0425734f;
+	m_camdir.z = -0.999093f;
+	m_camdir.w = 0.f;
 
   m_initialised = true;
 }
@@ -210,51 +212,62 @@ void vRendererCL::updateCamera(const float *_cam, const float *_dir)
     m_camera.x = _cam[0];
     m_camera.y = _cam[1];
     m_camera.z = _cam[2];
+		m_camera.w = 0.f;
   }
   if(_dir != nullptr)
   {
     m_camdir.x = _dir[0];
     m_camdir.y = _dir[1];
     m_camdir.z = _dir[2];
+		m_camdir.w = 0.f;
   }
 
   m_frame = 1;
 }
 
-void vRendererCL::initMesh(const std::vector<float3> &_vertData)
+void vRendererCL::initMesh(const std::vector<vFloat3> &_vertData)
 {
-  cl_int err;
-  unsigned int sz = _vertData.size()/6;
-  float scale = 15.f;
-  float offset = 50.f;
-  m_triCount = sz;
-  vTriangle *triangles = new vTriangle[sz];
-  for(unsigned int i = 0; i < _vertData.size(); i += 6)
-  {
-    vVert v1, v2, v3;
-    v1.m_vert.x = _vertData[i].x * scale + offset;
-    v1.m_vert.y = _vertData[i].y * scale + offset/2;
-    v1.m_vert.z = _vertData[i].z * scale + offset;
-    v1.m_normal.x = _vertData[i+1].x;
-    v1.m_normal.y = _vertData[i+1].y;
-    v1.m_normal.z = _vertData[i+1].z;
-    v2.m_vert.x = _vertData[i+2].x * scale + offset;
-    v2.m_vert.y = _vertData[i+2].y * scale + offset/2;
-    v2.m_vert.z = _vertData[i+2].z * scale + offset;
-    v2.m_normal.x = _vertData[i+3].x;
-    v2.m_normal.y = _vertData[i+3].y;
-    v2.m_normal.z = _vertData[i+3].z;
-    v3.m_vert.x = _vertData[i+4].x * scale + offset;
-    v3.m_vert.y = _vertData[i+4].y * scale + offset/2;
-    v3.m_vert.z = _vertData[i+4].z * scale + offset;
-    v3.m_normal.x = _vertData[i+5].x;
-    v3.m_normal.y = _vertData[i+5].y;
-    v3.m_normal.z = _vertData[i+5].z;
-    triangles[i/6].m_v1 = v1;
-    triangles[i/6].m_v2 = v2;
-    triangles[i/6].m_v3 = v3;
-  }
-  m_meshes.push_back(cl::Buffer(m_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sz*sizeof(vTriangle), &triangles[0], &err));
+	cl_int err;
+	unsigned int sz = _vertData.size()/6;
 
-  delete [] triangles;
+	float scale = 15.f;
+	float offset = 50.f;
+
+	m_triCount = sz;
+	vTriangle *triangles = new vTriangle[sz];
+
+	for(unsigned int i = 0; i < _vertData.size(); i += 6)
+	{
+		vVert v1, v2, v3;
+		v1.m_vert.x = _vertData[i].x * scale + offset;
+		v1.m_vert.y = _vertData[i].y * scale + offset/2;
+		v1.m_vert.z = _vertData[i].z * scale + offset;
+		v1.m_vert.w = 0.f;
+		v1.m_normal.x = _vertData[i+1].x;
+		v1.m_normal.y = _vertData[i+1].y;
+		v1.m_normal.z = _vertData[i+1].z;
+		v1.m_normal.w = 0.f;
+		v2.m_vert.x = _vertData[i+2].x * scale + offset;
+		v2.m_vert.y = _vertData[i+2].y * scale + offset/2;
+		v2.m_vert.z = _vertData[i+2].z * scale + offset;
+		v2.m_vert.w = 0.f;
+		v2.m_normal.x = _vertData[i+3].x;
+		v2.m_normal.y = _vertData[i+3].y;
+		v2.m_normal.z = _vertData[i+3].z;
+		v2.m_normal.w = 0.f;
+		v3.m_vert.x = _vertData[i+4].x * scale + offset;
+		v3.m_vert.y = _vertData[i+4].y * scale + offset/2;
+		v3.m_vert.z = _vertData[i+4].z * scale + offset;
+		v3.m_vert.w = 0.f;
+		v3.m_normal.x = _vertData[i+5].x;
+		v3.m_normal.y = _vertData[i+5].y;
+		v3.m_normal.z = _vertData[i+5].z;
+		v3.m_normal.w = 0.f;
+		triangles[i/6].m_v1 = v1;
+		triangles[i/6].m_v2 = v2;
+		triangles[i/6].m_v3 = v3;
+	}
+	m_meshes.push_back(cl::Buffer(m_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sz*sizeof(vTriangle), &triangles[0], &err));
+
+	delete [] triangles;
 }

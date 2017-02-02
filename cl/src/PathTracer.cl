@@ -3,19 +3,19 @@
 __constant float invGamma = 1.f/2.2f;
 __constant float PI = 3.14159265359f;
 __constant float EPSILON = 0.0000003f;
-__constant Sphere spheres[] = {			//Scene: radius, position, emission, color, material
-	{ 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f },			{ 0.075f, 0.f, 0.f }, { 0.75f, 0.0f, 0.0f } }, //Left
-	{ 1e5f, { -1e5f + 99.0f, 40.8f, 81.6f },		{ 0.f, 0.075f, 0.f }, { 0.0f, 0.75f, 0.0f } }, //Right
-	{ 1e5f, { 50.0f, 40.8f, 1e5f },							{ 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f } }, //Back
-	{ 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f },		{ 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f } }, //Frnt
-	{ 1e5f, { 50.0f, 1e5f, 81.6f },							{ 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f } }, //Botm
-	{ 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f },		{ 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f } }, //Top
-	{ 16.5f, { 27.0f, 16.5f, 47.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }, // small sphere 1
-	{ 16.5f, { 73.0f, 16.5f, 78.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f } }, // small sphere 2
-	{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f },	{ 2.0f, 1.8f, 1.6f }, { 0.0f, 0.0f, 0.0f } }  // Light
+__constant Sphere spheres[] = {
+		{ 1e5f,		{ 1e5f + 1.0f, 40.8f, 81.6f, 0.f },			{ 0.0f, 0.0f, 0.0f, 0.f },	{ 0.75f, 0.0f, 0.0f, 0.f } }, //Left
+		{ 1e5f,		{ -1e5f + 99.0f, 40.8f, 81.6f, 0.f },		{ 0.0f, 0.0f, 0.0f, 0.f },	{ 0.0f, 0.75f, 0.0f, 0.f } }, //Right
+		{ 1e5f,		{ 50.0f, 40.8f, 1e5f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Back
+		{ 1e5f,		{ 50.0f, 40.8f, -1e5f + 600.0f, 0.f },	{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.00f, 1.00f, 1.00f, 0.f } }, //Frnt
+		{ 1e5f,		{ 50.0f, 1e5f, 81.6f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Botm
+		{ 1e5f,		{ 50.0f, -1e5f + 81.6f, 81.6f, 0.f },		{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Top
+		{ 16.5f,	{ 27.0f, 16.5f, 47.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 1
+		{ 16.5f,	{ 73.0f, 16.5f, 78.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 2
+		{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f, 0.f },		{ 2.0f, 1.8f, 1.6f, 0.f },	{ 0.0f, 0.0f, 0.0f, 0.f } }  // Light
 };
 
-Ray createRay(float3 _o, float3 _d)
+Ray createRay(float4 _o, float4 _d)
 {
 	Ray ray;
 	ray.m_origin = _o;
@@ -23,10 +23,10 @@ Ray createRay(float3 _o, float3 _d)
 	return ray;
 }
 
-float intersectTriangle(const float3 _v1, const float3 _v2, const float3 _v3, const Ray *_ray)
+float intersectTriangle(const float4 _v1, const float4 _v2, const float4 _v3, const Ray *_ray)
 {
-	float3 e1, e2;  //Edge1, Edge2
-	float3 p, q, t;
+	float4 e1, e2;  //Edge1, Edge2
+	float4 p, q, t;
 	float det, inv_det, u, v;
 	float dist;
 
@@ -72,7 +72,7 @@ float intersectTriangle(const float3 _v1, const float3 _v2, const float3 _v3, co
 
 float intersectSphere(const Sphere *_sphere, const Ray *_ray) /* version using local copy of sphere */
 {
-	float3 rayToCenter = _sphere->m_pos - _ray->m_origin;
+	float4 rayToCenter = _sphere->m_pos - _ray->m_origin;
 	float b = dot(rayToCenter, _ray->m_dir);
 	float c = dot(rayToCenter, rayToCenter) - _sphere->m_r*_sphere->m_r;
 	float disc = b * b - c;
@@ -110,17 +110,17 @@ bool intersectScene(const Ray *_ray, __global const vTriangle *_scene, unsigned 
 			_hitData->m_emission = sphere.m_emission;
 		}
 	}
-//	for(unsigned int i = 0; i < _triCount; ++i)
-//	{
-//		float dist = intersectTriangle(_scene[i].m_v1.m_vert, _scene[i].m_v2.m_vert, _scene[i].m_v3.m_vert, _ray);
-//		if(dist != 0.0f && dist < t) {
-//			t = dist;
-//			_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-//			_hitData->m_normal = _scene[i].m_v1.m_normal;
-//			_hitData->m_color = (float3)(0.f, 1.f, 0.f);
-//			_hitData->m_emission = (float3)(0.f, 0.25f, 0.75f);
-//		}
-//	}
+	for(unsigned int i = 0; i < _triCount; ++i)
+	{
+		float dist = intersectTriangle(_scene[i].m_v1.m_vert, _scene[i].m_v2.m_vert, _scene[i].m_v3.m_vert, _ray);
+		if(dist != 0.0f && dist < t) {
+			t = dist;
+			_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+			_hitData->m_normal = _scene[i].m_v1.m_normal;
+			_hitData->m_color = (float4)(1.f, 1.f, 1.f, 0.f);
+			_hitData->m_emission = (float4)(0.f, 0.0f, 0.0f, 0.f);
+		}
+	}
 
 	return t < inf; /* true when ray interesects the scene */
 }
@@ -143,12 +143,12 @@ static float get_random(unsigned int *_seed0, unsigned int *_seed1)
 	return (res.f - 2.0f) / 2.0f;
 }
 
-float3 trace(const Ray *_camray, __global const vTriangle *_scene, unsigned int _triCount, unsigned int *_seed0, unsigned int *_seed1)
+float4 trace(const Ray *_camray, __global const vTriangle *_scene, unsigned int _triCount, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
-	float3 accum_color = (float3)(0.0f, 0.0f, 0.0f);
-	float3 mask = (float3)(1.0f, 1.0f, 1.0f);
+	float4 accum_color = (float4)(0.0f, 0.0f, 0.0f, 0.f);
+	float4 mask = (float4)(1.0f, 1.0f, 1.0f, 0.f);
 
 	for(int bounces = 0; bounces < 4; bounces++)
 	{
@@ -156,11 +156,11 @@ float3 trace(const Ray *_camray, __global const vTriangle *_scene, unsigned int 
 
 		/* if ray misses scene, return background colour */
 		if(!intersectScene(&ray, _scene, _triCount, &hitData)) {
-			return (float3)(0.f, 0.f, 0.f);
+			return (float4)(0.f, 0.f, 0.f, 0.f);
 		}
 
 		/* compute the surface normal and flip it if necessary to face the incoming ray */
-		float3 normal_facing = dot(hitData.m_normal, ray.m_dir) < 0.0f ? hitData.m_normal : hitData.m_normal * (-1.0f);
+		float4 normal_facing = dot(hitData.m_normal, ray.m_dir) < 0.0f ? hitData.m_normal : hitData.m_normal * (-1.0f);
 
 //    if(hitsphere_id == 6) {
 //      ray.m_origin = hitpoint + normal_facing*0.05f; // offset ray origin slightly to prevent self intersection
@@ -172,13 +172,13 @@ float3 trace(const Ray *_camray, __global const vTriangle *_scene, unsigned int 
 			float rand2s = sqrt(rand2);
 
 			/* create a local orthogonal coordinate frame centered at the hitpoint */
-			float3 w = normal_facing;
-			float3 axis = fabs(w.x) > 0.1f ? (float3)(0.0f, 1.0f, 0.0f) : (float3)(1.0f, 0.0f, 0.0f);
-			float3 u = normalize(cross(axis, w));
-			float3 v = cross(w, u);
+			float4 w = normal_facing;
+			float4 axis = fabs(w.x) > 0.1f ? (float4)(0.0f, 1.0f, 0.0f, 0.f) : (float4)(1.0f, 0.0f, 0.0f, 0.f);
+			float4 u = normalize(cross(axis, w));
+			float4 v = cross(w, u);
 
 			/* use the coordinte frame and random numbers to compute the next ray direction */
-			float3 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
+			float4 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
 
 			/* add a very small offset to the hitpoint to prevent self intersection */
 			ray.m_origin = hitData.m_hitPoint + normal_facing * 0.05f;
@@ -200,7 +200,7 @@ float3 trace(const Ray *_camray, __global const vTriangle *_scene, unsigned int 
 }
 
 
-__kernel void render(__write_only image2d_t _texture, __global const vTriangle *_scene, unsigned int _triCount, __global float3 *_colors, float3 _cam, float3 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__kernel void render(__write_only image2d_t _texture, __global const vTriangle *_scene, unsigned int _triCount, __global float4 *_colors, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	const unsigned int x = get_global_id(0);
 	const unsigned int y = get_global_id(1);
@@ -211,39 +211,33 @@ __kernel void render(__write_only image2d_t _texture, __global const vTriangle *
 		unsigned int seed0 = x * _frame;
 		unsigned int seed1 = y * _time;
 		if(_frame == 1) {
-			_colors[ind] = (float3)(0.f, 0.f, 0.f);
+			_colors[ind] = (float4)(0.f, 0.f, 0.f, 0.f);
 		}
 
 		Ray camera = createRay(_cam, _dir);
 
-		float3 cx = (float3)(_w * .5135 / _h, 0.0f, 0.0f); // ray direction offset in x direction
-		float3 cy = normalize(cross(cx, camera.m_dir)); // ray direction offset in y direction (.5135 is field of view angle)
+		float4 cx = (float4)(_w * .5135 / _h, 0.0f, 0.0f, 0.f); // ray direction offset in x direction
+		float4 cy = normalize(cross(cx, camera.m_dir)); // ray direction offset in y direction (.5135 is field of view angle)
 		cy.x *= .5135f;
 		cy.y *= .5135f;
 		cy.z *= .5135f;
-
-//    write_imagef(_texture, (int2)(x, y), (float4)(_tris[ind%1024].x,
-//                                                  _tris[ind%1024].y,
-//                                                  _tris[ind%1024].z,
-//                                                  1.f));
 
 		unsigned int samps = 8;
 		for(unsigned int s = 0; s < samps; s++)
 		{
 			// compute primary ray direction
-			float3 d = camera.m_dir + (float3)(cx.x*((.25 + x) / _w - .5),
-																						cx.y*((.25 + x) / _w - .5),
-																						cx.z*((.25 + x) / _w - .5))
-															+ (float3)(cy.x*((.25 + y) / _h - .5),
-																						cy.y*((.25 + y) / _h - .5),
-																						cy.z*((.25 + y) / _h - .5));
+			float4 d = camera.m_dir + (float4)(cx.x*((.25 + x) / _w - .5),
+																				 cx.y*((.25 + x) / _w - .5),
+																				 cx.z*((.25 + x) / _w - .5), 0.f)
+															+ (float4)(cy.x*((.25 + y) / _h - .5),
+																				 cy.y*((.25 + y) / _h - .5),
+																				 cy.z*((.25 + y) / _h - .5), 0.f);
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam = createRay(camera.m_origin + d * 40, normalize(d));
 
 			_colors[ind] += trace(&newcam, _scene, _triCount, &seed0, &seed1);
 		}
 		float coef = 1.f/(samps*_frame);
-//		float coef = 1.f;
 
 		write_imagef(_texture, (int2)(x, y), (float4)(pow(clamp(_colors[ind].x * coef, 0.f, 1.f), invGamma),
 																									pow(clamp(_colors[ind].y * coef, 0.f, 1.f), invGamma),

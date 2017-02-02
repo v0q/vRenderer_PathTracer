@@ -62,9 +62,8 @@ else{ # note brace must be here
 	include($(NGLDIR)/UseNGL.pri)
 }
 
-QMAKE_CXXFLAGS += -v
+QMAKE_CXXFLAGS += -v -j4
 macx: CONFIG += vrenderer_cl
-#linux: CONFIG += vrenderer_cuda
-CONFIG += vrenderer_cl
+linux: CONFIG += vrenderer_cuda
 
 include($$PWD/vRenderer.pri)
