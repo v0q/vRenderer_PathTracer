@@ -42,7 +42,7 @@ private:
   cl::Buffer m_colorArray;
   cl::CommandQueue m_queue;
   std::vector<cl::Buffer> m_meshes;
-  std::vector<cl::Memory> m_GLBuffers;
+	std::vector<cl::Memory> m_GLBuffers;
 
   cl_float3 m_camera;
   cl_float3 m_camdir;

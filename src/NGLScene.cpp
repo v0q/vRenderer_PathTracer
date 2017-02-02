@@ -57,10 +57,10 @@ void NGLScene::initializeGL()
   m_renderer->init((unsigned int)width(), (unsigned int)height());
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);			   // Grey Background
-  // enable depth testing for drawing
-  glEnable(GL_DEPTH_TEST);
-  // enable multisampling for smoother drawing
-  glEnable(GL_MULTISAMPLE);
+
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_MULTISAMPLE);
 
 	ngl::ShaderLib *shader = ngl::ShaderLib::instance();
 

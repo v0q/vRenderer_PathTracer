@@ -38,5 +38,3 @@ float intersectSphere(const Sphere *_sphere, const Ray *_ray);
 bool intersectScene(const Ray *_ray, __global const vTriangle *_scene, unsigned int _triCount, vHitData *_hitData);
 static float get_random(unsigned int *_seed0, unsigned int *_seed1);
 float3 trace(const Ray* _camray, __global const vTriangle *_scene, unsigned int _triCount, unsigned int *_seed0, unsigned int *_seed1);
-//float intersectSphere(const struct Sphere _sphere, const struct Ray _r);
-//float3 radiance(struct Ray *_r, unsigned int *s0, unsigned int *s1);

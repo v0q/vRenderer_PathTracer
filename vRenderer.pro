@@ -64,6 +64,7 @@ else{ # note brace must be here
 
 QMAKE_CXXFLAGS += -v
 macx: CONFIG += vrenderer_cl
-linux: CONFIG += vrenderer_cuda
+#linux: CONFIG += vrenderer_cuda
+CONFIG += vrenderer_cl
 
 include($$PWD/vRenderer.pri)
