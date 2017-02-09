@@ -33,7 +33,8 @@ DESTDIR=./
 # add the glsl shader files
 OTHER_FILES += README.md \
                shaders/screenQuad.vert \
-               shaders/screenQuad.frag
+               shaders/screenQuad.frag \
+               models/*.obj
 # were are going to default to a console app
 CONFIG += console
 # note each command you add needs a ; as it will be run as a single line
@@ -62,7 +63,7 @@ else{ # note brace must be here
 	include($(NGLDIR)/UseNGL.pri)
 }
 
-QMAKE_CXXFLAGS += -v -j4
+QMAKE_CXXFLAGS += -v -O2
 macx: CONFIG += vrenderer_cl
 linux: CONFIG += vrenderer_cuda
 

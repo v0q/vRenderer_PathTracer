@@ -3,7 +3,6 @@
 
 #include <GL/glew.h>
 #include <assimp/Importer.hpp>
-#include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 #include "MeshLoader.h"
@@ -28,6 +27,9 @@ std::vector<vFloat3> vMeshLoader::loadMesh(const std::string &_mesh)
   }
 
 	std::vector<vFloat3> vertData;
+	vBB bb;
+	float scale = 15.f;
+	float offset = 50.f;
 
   for(unsigned int i = 0; i < scene->mNumMeshes; ++i)
   {
@@ -38,7 +40,7 @@ std::vector<vFloat3> vMeshLoader::loadMesh(const std::string &_mesh)
       const aiFace& face = mesh->mFaces[j];
       for(unsigned int k = 0; k < 3; ++k)
       {
-        aiVector3t<float> vertex = mesh->mVertices[face.mIndices[k]];
+				aiVector3t<float> vertex = mesh->mVertices[face.mIndices[k]] * scale;
         aiVector3t<float> normal;
         if(mesh->mNormals != NULL)
           normal = mesh->mNormals[face.mIndices[k]];
@@ -49,11 +51,24 @@ std::vector<vFloat3> vMeshLoader::loadMesh(const std::string &_mesh)
                                      mesh->mVertices[face.mIndices[0]].x*mesh->mVertices[face.mIndices[1]].y - mesh->mVertices[face.mIndices[0]].y*mesh->mVertices[face.mIndices[1]].x);
           normal.Normalize();
         }
+				vertex.x += offset;
+				vertex.y += offset / 2;
+				vertex.z += offset;
+
 				vertData.push_back(vFloat3(vertex.x, vertex.y, vertex.z));
 				vertData.push_back(vFloat3(normal.x, normal.y, normal.z));
+
+				bb.extendBB(vertex);
       }
 		}
   }
+
+	std::cout << "\nBounding box dimensions for " << _mesh << ":\n";
+	bb.print();
+	std::cout << "\n";
+
+	vertData.push_back(bb.getMinBounds());
+	vertData.push_back(bb.getMaxBounds());
 
   return vertData;
 }

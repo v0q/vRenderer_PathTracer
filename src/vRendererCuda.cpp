@@ -76,7 +76,6 @@ void vRendererCuda::render()
   validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc));
 	cu_runRenderKernel(writeSurface,
 										 m_meshes[0],
-										 m_triCount,
 										 m_colorArray,
 										 m_camera,
 										 m_camdir,
@@ -101,37 +100,35 @@ void vRendererCuda::cleanUp()
 
 void vRendererCuda::initMesh(const std::vector<vFloat3> &_vertData)
 {
-//	cl_int err;
-	unsigned int sz = _vertData.size()/6;
+	unsigned int sz = _vertData.size();
 
-	float scale = 15.f;
-	float offset = 50.f;
+	m_triCount = (sz - 2)/6;
+	vMesh mesh;
+	vTriangle *triangles = new vTriangle[m_triCount];
 
-	m_triCount = sz;
-	vTriangle *triangles = new vTriangle[sz];
-
-	for(unsigned int i = 0; i < _vertData.size(); i += 6)
+	// Get the vertices of the mesh and their normals
+	for(unsigned int i = 0; i < sz - 2; i += 6)
 	{
 		vVert v1, v2, v3;
-		v1.m_vert.x = _vertData[i].x * scale + offset;
-		v1.m_vert.y = _vertData[i].y * scale + offset/2;
-		v1.m_vert.z = _vertData[i].z * scale + offset;
+		v1.m_vert.x = _vertData[i].x;
+		v1.m_vert.y = _vertData[i].y;
+		v1.m_vert.z = _vertData[i].z;
 		v1.m_vert.w = 0.f;
 		v1.m_normal.x = _vertData[i+1].x;
 		v1.m_normal.y = _vertData[i+1].y;
 		v1.m_normal.z = _vertData[i+1].z;
 		v1.m_normal.w = 0.f;
-		v2.m_vert.x = _vertData[i+2].x * scale + offset;
-		v2.m_vert.y = _vertData[i+2].y * scale + offset/2;
-		v2.m_vert.z = _vertData[i+2].z * scale + offset;
+		v2.m_vert.x = _vertData[i+2].x;
+		v2.m_vert.y = _vertData[i+2].y;
+		v2.m_vert.z = _vertData[i+2].z;
 		v2.m_vert.w = 0.f;
 		v2.m_normal.x = _vertData[i+3].x;
 		v2.m_normal.y = _vertData[i+3].y;
 		v2.m_normal.z = _vertData[i+3].z;
 		v2.m_normal.w = 0.f;
-		v3.m_vert.x = _vertData[i+4].x * scale + offset;
-		v3.m_vert.y = _vertData[i+4].y * scale + offset/2;
-		v3.m_vert.z = _vertData[i+4].z * scale + offset;
+		v3.m_vert.x = _vertData[i+4].x;
+		v3.m_vert.y = _vertData[i+4].y;
+		v3.m_vert.z = _vertData[i+4].z;
 		v3.m_vert.w = 0.f;
 		v3.m_normal.x = _vertData[i+5].x;
 		v3.m_normal.y = _vertData[i+5].y;
@@ -141,10 +138,22 @@ void vRendererCuda::initMesh(const std::vector<vFloat3> &_vertData)
 		triangles[i/6].m_v2 = v2;
 		triangles[i/6].m_v3 = v3;
 	}
-	vTriangle *buffer;
-	validateCuda(cudaMalloc(&buffer,sz*sizeof(vTriangle)), "Malloc mesh");
-	validateCuda(cudaMemcpy(buffer, &triangles[0], sz*sizeof(vTriangle), cudaMemcpyHostToDevice), "Mesh init");
-	m_meshes.push_back(buffer);
+	// Set the triangle count and bounding box of the mesh
+	mesh.m_bb.m_x = make_float2(_vertData[sz - 2].x, _vertData[sz - 1].x);
+	mesh.m_bb.m_y = make_float2(_vertData[sz - 2].y, _vertData[sz - 1].y);
+	mesh.m_bb.m_z = make_float2(_vertData[sz - 2].z, _vertData[sz - 1].z);
+	mesh.m_triCount = m_triCount;
+
+	vMesh *meshBuffer;
+	vTriangle *triangleBuffer;
+
+	validateCuda(cudaMalloc(&meshBuffer, sizeof(vMesh)), "Malloc mesh buffer");
+	validateCuda(cudaMalloc(&triangleBuffer, m_triCount*sizeof(vTriangle)), "Malloc triangle buffer");
+	validateCuda(cudaMemcpy(meshBuffer, &mesh, sizeof(vMesh), cudaMemcpyHostToDevice), "Copy mesh to host");
+	validateCuda(cudaMemcpy(triangleBuffer, &triangles[0], m_triCount*sizeof(vTriangle), cudaMemcpyHostToDevice), "Copy triangles to host");
+	validateCuda(cudaMemcpy(&(meshBuffer->m_mesh), &triangleBuffer, sizeof(vTriangle *), cudaMemcpyHostToDevice), "Copy triangles host to mesh host");
+
+	m_meshes.push_back(meshBuffer);
 
 	delete [] triangles;
 }

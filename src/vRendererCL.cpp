@@ -228,7 +228,7 @@ void vRendererCL::updateCamera(const float *_cam, const float *_dir)
 void vRendererCL::initMesh(const std::vector<vFloat3> &_vertData)
 {
 	cl_int err;
-	unsigned int sz = _vertData.size()/6;
+	unsigned int sz = (_vertData.size() - 2)/6;
 
 	float scale = 15.f;
 	float offset = 50.f;

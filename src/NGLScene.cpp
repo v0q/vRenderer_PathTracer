@@ -128,10 +128,11 @@ void NGLScene::initializeGL()
   // Unbind the texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-  m_text.reset(new ngl::Text(QFont("Arial", 14)));
+	m_text.reset(new ngl::Text(QFont("Arial", 12)));
 	m_text->setScreenSize(width(), height());
 
 	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/lowpolytree.obj"));
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)
@@ -150,13 +151,18 @@ void NGLScene::timerEvent(QTimerEvent *_event)
 
 void NGLScene::paintGL()
 {
+
 	static float t = 0;
 	t += 0.1f;
   // clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0,0,m_win.width,m_win.height);
 
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
   m_renderer->render();
+
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 
 	ngl::ShaderLib *shader = ngl::ShaderLib::instance();
 	shader->use("Screen Quad");
@@ -194,11 +200,14 @@ void NGLScene::paintGL()
 		m_renderTexture = false;
 	}
 
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
 	m_text->setColour(1, 1, 1);
 	QString text = QString("%1 fps").arg(m_fps);
 	m_text->renderText(10, 20, text);
-	text = QString("%1SPP").arg(m_renderer->getFrameCount()*8);
+	text = QString("Render time/frame: %1ms").arg(duration);
 	m_text->renderText(10, 40, text);
+	text = QString("%1 samples per pixel").arg(m_renderer->getFrameCount()*8);
+	m_text->renderText(10, 60, text);
 	++m_frames;
 }
 

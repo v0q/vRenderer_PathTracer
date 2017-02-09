@@ -5,38 +5,10 @@
 #include <thrust/device_vector.h>
 
 #include "PathTracer.cuh"
+#include "RayIntersection.cuh"
 #include "MathHelpers.cuh"
 
 #define invGamma 1.f/2.2f
-#define PI 3.14159265359f
-#define EPSILON 0.0000003f
-
-typedef struct Ray {
-	float4 m_origin;
-	float4 m_dir;
-	__device__ Ray(float4 _o, float4 _d) : m_origin(_o), m_dir(_d) {}
-} Ray;
-
-typedef struct Sphere {
-	float m_r;       // radius
-	float4 m_pos;
-	float4 m_emission;
-	float4 m_col;
-
-	__device__ float intersect(const Ray *_r) const
-	{ // returns distance, 0 if nohit
-		float4 op = m_pos - _r->m_origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
-		float t;
-		float eps = 1e-4;
-		float b = dot(op, _r->m_dir);
-		float det = b*b - dot(op, op) + m_r*m_r;
-		if(det < 0)
-			return 0;
-		else
-			det = sqrtf(det);
-		return (t = b-det) > eps ? t : ((t = b+det) > eps ? t : 0.0);
-	}
-} Sphere;
 
 __constant__ Sphere spheres[] = {			//Scene: radius, position, emission, color, material
 	{ 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f, 0.0f },			{ 0.075f, 0.f, 0.f, 0.0f }, { 0.75f, 0.0f, 0.0f, 0.0f } }, //Left
@@ -45,65 +17,18 @@ __constant__ Sphere spheres[] = {			//Scene: radius, position, emission, color, 
 	{ 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f, 0.0f } }, //Frnt
 	{ 1e5f, { 50.0f, 1e5f, 81.6f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
 	{ 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Top
-	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
-	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
+//	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
+//	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
 	{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f, 0.0f },	{ 2.0f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
 };
 
-__device__ float intersectTriangle(const float4 &_v1, const float4 &_v2, const float4 &_v3, const Ray *_ray)
-{
-	float4 e1, e2;  //Edge1, Edge2
-	float4 p, q, t;
-	float det, inv_det, u, v;
-	float dist;
-
-	//Find vectors for two edges sharing V1
-	e1 = _v2 - _v1;
-	e2 = _v3 - _v1;
-	//Begin calculating determinant - also used to calculate u parameter
-
-	p = cross(_ray->m_dir, e2);
-	//if determinant is near zero, ray lies in plane of triangle or ray is parallel to plane of triangle
-	det = dot(e1, p);
-	//NOT CULLING
-	if(det > -EPSILON && det < EPSILON)
-		return 0.f;
-	inv_det = 1.f / det;
-
-	//calculate distance from V1 to ray origin
-	t = _ray->m_origin - _v1;
-
-	//Calculate u parameter and test bound
-	u = dot(t, p) * inv_det;
-	//The intersection lies outside of the triangle
-	if(u < 0.f || u > 1.f)
-		return 0.f;
-
-	//Prepare to test v parameter
-	q = cross(t, e1);
-
-	//Calculate V parameter and test bound
-	v = dot(_ray->m_dir, q) * inv_det;
-	//The intersection lies outside of the triangle
-	if(v < 0.f || u + v  > 1.f)
-		return 0.f;
-
-	dist = dot(e2, q) * inv_det;
-
-	if(dist > EPSILON)
-		return dist;
-
-	// No hit, no win
-	return 0.f;
-}
-
-__device__ inline bool intersectScene(const Ray *_ray,  const vTriangle *_scene, unsigned int _triCount, vHitData *_hitData)
+__device__ inline bool intersectScene(const Ray *_ray,  const vMesh *_scene, vHitData *_hitData)
 {
 	/* initialise t to a very large number,
 	so t will be guaranteed to be smaller
 	when a hit with the scene occurs */
 
-	int n = sizeof(spheres)/sizeof(Sphere);;
+	int n = sizeof(spheres)/sizeof(Sphere);
 	float inf = 1e20f;
 	float t = inf;
 
@@ -121,29 +46,33 @@ __device__ inline bool intersectScene(const Ray *_ray,  const vTriangle *_scene,
 			_hitData->m_emission = sphere.m_emission;
 		}
 	}
-	for(unsigned int i = 0; i < _triCount; ++i)
+	if(intersectBoundingBox(_scene[0].m_bb, _ray))
 	{
-		float dist = intersectTriangle(_scene[i].m_v1.m_vert, _scene[i].m_v2.m_vert, _scene[i].m_v3.m_vert, _ray);
-		if(dist != 0.0f && dist < t) {
-			t = dist;
-			_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-			_hitData->m_normal = _scene[i].m_v1.m_normal;
-			_hitData->m_color = make_float4(1.f, 1.f, 1.f, 0.f);
-			_hitData->m_emission = make_float4(0.f, 0.0f, 0.0f, 0.f);
+		for(unsigned int i = 0; i < _scene[0].m_triCount; ++i)
+		{
+			float dist = intersectTriangle(_scene[0].m_mesh[i].m_v1.m_vert, _scene[0].m_mesh[i].m_v2.m_vert, _scene[0].m_mesh[i].m_v3.m_vert, _ray);
+			if(dist != 0.0f && dist < t) {
+				t = dist;
+				_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+				_hitData->m_normal = _scene[0].m_mesh[i].m_v1.m_normal;
+				_hitData->m_color = make_float4(1.f, 1.f, 1.f, 0.f);
+				_hitData->m_emission = make_float4(0.f, 0.0f, 0.0f, 0.f);
+			}
 		}
 	}
 
 	return t < inf; /* true when ray interesects the scene */
 }
 
-__device__ static unsigned int hash(unsigned int *seed0, unsigned int *seed1) {
- *seed0 = 36969 * ((*seed0) & 65535) + ((*seed0) >> 16);  // hash the seeds using bitwise AND and bitshifts
+__device__ static unsigned int hash(unsigned int *seed0, unsigned int *seed1)
+{
+ *seed0 = 36969 * ((*seed0) & 65535) + ((*seed0) >> 16); // hash the seeds using bitwise AND and bitshifts
  *seed1 = 18000 * ((*seed1) & 65535) + ((*seed1) >> 16);
 
 	return *seed0**seed1;
 }
 
-__device__ float4 trace(const Ray *_camray, const vTriangle *_scene, unsigned int _triCount, unsigned int *_seed0, unsigned int *_seed1)
+__device__ float4 trace(const Ray *_camray, const vMesh *_scene, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
@@ -154,7 +83,7 @@ __device__ float4 trace(const Ray *_camray, const vTriangle *_scene, unsigned in
 	{
 		vHitData hitData;
 
-		if(!intersectScene(&ray, _scene, _triCount, &hitData)) {
+		if(!intersectScene(&ray, _scene, &hitData)) {
 			return make_float4(0.f, 0.f, 0.f, 0.f);
 		}
 
@@ -196,7 +125,7 @@ __device__ float4 trace(const Ray *_camray, const vTriangle *_scene, unsigned in
 	return accum_color;
 }
 
-__global__ void render(cudaSurfaceObject_t _tex, const vTriangle *_scene, unsigned int _triCount, float4 *_colors, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__global__ void render(cudaSurfaceObject_t _tex, const vMesh *_scene, float4 *_colors, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -222,7 +151,7 @@ __global__ void render(cudaSurfaceObject_t _tex, const vTriangle *_scene, unsign
 			float4 d = camera.m_dir + cx*((.25 + x) / _w - .5) + cy*((.25 + y) / _h - .5);
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam(camera.m_origin + d * 40, normalize(d));
-			_colors[ind] += trace(&newcam, _scene, _triCount, &s1, &s2);
+			_colors[ind] += trace(&newcam, _scene, &s1, &s2);
 		}
 
 		float coef = 1.f/(samps*_frame);
@@ -235,13 +164,13 @@ __global__ void render(cudaSurfaceObject_t _tex, const vTriangle *_scene, unsign
 	}
 }
 
-void cu_runRenderKernel(cudaSurfaceObject_t _texture, const vTriangle *_scene, unsigned int _triCount, float4 *_colorArr, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+void cu_runRenderKernel(cudaSurfaceObject_t _texture, const vMesh *_scene, float4 *_colorArr, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	dim3 dimBlock(16, 16);
 	dim3 dimGrid((_w / dimBlock.x),
 							 (_h / dimBlock.y));
 
-	render<<<dimGrid, dimBlock>>>(_texture, _scene, _triCount, _colorArr, _cam, _dir, _w, _h, _frame, _time);
+	render<<<dimGrid, dimBlock>>>(_texture, _scene, _colorArr, _cam, _dir, _w, _h, _frame, _time);
 }
 
 void cu_fillFloat4(float4 *d_ptr, float4 _val, unsigned int _size)
