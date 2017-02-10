@@ -1,4 +1,4 @@
-#include <iostream>
+#include <stdio.h>
 #include <cuda_runtime.h>
 #include <thrust/random.h>
 #include <thrust/random/uniform_real_distribution.h>
@@ -8,7 +8,31 @@
 #include "RayIntersection.cuh"
 #include "MathHelpers.cuh"
 
-#define invGamma 1.f/2.2f
+__constant__ __device__ uint numMeshes = 0;
+__constant__ __device__ float kInvGamma = 1.f/2.2f;
+__constant__ __device__ uint kSamps = 8;
+__constant__ __device__ float kInvSamps = 1.f/8.f;
+
+typedef struct Sphere {
+	float m_r;       // radius
+	float4 m_pos;
+	float4 m_emission;
+	float4 m_col;
+
+	__device__ float intersect(const Ray *_r) const
+	{ // returns distance, 0 if nohit
+		float4 op = m_pos - _r->m_origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
+		float t;
+		float eps = 1e-4;
+		float b = dot(op, _r->m_dir);
+		float det = b*b - dot(op, op) + m_r*m_r;
+		if(det < 0)
+			return 0;
+		else
+			det = sqrtf(det);
+		return (t = b-det) > eps ? t : ((t = b+det) > eps ? t : 0.0);
+	}
+} Sphere;
 
 __constant__ Sphere spheres[] = {			//Scene: radius, position, emission, color, material
 	{ 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f, 0.0f },			{ 0.075f, 0.f, 0.f, 0.0f }, { 0.75f, 0.0f, 0.0f, 0.0f } }, //Left
@@ -17,12 +41,12 @@ __constant__ Sphere spheres[] = {			//Scene: radius, position, emission, color, 
 	{ 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f, 0.0f } }, //Frnt
 	{ 1e5f, { 50.0f, 1e5f, 81.6f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
 	{ 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Top
-//	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
-//	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
+	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
+	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
 	{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f, 0.0f },	{ 2.0f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
 };
 
-__device__ inline bool intersectScene(const Ray *_ray,  const vMesh *_scene, vHitData *_hitData)
+__device__ inline bool intersectScene(const Ray *_ray, const vMesh *_scene, vHitData *_hitData)
 {
 	/* initialise t to a very large number,
 	so t will be guaranteed to be smaller
@@ -46,17 +70,20 @@ __device__ inline bool intersectScene(const Ray *_ray,  const vMesh *_scene, vHi
 			_hitData->m_emission = sphere.m_emission;
 		}
 	}
-	if(intersectBoundingBox(_scene[0].m_bb, _ray))
+	for(unsigned int j = 0; j < numMeshes; ++j)
 	{
-		for(unsigned int i = 0; i < _scene[0].m_triCount; ++i)
+		if(intersectBVH(_scene[j].m_bvh, _ray))
 		{
-			float dist = intersectTriangle(_scene[0].m_mesh[i].m_v1.m_vert, _scene[0].m_mesh[i].m_v2.m_vert, _scene[0].m_mesh[i].m_v3.m_vert, _ray);
-			if(dist != 0.0f && dist < t) {
-				t = dist;
-				_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-				_hitData->m_normal = _scene[0].m_mesh[i].m_v1.m_normal;
-				_hitData->m_color = make_float4(1.f, 1.f, 1.f, 0.f);
-				_hitData->m_emission = make_float4(0.f, 0.0f, 0.0f, 0.f);
+			for(unsigned int i = 0; i < _scene[j].m_triCount; ++i)
+			{
+				float dist = intersectTriangle(_scene[j].m_mesh[i].m_v1.m_vert, _scene[j].m_mesh[i].m_v2.m_vert, _scene[j].m_mesh[i].m_v3.m_vert, _ray);
+				if(dist != 0.0f && dist < t) {
+					t = dist;
+					_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+					_hitData->m_normal = _scene[j].m_mesh[i].m_v1.m_normal;
+					_hitData->m_color = make_float4(1.f, 1.f, 1.f, 0.f);
+					_hitData->m_emission = make_float4(0.f, 0.f, 4.5f, 0.f);
+				}
 			}
 		}
 	}
@@ -145,19 +172,18 @@ __global__ void render(cudaSurfaceObject_t _tex, const vMesh *_scene, float4 *_c
 		float4 cx = make_float4(_w * .5135 / _h, 0.0f, 0.0f, 0.0f); // ray direction offset in x direction
 		float4 cy = normalize(cross(cx, camera.m_dir)) * .5135; // ray direction offset in y direction (.5135 is field of view angle)
 
-		unsigned int samps = 8;
-		for(unsigned int s = 0; s < samps; s++) {  // samples per pixel
+		for(unsigned int s = 0; s < kSamps; s++) {  // samples per pixel
 			// compute primary ray direction
 			float4 d = camera.m_dir + cx*((.25 + x) / _w - .5) + cy*((.25 + y) / _h - .5);
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam(camera.m_origin + d * 40, normalize(d));
-			_colors[ind] += trace(&newcam, _scene, &s1, &s2);
+			_colors[ind] += trace(&newcam, _scene, &s1, &s2) * (kInvSamps);
 		}
 
-		float coef = 1.f/(samps*_frame);
-		unsigned char r = (unsigned char)(powf(clamp(_colors[ind].x*coef, 0.0, 1.0), invGamma) * 255);
-		unsigned char g = (unsigned char)(powf(clamp(_colors[ind].y*coef, 0.0, 1.0), invGamma) * 255);
-		unsigned char b = (unsigned char)(powf(clamp(_colors[ind].z*coef, 0.0, 1.0), invGamma) * 255);
+		float coef = 1.f/_frame;
+		unsigned char r = (unsigned char)(powf(clamp(_colors[ind].x*coef, 0.0, 1.0), kInvGamma) * 255);
+		unsigned char g = (unsigned char)(powf(clamp(_colors[ind].y*coef, 0.0, 1.0), kInvGamma) * 255);
+		unsigned char b = (unsigned char)(powf(clamp(_colors[ind].z*coef, 0.0, 1.0), kInvGamma) * 255);
 
 		uchar4 data = make_uchar4(r, g, b, 0xff);
 		surf2Dwrite(data, _tex, x*sizeof(uchar4), y);
@@ -171,6 +197,11 @@ void cu_runRenderKernel(cudaSurfaceObject_t _texture, const vMesh *_scene, float
 							 (_h / dimBlock.y));
 
 	render<<<dimGrid, dimBlock>>>(_texture, _scene, _colorArr, _cam, _dir, _w, _h, _frame, _time);
+}
+
+void cu_updateMeshCount(unsigned int _numMeshes)
+{
+	cudaMemcpyToSymbol(numMeshes, &_numMeshes, sizeof(unsigned int));
 }
 
 void cu_fillFloat4(float4 *d_ptr, float4 _val, unsigned int _size)

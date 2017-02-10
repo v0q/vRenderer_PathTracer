@@ -4,18 +4,6 @@
 #include <assimp/scene.h>
 #include <string>
 
-#ifdef __VRENDERER_OPENCL__
-	#ifdef __APPLE__
-		#include <OpenCL/cl.h>
-	#else
-		#include <CL/cl.h>
-	#endif
-	typedef cl_float4 ftype;
-#elif __VRENDERER_CUDA__
-	#include <cuda/cuda_runtime.h>
-	typedef float4 ftype;
-#endif
-
 typedef struct vFloat3
 {
 	float x;
@@ -25,65 +13,31 @@ typedef struct vFloat3
 } vFloat3;
 
 ///
-/// \brief The vBoundingBox class Simple class for calculating the bounding box of a mesh
+/// \brief The BVH class Simple class for calculating the bounding volume hierarchy for the mesh
 ///
-class vBB
+class BVH
 {
 public:
 	///
 	/// @brief vBoundingBox Default ctor
 	///
-	vBB() :
-		m_initialised(false)
-	{
-		m_x.m_min = m_x.m_max = 0.f;
-		m_y.m_min = m_y.m_max = 0.f;
-		m_z.m_min = m_z.m_max = 0.f;
-	}
+	BVH();
 
 	///
 	/// @brief extendBB Simple function to update the extents of the bounding box if needed
 	/// @param _vert Mesh vertex to evaluate against the current bounding box
 	///
-	void extendBB(aiVector3t<float> &_vert) {
-		if(m_initialised)
-		{
-			m_x.m_min = m_x.m_min < _vert.x ? m_x.m_min : _vert.x;
-			m_x.m_max = m_x.m_max > _vert.x ? m_x.m_max : _vert.x;
+	void computeExtents(const aiVector3t<float> &_vert);
+	vFloat3 getSlab(const unsigned int &i) const;
+	void print() const;
 
-			m_y.m_min = m_y.m_min < _vert.y ? m_y.m_min : _vert.y;
-			m_y.m_max = m_y.m_max > _vert.y ? m_y.m_max : _vert.y;
-
-			m_z.m_min = m_z.m_min < _vert.z ? m_z.m_min : _vert.z;
-			m_z.m_max = m_z.m_max > _vert.z ? m_z.m_max : _vert.z;
-		}
-		else
-		{
-			m_x.m_min = m_x.m_max = _vert.x;
-			m_y.m_min = m_y.m_max = _vert.y;
-			m_z.m_min = m_z.m_max = _vert.z;
-
-			m_initialised = true;
-		}
-	}
-
-	vFloat3 getMinBounds() const {
-		return vFloat3(m_x.m_min, m_y.m_min, m_z.m_min);
-	}
-
-	vFloat3 getMaxBounds() const {
-		return vFloat3(m_x.m_max, m_y.m_max, m_z.m_max);
-	}
-
-	void print() const
-	{
-		std::cout << "X: [" << m_x.m_min << ", " << m_x.m_max << "]\n";
-		std::cout << "Y: [" << m_y.m_min << ", " << m_y.m_max << "]\n";
-		std::cout << "Z: [" << m_z.m_min << ", " << m_z.m_max << "]\n";
-	}
+	static const unsigned int m_numPlaneSetNormals = 7;
+	static const vFloat3 m_planeSetNormals[m_numPlaneSetNormals];
 
 private:
 	bool m_initialised;
+	float m_dNear[m_numPlaneSetNormals];
+	float m_dFar[m_numPlaneSetNormals];
 	union
 	{
 		struct

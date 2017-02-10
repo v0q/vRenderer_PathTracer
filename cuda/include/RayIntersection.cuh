@@ -1,47 +1,22 @@
 #pragma once
 
+#include <float.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include "PathTracer.cuh"
 #include "MathHelpers.cuh"
 
-#define PI 3.14159265359f
-#define EPSILON 0.0000003f
+#define kNumPlaneSetNormals 7
+
+__constant__ __device__ float PI = 3.14159265359f;
+__constant__ __device__ float epsilon = 0.0000003f;
 
 typedef struct Ray {
 	float4 m_origin;
 	float4 m_dir;
-	float4 m_invDir;
-	uint3 m_sign;
 
-	__device__ Ray(float4 _o, float4 _d) : m_origin(_o), m_dir(_d) {
-		m_invDir = 1.f / m_dir;
-		m_sign.x = (m_invDir.x < 0);
-		m_sign.y = (m_invDir.y < 0);
-		m_sign.z = (m_invDir.z < 0);
-	}
+	__device__ Ray(float4 _o, float4 _d) : m_origin(_o), m_dir(_d) {}
 } Ray;
-
-typedef struct Sphere {
-	float m_r;       // radius
-	float4 m_pos;
-	float4 m_emission;
-	float4 m_col;
-
-	__device__ float intersect(const Ray *_r) const
-	{ // returns distance, 0 if nohit
-		float4 op = m_pos - _r->m_origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
-		float t;
-		float eps = 1e-4;
-		float b = dot(op, _r->m_dir);
-		float det = b*b - dot(op, op) + m_r*m_r;
-		if(det < 0)
-			return 0;
-		else
-			det = sqrtf(det);
-		return (t = b-det) > eps ? t : ((t = b+det) > eps ? t : 0.0);
-	}
-} Sphere;
 
 __device__ float intersectTriangle(const float4 &_v1, const float4 &_v2, const float4 &_v3, const Ray *_ray)
 {
@@ -59,7 +34,7 @@ __device__ float intersectTriangle(const float4 &_v1, const float4 &_v2, const f
 	//if determinant is near zero, ray lies in plane of triangle or ray is parallel to plane of triangle
 	det = dot(e1, p);
 	//NOT CULLING
-	if(det > -EPSILON && det < EPSILON)
+	if(det > -epsilon && det < epsilon)
 		return 0.f;
 	inv_det = 1.f / det;
 
@@ -83,7 +58,7 @@ __device__ float intersectTriangle(const float4 &_v1, const float4 &_v2, const f
 
 	dist = dot(e2, q) * inv_det;
 
-	if(dist > EPSILON)
+	if(dist > epsilon)
 		return dist;
 
 	// No hit, no win
@@ -95,36 +70,76 @@ __device__ float intersectTriangle(const float4 &_v1, const float4 &_v2, const f
 /// \param _ray
 /// \return
 ///
-__device__ bool intersectBoundingBox(const vBoundingBox _bb, const Ray *_ray)
+__device__ bool intersectBVH(const vBVH _bb, const Ray *_ray)
 {
-		float2 tx;
-		float2 ty;
-		float2 tz;
+	float tNear = -FLT_MAX;
+	float tFar = FLT_MAX;
 
-		tx.x = ((_ray->m_sign.x ? _bb.m_x.y : _bb.m_x.x) - _ray->m_origin.x) * _ray->m_invDir.x;
-		tx.y = ((_ray->m_sign.x ? _bb.m_x.x : _bb.m_x.y) - _ray->m_origin.x) * _ray->m_invDir.x;
-		ty.x = ((_ray->m_sign.y ? _bb.m_y.y : _bb.m_y.x) - _ray->m_origin.y) * _ray->m_invDir.y;
-		ty.y = ((_ray->m_sign.y ? _bb.m_y.x : _bb.m_y.y) - _ray->m_origin.y) * _ray->m_invDir.y;
+#define SWAP(x, y)	\
+	{									\
+		float tmp = x;	\
+		x = y;					\
+		y = tmp;				\
+	}
 
-		if ((tx.x > ty.y) || (ty.x > tx.y))
+	for(uint8_t i = 0; i < kNumPlaneSetNormals; ++i)
+	{
+		float numerator = dot(_bb.m_normal[i], _ray->m_origin);
+		float denominator = dot(_bb.m_normal[i], _ray->m_dir);
+
+		float tn = (_bb.m_dNear[i] - numerator) / denominator;
+		float tf = (_bb.m_dFar[i] - numerator) / denominator;
+		if(denominator < 0)
+			SWAP(tn, tf);
+		if(tn > tNear)
+			tNear = tn;
+		if(tf < tFar)
+			tFar = tf;
+		if(tNear > tFar)
 			return false;
-		if (ty.x > tx.x)
-			tx.x = ty.x;
-		if (ty.y < tx.y)
-			tx.y = ty.y;
+	}
 
-		tz.x = ((_ray->m_sign.z ? _bb.m_z.y : _bb.m_z.x) - _ray->m_origin.z) * _ray->m_invDir.z;
-		tz.y = ((_ray->m_sign.z ? _bb.m_z.x : _bb.m_z.y) - _ray->m_origin.z) * _ray->m_invDir.z;
 
-		if ((tx.x > tz.y) || (tz.x > tx.y))
-			return false;
-		if (tz.x > tx.x)
-			tx.x = tz.x;
-		if (tz.y < tx.y)
-			tx.y = tz.y;
 
-		if(tx.x < 0 && tx.y < 0)
-			return false;
+//	tx.x = (_bb.m_x.x - _ray->m_origin.x) / _ray->m_dir.x;
+//	tx.y = (_bb.m_x.y - _ray->m_origin.x) / _ray->m_dir.x;
+//	if(tx.x > tx.y) SWAP(tx.x, tx.y)
 
-		return true;
+//	ty.x = (_bb.m_y.x - _ray->m_origin.y) / _ray->m_dir.y;
+//	ty.y = (_bb.m_y.y - _ray->m_origin.y) / _ray->m_dir.y;
+//	if(ty.x > ty.y) SWAP(ty.x, ty.y)
+
+//	if ((tx.x > ty.y) || (ty.x > tx.y))
+//		return false;
+//	if (ty.x > tx.x)
+//		tx.x = ty.x;
+//	if (ty.y < tx.y)
+//		tx.y = ty.y;
+
+//	tz.x = (_bb.m_z.x - _ray->m_origin.z) / _ray->m_dir.z;
+//	tz.y = (_bb.m_z.y - _ray->m_origin.z) / _ray->m_dir.z;
+//	if(tz.x > tz.y) SWAP(tz.x, tz.y)
+
+//	if ((tx.x > tz.y) || (tz.x > tx.y))
+//		return false;
+//	if (tz.x > tx.x)
+//		tx.x = tz.x;
+//	if (tz.y < tx.y)
+//		tx.y = tz.y;
+
+//	if(tx.x < 0 && tx.y < 0)
+//		return false;
+
+
+
+//	for (uint8_t i = 0; i < kNumPlaneSetNormals; ++i) {
+//		float tn = (d[i][0] - precomputedNumerator[i]) / precomputeDenominator[i];
+//		float tf = (d[i][1] - precomputedNumerator[i]) / precomputeDenominator[i];
+//		if (precomputeDenominator[i] < 0) std::swap(tn, tf);
+//		if (tn > tNear) tNear = tn, planeIndex = i;
+//		if (tf < tFar) tFar = tf;
+//		if (tNear > tFar) return false;
+//	}
+
+	return true;
 }
