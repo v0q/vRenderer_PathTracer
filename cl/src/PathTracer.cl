@@ -1,8 +1,8 @@
 #include "cl/include/PathTracer.h"
+#include "cl/include/RayIntersection.h"
 
 __constant float invGamma = 1.f/2.2f;
-__constant float PI = 3.14159265359f;
-__constant float EPSILON = 0.0000003f;
+
 __constant Sphere spheres[] = {
 		{ 1e5f,		{ 1e5f + 1.0f, 40.8f, 81.6f, 0.f },			{ 0.0f, 0.0f, 0.0f, 0.f },	{ 0.75f, 0.0f, 0.0f, 0.f } }, //Left
 		{ 1e5f,		{ -1e5f + 99.0f, 40.8f, 81.6f, 0.f },		{ 0.0f, 0.0f, 0.0f, 0.f },	{ 0.0f, 0.75f, 0.0f, 0.f } }, //Right
@@ -10,8 +10,8 @@ __constant Sphere spheres[] = {
 		{ 1e5f,		{ 50.0f, 40.8f, -1e5f + 600.0f, 0.f },	{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.00f, 1.00f, 1.00f, 0.f } }, //Frnt
 		{ 1e5f,		{ 50.0f, 1e5f, 81.6f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Botm
 		{ 1e5f,		{ 50.0f, -1e5f + 81.6f, 81.6f, 0.f },		{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Top
-		{ 16.5f,	{ 27.0f, 16.5f, 47.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 1
-		{ 16.5f,	{ 73.0f, 16.5f, 78.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 2
+//		{ 16.5f,	{ 27.0f, 16.5f, 47.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 1
+//		{ 16.5f,	{ 73.0f, 16.5f, 78.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 2
 		{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f, 0.f },		{ 2.0f, 1.8f, 1.6f, 0.f },	{ 0.0f, 0.0f, 0.0f, 0.f } }  // Light
 };
 
@@ -20,73 +20,14 @@ Ray createRay(float4 _o, float4 _d)
 	Ray ray;
 	ray.m_origin = _o;
 	ray.m_dir = _d;
+  ray.m_invDir = 1.f / _d;
+  ray.m_sign.x = (ray.m_invDir.x < 0);
+  ray.m_sign.y = (ray.m_invDir.y < 0);
+  ray.m_sign.z = (ray.m_invDir.z < 0);
 	return ray;
 }
 
-float intersectTriangle(const float4 _v1, const float4 _v2, const float4 _v3, const Ray *_ray)
-{
-	float4 e1, e2;  //Edge1, Edge2
-	float4 p, q, t;
-	float det, inv_det, u, v;
-	float dist;
-
-	//Find vectors for two edges sharing V1
-	e1 = _v2 - _v1;
-	e2 = _v3 - _v1;
-	//Begin calculating determinant - also used to calculate u parameter
-
-	p = cross(_ray->m_dir, e2);
-	//if determinant is near zero, ray lies in plane of triangle or ray is parallel to plane of triangle
-	det = dot(e1, p);
-	//NOT CULLING
-	if(det > -EPSILON && det < EPSILON)
-		return 0.f;
-	inv_det = 1.f / det;
-
-	//calculate distance from V1 to ray origin
-	t = _ray->m_origin - _v1;
-
-	//Calculate u parameter and test bound
-	u = dot(t, p) * inv_det;
-	//The intersection lies outside of the triangle
-	if(u < 0.f || u > 1.f)
-		return 0.f;
-
-	//Prepare to test v parameter
-	q = cross(t, e1);
-
-	//Calculate V parameter and test bound
-	v = dot(_ray->m_dir, q) * inv_det;
-	//The intersection lies outside of the triangle
-	if(v < 0.f || u + v  > 1.f)
-		return 0.f;
-
-	dist = dot(e2, q) * inv_det;
-
-	if(dist > EPSILON)
-		return dist;
-
-	// No hit, no win
-	return 0.f;
-}
-
-float intersectSphere(const Sphere *_sphere, const Ray *_ray) /* version using local copy of sphere */
-{
-	float4 rayToCenter = _sphere->m_pos - _ray->m_origin;
-	float b = dot(rayToCenter, _ray->m_dir);
-	float c = dot(rayToCenter, rayToCenter) - _sphere->m_r*_sphere->m_r;
-	float disc = b * b - c;
-
-	if (disc < 0.0f) return 0.0f;
-	else disc = sqrt(disc);
-
-	if ((b - disc) > EPSILON) return b - disc;
-	if ((b + disc) > EPSILON) return b + disc;
-
-	return 0.0f;
-}
-
-bool intersectScene(const Ray *_ray, __global const vTriangle *_scene, unsigned int _triCount, vHitData *_hitData)
+bool intersectScene(const Ray *_ray, __global const vMesh *_scene, vHitData *_hitData)
 {
 	/* initialise t to a very large number,
 	so t will be guaranteed to be smaller
@@ -110,17 +51,20 @@ bool intersectScene(const Ray *_ray, __global const vTriangle *_scene, unsigned 
 			_hitData->m_emission = sphere.m_emission;
 		}
 	}
-	for(unsigned int i = 0; i < _triCount; ++i)
-	{
-		float dist = intersectTriangle(_scene[i].m_v1.m_vert, _scene[i].m_v2.m_vert, _scene[i].m_v3.m_vert, _ray);
-		if(dist != 0.0f && dist < t) {
-			t = dist;
-			_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-			_hitData->m_normal = _scene[i].m_v1.m_normal;
-			_hitData->m_color = (float4)(1.f, 1.f, 1.f, 0.f);
-			_hitData->m_emission = (float4)(0.f, 0.0f, 0.0f, 0.f);
-		}
-	}
+  if(intersectBoundingBox(_ray, _scene[0].m_bb.m_x, _scene[0].m_bb.m_y, _scene[0].m_bb.m_z))
+  {
+    for(unsigned int i = 0; i < _scene[0].m_triCount; ++i)
+    {
+      float dist = intersectTriangle(_scene[0].m_mesh[i].m_v1.m_vert, _scene[0].m_mesh[i].m_v2.m_vert, _scene[0].m_mesh[i].m_v3.m_vert, _ray);
+      if(dist != 0.0f && dist < t) {
+        t = dist;
+        _hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+        _hitData->m_normal = _scene[0].m_mesh[i].m_v1.m_normal;
+        _hitData->m_color = (float4)(1.f, 1.f, 1.f, 0.f);
+        _hitData->m_emission = (float4)(0.f, 0.0f, 0.0f, 0.f);
+      }
+    }
+  }
 
 	return t < inf; /* true when ray interesects the scene */
 }
@@ -143,7 +87,7 @@ static float get_random(unsigned int *_seed0, unsigned int *_seed1)
 	return (res.f - 2.0f) / 2.0f;
 }
 
-float4 trace(const Ray *_camray, __global const vTriangle *_scene, unsigned int _triCount, unsigned int *_seed0, unsigned int *_seed1)
+float4 trace(const Ray *_camray, __global const vMesh *_scene, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
@@ -155,55 +99,52 @@ float4 trace(const Ray *_camray, __global const vTriangle *_scene, unsigned int 
 		vHitData hitData;
 
 		/* if ray misses scene, return background colour */
-		if(!intersectScene(&ray, _scene, _triCount, &hitData)) {
+    if(!intersectScene(&ray, _scene, &hitData)) {
 			return (float4)(0.f, 0.f, 0.f, 0.f);
 		}
 
 		/* compute the surface normal and flip it if necessary to face the incoming ray */
 		float4 normal_facing = dot(hitData.m_normal, ray.m_dir) < 0.0f ? hitData.m_normal : hitData.m_normal * (-1.0f);
 
-//    if(hitsphere_id == 6) {
-//      ray.m_origin = hitpoint + normal_facing*0.05f; // offset ray origin slightly to prevent self intersection
-//      ray.m_dir = ray.m_dir - hitData.m_normal*2*dot(hitData.m_normal, ray.m_dir);
-//    } else {
-			/* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
-			float rand1 = 2.0f * PI * get_random(_seed0, _seed1);
-			float rand2 = get_random(_seed0, _seed1);
-			float rand2s = sqrt(rand2);
+    /* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
+    float rand1 = 2.0f * PI * get_random(_seed0, _seed1);
+    float rand2 = get_random(_seed0, _seed1);
+    float rand2s = sqrt(rand2);
 
-			/* create a local orthogonal coordinate frame centered at the hitpoint */
-			float4 w = normal_facing;
-			float4 axis = fabs(w.x) > 0.1f ? (float4)(0.0f, 1.0f, 0.0f, 0.f) : (float4)(1.0f, 0.0f, 0.0f, 0.f);
-			float4 u = normalize(cross(axis, w));
-			float4 v = cross(w, u);
+    /* create a local orthogonal coordinate frame centered at the hitpoint */
+    float4 w = normal_facing;
+    float4 axis = fabs(w.x) > 0.1f ? (float4)(0.0f, 1.0f, 0.0f, 0.f) : (float4)(1.0f, 0.0f, 0.0f, 0.f);
+    float4 u = normalize(cross(axis, w));
+    float4 v = cross(w, u);
 
-			/* use the coordinte frame and random numbers to compute the next ray direction */
-			float4 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
+    /* use the coordinte frame and random numbers to compute the next ray direction */
+    float4 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
 
-			/* add a very small offset to the hitpoint to prevent self intersection */
-			ray.m_origin = hitData.m_hitPoint + normal_facing * 0.05f;
-			ray.m_dir = newdir;
+    /* add a very small offset to the hitpoint to prevent self intersection */
+    ray.m_origin = hitData.m_hitPoint + normal_facing * 0.05f;
+    ray.m_dir = newdir;
 
-			/* add the colour and light contributions to the accumulated colour */
-			accum_color += mask * hitData.m_emission;
+    /* add the colour and light contributions to the accumulated colour */
+    accum_color += mask * hitData.m_emission;
 
-			/* the mask colour picks up surface colours at each bounce */
-			mask *= hitData.m_color;
+    /* the mask colour picks up surface colours at each bounce */
+    mask *= hitData.m_color;
 
-			/* perform cosine-weighted importance sampling for diffuse surfaces*/
-			mask *= dot(newdir, normal_facing);
-			mask *= 2;
-//    }
+    /* perform cosine-weighted importance sampling for diffuse surfaces*/
+    mask *= dot(newdir, normal_facing);
+    mask *= 2;
 	}
 
 	return accum_color;
 }
 
 
-__kernel void render(__write_only image2d_t _texture, __global const vTriangle *_scene, unsigned int _triCount, __global float4 *_colors, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__kernel void render(__write_only image2d_t _texture, __global vMesh *_scene, __global const vTriangle *_triangles, __global float4 *_colors, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	const unsigned int x = get_global_id(0);
 	const unsigned int y = get_global_id(1);
+
+  _scene[0].m_mesh = _triangles;
 
 	if(x < _w && y < _h)
 	{
@@ -235,7 +176,7 @@ __kernel void render(__write_only image2d_t _texture, __global const vTriangle *
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam = createRay(camera.m_origin + d * 40, normalize(d));
 
-			_colors[ind] += trace(&newcam, _scene, _triCount, &seed0, &seed1);
+      _colors[ind] += trace(&newcam, _scene, &seed0, &seed1);
 		}
 		float coef = 1.f/(samps*_frame);
 

@@ -16,7 +16,7 @@ public:
   void cleanUp() override;
   void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) override;
 	void initMesh(const std::vector<vFloat3> &_vertData) override;
-  unsigned int getFrameCount() const override { return m_frame; }
+  unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
 	void validateCuda(cudaError_t _err, const std::string &_msg = "");
 

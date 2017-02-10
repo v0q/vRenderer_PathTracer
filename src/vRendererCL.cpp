@@ -68,7 +68,7 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 	if(devices.size())
 	{
 		std::cout << "Using device: \n";
-		m_device = devices[devices.size() - 1];
+    m_device = devices[devices.size() - 1];
 		std::cout << "\t" << m_device.getInfo<CL_DEVICE_NAME>() << "\n";
 	}
 
@@ -118,6 +118,33 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 	}
 
 	m_kernel = cl::Kernel(m_program, "render");
+
+  {
+    std::ifstream clFile("cl/src/DevicePointer.cl");
+    if(!clFile)
+    {
+      std::cerr << "Could not find 'cl/src/DevicePointer.cl'\n";
+      exit(0);
+    }
+    std::string devicePointerSrc((std::istreambuf_iterator<char>(clFile)),
+                                  std::istreambuf_iterator<char>());
+
+    cl::Program dpProgram = cl::Program(m_context, devicePointerSrc.c_str());
+    cl_int result = dpProgram.build({ m_device });
+    if(result)
+    {
+      std::cerr << "Failed compile the program: " << result << "\n";
+      std::string buildlog = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device);
+      FILE *log = fopen("errorlog.txt", "w");
+      fprintf(log, "%s\n", buildlog.c_str());
+
+      std::cerr << "Build log saved to errorlog.txt:\n";
+      exit(EXIT_FAILURE);
+    }
+
+    m_devPointerKernel = cl::Kernel(dpProgram, "initDevicePointer");
+  }
+
 	m_queue = cl::CommandQueue(m_context, m_device);
 	m_colorArray = cl::Buffer(m_context, CL_MEM_WRITE_ONLY, m_width*m_height*sizeof(cl_float3));
 
@@ -163,21 +190,20 @@ void vRendererCL::render()
 	{
 		std::cout << "Failed to acquire gl objects: " << err << "\n";
 		exit(EXIT_FAILURE);
-	}
+  }
 
 	event.wait();
 
-	m_kernel.setArg(0, m_glTexture);
-	if(m_meshes.size())
-		m_kernel.setArg(1, m_meshes[0]);
-	m_kernel.setArg(2, m_triCount);
-	m_kernel.setArg(3, m_colorArray);
-	m_kernel.setArg(4, m_camera);
-	m_kernel.setArg(5, m_camdir);
-	m_kernel.setArg(6, m_width);
-	m_kernel.setArg(7, m_height);
-	m_kernel.setArg(8, m_frame++);
-	m_kernel.setArg(9, static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count()));
+  m_kernel.setArg(0, m_glTexture);
+  m_kernel.setArg(1, m_meshes[0].first);
+  m_kernel.setArg(2, m_meshes[0].second);
+  m_kernel.setArg(3, m_colorArray);
+  m_kernel.setArg(4, m_camera);
+  m_kernel.setArg(5, m_camdir);
+  m_kernel.setArg(6, m_width);
+  m_kernel.setArg(7, m_height);
+  m_kernel.setArg(8, m_frame++);
+  m_kernel.setArg(9, static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count()));
 
 	if((err = m_queue.enqueueNDRangeKernel(m_kernel, cl::NullRange, globalRange, localRange, nullptr, &event)) != CL_SUCCESS)
 	{
@@ -228,36 +254,34 @@ void vRendererCL::updateCamera(const float *_cam, const float *_dir)
 void vRendererCL::initMesh(const std::vector<vFloat3> &_vertData)
 {
 	cl_int err;
-	unsigned int sz = (_vertData.size() - 2)/6;
+  unsigned int sz = _vertData.size();
 
-	float scale = 15.f;
-	float offset = 50.f;
-
-	m_triCount = sz;
-	vTriangle *triangles = new vTriangle[sz];
+  m_triCount = (sz - 2)/6;
+  vMesh mesh;
+  vTriangle *triangles = new vTriangle[m_triCount];
 
 	for(unsigned int i = 0; i < _vertData.size(); i += 6)
 	{
 		vVert v1, v2, v3;
-		v1.m_vert.x = _vertData[i].x * scale + offset;
-		v1.m_vert.y = _vertData[i].y * scale + offset/2;
-		v1.m_vert.z = _vertData[i].z * scale + offset;
+    v1.m_vert.x = _vertData[i].x;
+    v1.m_vert.y = _vertData[i].y;
+    v1.m_vert.z = _vertData[i].z;
 		v1.m_vert.w = 0.f;
 		v1.m_normal.x = _vertData[i+1].x;
 		v1.m_normal.y = _vertData[i+1].y;
 		v1.m_normal.z = _vertData[i+1].z;
 		v1.m_normal.w = 0.f;
-		v2.m_vert.x = _vertData[i+2].x * scale + offset;
-		v2.m_vert.y = _vertData[i+2].y * scale + offset/2;
-		v2.m_vert.z = _vertData[i+2].z * scale + offset;
+    v2.m_vert.x = _vertData[i+2].x;
+    v2.m_vert.y = _vertData[i+2].y;
+    v2.m_vert.z = _vertData[i+2].z;
 		v2.m_vert.w = 0.f;
 		v2.m_normal.x = _vertData[i+3].x;
 		v2.m_normal.y = _vertData[i+3].y;
 		v2.m_normal.z = _vertData[i+3].z;
 		v2.m_normal.w = 0.f;
-		v3.m_vert.x = _vertData[i+4].x * scale + offset;
-		v3.m_vert.y = _vertData[i+4].y * scale + offset/2;
-		v3.m_vert.z = _vertData[i+4].z * scale + offset;
+    v3.m_vert.x = _vertData[i+4].x;
+    v3.m_vert.y = _vertData[i+4].y;
+    v3.m_vert.z = _vertData[i+4].z;
 		v3.m_vert.w = 0.f;
 		v3.m_normal.x = _vertData[i+5].x;
 		v3.m_normal.y = _vertData[i+5].y;
@@ -267,7 +291,25 @@ void vRendererCL::initMesh(const std::vector<vFloat3> &_vertData)
 		triangles[i/6].m_v2 = v2;
 		triangles[i/6].m_v3 = v3;
 	}
-	m_meshes.push_back(cl::Buffer(m_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sz*sizeof(vTriangle), &triangles[0], &err));
+
+  mesh.m_bb.m_x.x = _vertData[sz - 2].x;
+  mesh.m_bb.m_x.y = _vertData[sz - 1].x;
+  mesh.m_bb.m_y.x = _vertData[sz - 2].y;
+  mesh.m_bb.m_y.y = _vertData[sz - 1].y;
+  mesh.m_bb.m_z.x = _vertData[sz - 2].z;
+  mesh.m_bb.m_z.y = _vertData[sz - 1].z;
+  mesh.m_triCount = m_triCount;
+
+  cl::Buffer meshBuffer = cl::Buffer(m_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(vMesh), &mesh, &err);
+  cl::Buffer triangleBuffer = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR, m_triCount*sizeof(vTriangle), &triangles[0], &err);
+
+  m_meshes.push_back(std::make_pair(meshBuffer, triangleBuffer));
+
+//  validateCuda(cudaMalloc(&meshBuffer, sizeof(vMesh)), "Malloc mesh buffer");
+//	validateCuda(cudaMalloc(&triangleBuffer, m_triCount*sizeof(vTriangle)), "Malloc triangle buffer");
+//	validateCuda(cudaMemcpy(meshBuffer, &mesh, sizeof(vMesh), cudaMemcpyHostToDevice), "Copy mesh to host");
+//	validateCuda(cudaMemcpy(triangleBuffer, &triangles[0], m_triCount*sizeof(vTriangle), cudaMemcpyHostToDevice), "Copy triangles to host");
+//	validateCuda(cudaMemcpy(&(meshBuffer->m_mesh), &triangleBuffer, sizeof(vTriangle *), cudaMemcpyHostToDevice), "Copy triangles host to mesh host");
 
 	delete [] triangles;
 }

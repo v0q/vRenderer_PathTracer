@@ -7,8 +7,9 @@ vrenderer_cl {
   HEADERS += $$PWD/include/vRendererCL.h
 
   CL_SOURCES += $$PWD/cl/src/PathTracer.cl \
-                $$PWD/cl/src/CL_UVRender.cl
-  CL_HEADERS += $$PWD/cl/include/PathTracer.h
+                $$PWD/cl/src/DevicePointer.cl
+  CL_HEADERS += $$PWD/cl/include/PathTracer.h \
+                $$PWD/cl/include/RayIntersection.h
 
   INCLUDEPATH += $$PWD/cl/include
   OTHER_FILES += $$CL_SOURCES $$CL_HEADERS
