@@ -19,11 +19,16 @@ CONFIG-=app_bundle
 SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/NGLScene.cpp \
           $$PWD/src/NGLSceneMouseControls.cpp \
-          $$PWD/src/MeshLoader.cpp
+          $$PWD/src/MeshLoader.cpp \
+          $$PWD/src/BVH.cpp \
+          $$PWD/src/Utilities.cpp
 # same for the .h files
 HEADERS+= $$PWD/include/NGLScene.h \
           $$PWD/include/WindowParams.h \
           $$PWD/include/MeshLoader.h \
+          $$PWD/include/MeshData.h \
+          $$PWD/include/BVH.h \
+          $$PWD/include/Utilities.h \
           $$PWD/include/vRenderer.h
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include

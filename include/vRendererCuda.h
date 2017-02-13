@@ -15,13 +15,14 @@ public:
   void render() override;
   void cleanUp() override;
   void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) override;
-	void initMesh(const std::vector<vFloat3> &_vertData) override;
+	void initMesh(const vMeshData &_meshData) override;
   unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
 	void validateCuda(cudaError_t _err, const std::string &_msg = "");
 
   cudaGraphicsResource_t m_cudaGLTextureBuffer;
   cudaArray *m_cudaImgArray;
+	vVert* vertexBuffer;
 	std::vector<vMesh *> m_meshes;
 
 	float4 *m_camera;

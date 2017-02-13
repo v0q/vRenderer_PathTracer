@@ -76,15 +76,15 @@ void vRendererCuda::render()
   wdsc.res.array.array = m_cudaImgArray;
   cudaSurfaceObject_t writeSurface;
 	validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc), "Create a writeable cuda surface");
-	cu_runRenderKernel(writeSurface,
-										 m_meshes[0],
-										 m_colorArray,
-										 m_camera,
-										 m_camdir,
-										 m_width,
-										 m_height,
-										 m_frame++,
-										 std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
+//	cu_runRenderKernel(writeSurface,
+//										 m_meshes[0],
+//										 m_colorArray,
+//										 m_camera,
+//										 m_camdir,
+//										 m_width,
+//										 m_height,
+//										 m_frame++,
+//										 std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
 	validateCuda(cudaDestroySurfaceObject(writeSurface), "Clean up the surface");
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer), "Free the mapped GL texture buffer");
 	validateCuda(cudaStreamSynchronize(0), "Synchronize");
@@ -99,6 +99,10 @@ void vRendererCuda::cleanUp()
 			cudaFree(buffer->m_mesh);
 			cudaFree(buffer);
 		}
+		if(vertexBuffer)
+		{
+			cudaFree(vertexBuffer);
+		}
     cudaFree(m_colorArray);
     cudaFree(m_camera);
     cudaFree(m_camdir);
@@ -106,68 +110,101 @@ void vRendererCuda::cleanUp()
   }
 }
 
-void vRendererCuda::initMesh(const std::vector<vFloat3> &_vertData)
+void vRendererCuda::initMesh(const vMeshData &_meshData)
 {
-	unsigned int sz = _vertData.size();
+	// Copy vertex data to GPU
+	vVert *vertices = new vVert[_meshData.m_vertices.size()];
 
-	m_triCount = (sz - BVH::m_numPlaneSetNormals)/6;
-	vMesh mesh;
-	vTriangle *triangles = new vTriangle[m_triCount];
-
-	// Get the vertices of the mesh and their normals
-	for(unsigned int i = 0; i < sz - BVH::m_numPlaneSetNormals; i += 6)
+	for(unsigned int i = 0; i < _meshData.m_vertices.size(); ++i)
 	{
-		vVert v1, v2, v3;
-		v1.m_vert.x = _vertData[i].x;
-		v1.m_vert.y = _vertData[i].y;
-		v1.m_vert.z = _vertData[i].z;
-		v1.m_vert.w = 0.f;
-		v1.m_normal.x = _vertData[i+1].x;
-		v1.m_normal.y = _vertData[i+1].y;
-		v1.m_normal.z = _vertData[i+1].z;
-		v1.m_normal.w = 0.f;
-		v2.m_vert.x = _vertData[i+2].x;
-		v2.m_vert.y = _vertData[i+2].y;
-		v2.m_vert.z = _vertData[i+2].z;
-		v2.m_vert.w = 0.f;
-		v2.m_normal.x = _vertData[i+3].x;
-		v2.m_normal.y = _vertData[i+3].y;
-		v2.m_normal.z = _vertData[i+3].z;
-		v2.m_normal.w = 0.f;
-		v3.m_vert.x = _vertData[i+4].x;
-		v3.m_vert.y = _vertData[i+4].y;
-		v3.m_vert.z = _vertData[i+4].z;
-		v3.m_vert.w = 0.f;
-		v3.m_normal.x = _vertData[i+5].x;
-		v3.m_normal.y = _vertData[i+5].y;
-		v3.m_normal.z = _vertData[i+5].z;
-		v3.m_normal.w = 0.f;
-		triangles[i/6].m_v1 = v1;
-		triangles[i/6].m_v2 = v2;
-		triangles[i/6].m_v3 = v3;
+		vertices[i].m_vert.x = _meshData.m_vertices[i].m_vert.x;
+		vertices[i].m_vert.y = _meshData.m_vertices[i].m_vert.y;
+		vertices[i].m_vert.z = _meshData.m_vertices[i].m_vert.z;
+		vertices[i].m_vert.w = 0.f;
+
+		vertices[i].m_normal.x = _meshData.m_vertices[i].m_normal.x;
+		vertices[i].m_normal.y = _meshData.m_vertices[i].m_normal.y;
+		vertices[i].m_normal.z = _meshData.m_vertices[i].m_normal.z;
+		vertices[i].m_normal.w = 0.f;
 	}
-	// Set the triangle count and bounding box of the mesh
-	for(unsigned int i = 0; i < BVH::m_numPlaneSetNormals; ++i) {
-		mesh.m_bvh.m_normal[i] = make_float4(BVH::m_planeSetNormals[i].x, BVH::m_planeSetNormals[i].y, BVH::m_planeSetNormals[i].z, 0.0f);
-		mesh.m_bvh.m_dNear[i] = _vertData[sz - (BVH::m_numPlaneSetNormals - i)].x;
-		mesh.m_bvh.m_dFar[i] = _vertData[sz - (BVH::m_numPlaneSetNormals - i)].y;
+
+	validateCuda(cudaMalloc(&vertexBuffer, _meshData.m_vertices.size() * sizeof(vVert)), "Malloc buffer for the vertices");
+	validateCuda(cudaMemcpy(vertexBuffer, &vertices[0], _meshData.m_vertices.size() * sizeof(vVert), cudaMemcpyHostToDevice), "Copy vertex data to GPU memory");
+
+	std::cout << "In mesh init\n";
+	for(unsigned int i = 0; i < 9; ++i)
+	{
+		CacheFriendlyBVHNode bvh = _meshData.m_cfbvh[i];
+		if(bvh.m_u.m_leaf.m_count & 0x80000000)
+		{
+			std::cout << "Box " << i << ":\n";
+			std::cout << "  BB Bot: " << bvh.m_bottom.x << ", " << bvh.m_bottom.y << ", " << bvh.m_bottom.z << "\n";
+			std::cout << "  BB Top: " << bvh.m_top.x << ", " << bvh.m_top.y << ", " << bvh.m_top.z << "\n";
+			std::cout << "  TriCount: " << (bvh.m_u.m_leaf.m_count ^ 0x80000000)  << "\n";
+			std::cout << "  Start index: " << bvh.m_u.m_leaf.m_startIndexInTriIndexList << "\n\n";
+		}
 	}
-	mesh.m_triCount = m_triCount;
 
-	vMesh *meshBuffer;
-	vTriangle *triangleBuffer;
+//	unsigned int sz = _vertData.size();
 
-	validateCuda(cudaMalloc(&meshBuffer, sizeof(vMesh)), "Malloc mesh buffer");
-	validateCuda(cudaMalloc(&triangleBuffer, m_triCount*sizeof(vTriangle)), "Malloc triangle buffer");
-	validateCuda(cudaMemcpy(meshBuffer, &mesh, sizeof(vMesh), cudaMemcpyHostToDevice), "Copy mesh to host");
-	validateCuda(cudaMemcpy(triangleBuffer, &triangles[0], m_triCount*sizeof(vTriangle), cudaMemcpyHostToDevice), "Copy triangles to host");
-	validateCuda(cudaMemcpy(&(meshBuffer->m_mesh), &triangleBuffer, sizeof(vTriangle *), cudaMemcpyHostToDevice), "Copy triangles host to mesh host");
+//	m_triCount = (sz - BVH::m_numPlaneSetNormals)/6;
+//	vMesh mesh;
+//	vTriangle *triangles = new vTriangle[m_triCount];
 
-	m_meshes.push_back(meshBuffer);
+//	// Get the vertices of the mesh and their normals
+//	for(unsigned int i = 0; i < sz - BVH::m_numPlaneSetNormals; i += 6)
+//	{
+//		vVert v1, v2, v3;
+//		v1.m_vert.x = _vertData[i].x;
+//		v1.m_vert.y = _vertData[i].y;
+//		v1.m_vert.z = _vertData[i].z;
+//		v1.m_vert.w = 0.f;
+//		v1.m_normal.x = _vertData[i+1].x;
+//		v1.m_normal.y = _vertData[i+1].y;
+//		v1.m_normal.z = _vertData[i+1].z;
+//		v1.m_normal.w = 0.f;
+//		v2.m_vert.x = _vertData[i+2].x;
+//		v2.m_vert.y = _vertData[i+2].y;
+//		v2.m_vert.z = _vertData[i+2].z;
+//		v2.m_vert.w = 0.f;
+//		v2.m_normal.x = _vertData[i+3].x;
+//		v2.m_normal.y = _vertData[i+3].y;
+//		v2.m_normal.z = _vertData[i+3].z;
+//		v2.m_normal.w = 0.f;
+//		v3.m_vert.x = _vertData[i+4].x;
+//		v3.m_vert.y = _vertData[i+4].y;
+//		v3.m_vert.z = _vertData[i+4].z;
+//		v3.m_vert.w = 0.f;
+//		v3.m_normal.x = _vertData[i+5].x;
+//		v3.m_normal.y = _vertData[i+5].y;
+//		v3.m_normal.z = _vertData[i+5].z;
+//		v3.m_normal.w = 0.f;
+//		triangles[i/6].m_v1 = v1;
+//		triangles[i/6].m_v2 = v2;
+//		triangles[i/6].m_v3 = v3;
+//	}
+//	// Set the triangle count and bounding box of the mesh
+//	for(unsigned int i = 0; i < BVH::m_numPlaneSetNormals; ++i) {
+//		mesh.m_bvh.m_normal[i] = make_float4(BVH::m_planeSetNormals[i].x, BVH::m_planeSetNormals[i].y, BVH::m_planeSetNormals[i].z, 0.0f);
+//		mesh.m_bvh.m_dNear[i] = _vertData[sz - (BVH::m_numPlaneSetNormals - i)].x;
+//		mesh.m_bvh.m_dFar[i] = _vertData[sz - (BVH::m_numPlaneSetNormals - i)].y;
+//	}
+//	mesh.m_triCount = m_triCount;
 
-	cu_updateMeshCount(m_meshes.size());
+//	vMesh *meshBuffer;
+//	vTriangle *triangleBuffer;
 
-	delete [] triangles;
+//	validateCuda(cudaMalloc(&meshBuffer, sizeof(vMesh)), "Malloc mesh buffer");
+//	validateCuda(cudaMalloc(&triangleBuffer, m_triCount*sizeof(vTriangle)), "Malloc triangle buffer");
+//	validateCuda(cudaMemcpy(meshBuffer, &mesh, sizeof(vMesh), cudaMemcpyHostToDevice), "Copy mesh to host");
+//	validateCuda(cudaMemcpy(triangleBuffer, &triangles[0], m_triCount*sizeof(vTriangle), cudaMemcpyHostToDevice), "Copy triangles to host");
+//	validateCuda(cudaMemcpy(&(meshBuffer->m_mesh), &triangleBuffer, sizeof(vTriangle *), cudaMemcpyHostToDevice), "Copy triangles host to mesh host");
+
+//	m_meshes.push_back(meshBuffer);
+
+//	cu_updateMeshCount(m_meshes.size());
+
+//	delete [] triangles;
 }
 
 void vRendererCuda::validateCuda(cudaError_t _err, const std::string &_msg)

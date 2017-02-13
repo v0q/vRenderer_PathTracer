@@ -1,78 +1,12 @@
 #include <iostream>
 #include <vector>
 
-#include <cfloat>
 #include <GL/glew.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
 #include "MeshLoader.h"
-
-const vFloat3 BVH::m_planeSetNormals[BVH::m_numPlaneSetNormals] = {
-	vFloat3(1.f, 0.f, 0.f),
-	vFloat3(0.f, 1.f, 0.f),
-	vFloat3(0.f, 0.f, 1.f),
-	vFloat3( sqrtf(3.f) / 3.f,  sqrtf(3.f) / 3.f, sqrtf(3.f) / 3.f),
-	vFloat3(-sqrtf(3.f) / 3.f,  sqrtf(3.f) / 3.f, sqrtf(3.f) / 3.f),
-	vFloat3(-sqrtf(3.f) / 3.f, -sqrtf(3.f) / 3.f, sqrtf(3.f) / 3.f),
-	vFloat3( sqrtf(3.f) / 3.f, -sqrtf(3.f) / 3.f, sqrtf(3.f) / 3.f)
-};
-
-BVH::BVH() :
-	m_initialised(false)
-{
-	m_x.m_min = m_x.m_max = 0.f;
-	m_y.m_min = m_y.m_max = 0.f;
-	m_z.m_min = m_z.m_max = 0.f;
-
-	for(unsigned int i = 0; i < m_numPlaneSetNormals; ++i)
-	{
-		m_dNear[i] = FLT_MAX;
-		m_dFar[i] = -FLT_MAX;
-	}
-}
-
-void BVH::computeExtents(const aiVector3t<float> &_vert)
-{
-	for(unsigned int i = 0; i < m_numPlaneSetNormals; ++i)
-	{
-		float d = m_planeSetNormals[i].x * _vert.x +
-							m_planeSetNormals[i].y * _vert.y +
-							m_planeSetNormals[i].z * _vert.z;
-		m_dNear[i] = std::min(d, m_dNear[i]);
-		m_dFar[i] = std::max(d, m_dFar[i]);
-	}
-//	if(m_initialised)
-//	{
-//		m_x.m_min = m_x.m_min < _vert.x ? m_x.m_min : _vert.x;
-//		m_x.m_max = m_x.m_max > _vert.x ? m_x.m_max : _vert.x;
-
-//		m_y.m_min = m_y.m_min < _vert.y ? m_y.m_min : _vert.y;
-//		m_y.m_max = m_y.m_max > _vert.y ? m_y.m_max : _vert.y;
-
-//		m_z.m_min = m_z.m_min < _vert.z ? m_z.m_min : _vert.z;
-//		m_z.m_max = m_z.m_max > _vert.z ? m_z.m_max : _vert.z;
-//	}
-//	else
-//	{
-//		m_x.m_min = m_x.m_max = _vert.x;
-//		m_y.m_min = m_y.m_max = _vert.y;
-//		m_z.m_min = m_z.m_max = _vert.z;
-
-//		m_initialised = true;
-//	}
-}
-
-vFloat3 BVH::getSlab(const unsigned int &i) const
-{
-	return vFloat3(m_dNear[i], m_dFar[i], 0.0f);
-}
-
-void BVH::print() const
-{
-	for(unsigned int i = 0; i < m_numPlaneSetNormals; ++i)
-		std::cout << "Slab " << i+1 << " [" << m_planeSetNormals[i].x << ", " << m_planeSetNormals[i].y << ", " << m_planeSetNormals[i].z << "]\n  Near: " << m_dNear[i] << "\n  Far: " << m_dFar[i] << "\n\n";
-}
+#include "Utilities.h"
 
 vMeshLoader::vMeshLoader(const std::string &_mesh)
 {
@@ -82,7 +16,7 @@ vMeshLoader::~vMeshLoader()
 {
 }
 
-std::vector<vFloat3> vMeshLoader::loadMesh(const std::string &_mesh)
+vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 {
   Assimp::Importer importer;
   const aiScene* scene = importer.ReadFile(_mesh.c_str(), aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
@@ -90,10 +24,11 @@ std::vector<vFloat3> vMeshLoader::loadMesh(const std::string &_mesh)
   {
     std::cerr << "Failed to load mesh: " << _mesh << "\n";
 		std::cerr << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
-		return std::vector<vFloat3>();
+		return vMeshData();
   }
 
-	std::vector<vFloat3> vertData;
+	std::vector<vHVert> vertices;
+	std::vector<vHTriangle> triangles;
 	BVH bb;
 	float scale = 15.f;
 	float offset = 50.f;
@@ -102,40 +37,85 @@ std::vector<vFloat3> vMeshLoader::loadMesh(const std::string &_mesh)
   {
     aiMesh* mesh = scene->mMeshes[i];
     unsigned int numFaces = mesh->mNumFaces;
-    for(unsigned int j = 0; j < numFaces; ++j)
-    {
-      const aiFace& face = mesh->mFaces[j];
-      for(unsigned int k = 0; k < 3; ++k)
-      {
-				aiVector3t<float> vertex = mesh->mVertices[face.mIndices[k]] * scale;
-        aiVector3t<float> normal;
-        if(mesh->mNormals != NULL)
-          normal = mesh->mNormals[face.mIndices[k]];
-        else
-        {
-          normal = aiVector3t<float>(mesh->mVertices[face.mIndices[0]].y*mesh->mVertices[face.mIndices[1]].z - mesh->mVertices[face.mIndices[0]].z*mesh->mVertices[face.mIndices[1]].z,
-                                     mesh->mVertices[face.mIndices[0]].z*mesh->mVertices[face.mIndices[1]].x - mesh->mVertices[face.mIndices[0]].x*mesh->mVertices[face.mIndices[1]].z,
-                                     mesh->mVertices[face.mIndices[0]].x*mesh->mVertices[face.mIndices[1]].y - mesh->mVertices[face.mIndices[0]].y*mesh->mVertices[face.mIndices[1]].x);
-          normal.Normalize();
-        }
-				vertex.x += offset;
-				vertex.y += offset / 2;
-				vertex.z += offset;
+		unsigned int numVerts = mesh->mNumVertices;
 
-				vertData.push_back(vFloat3(vertex.x, vertex.y, vertex.z));
-				vertData.push_back(vFloat3(normal.x, normal.y, normal.z));
+		triangles.resize(numFaces);
+		vertices.resize(numVerts);
 
-				bb.computeExtents(vertex);
-      }
+		for(unsigned int j = 0; j < numVerts; ++j)
+		{
+			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
+			const aiVector3t<float> normal = mesh->mNormals[j];
+			vHVert v;
+			v.m_vert = vFloat3(vert.x, vert.y, vert.z);
+			v.m_normal = vFloat3(normal.x, normal.y, normal.z);
+			vertices[j] = v;
 		}
-  }
 
-	std::cout << "\nBVH Slabs for " << _mesh << ":\n";
-	bb.print();
-	std::cout << "\n";
+		for(unsigned int j = 0; j < numFaces; ++j)
+		{
+			const aiFace& face = mesh->mFaces[j];
 
-	for(unsigned int i = 0; i < BVH::m_numPlaneSetNormals; ++i)
-		vertData.push_back(bb.getSlab(i));
+			triangles[j].m_bottom = vFloat3(FLT_MAX, FLT_MAX, FLT_MAX);
+			triangles[j].m_top = vFloat3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+			triangles[j].m_indices[0] = face.mIndices[0];
+			triangles[j].m_indices[1] = face.mIndices[1];
+			triangles[j].m_indices[2] = face.mIndices[2];
 
-  return vertData;
+			vFloat3 vert1 = vertices[triangles[j].m_indices[1]].m_vert - vertices[triangles[j].m_indices[0]].m_vert;
+			vFloat3 vert2 = vertices[triangles[j].m_indices[2]].m_vert - vertices[triangles[j].m_indices[1]].m_vert;
+			vFloat3 vert3 = vertices[triangles[j].m_indices[0]].m_vert - vertices[triangles[j].m_indices[2]].m_vert;
+
+			triangles[j].m_center = vFloat3((vert1.x + vert2.x + vert3.x) / 3.0f,
+																			(vert1.y + vert2.y + vert3.y) / 3.0f,
+																			(vert1.z + vert2.z + vert3.z) / 3.0f);
+
+			if(mesh->mNormals != NULL)
+			{
+				triangles[j].m_normal = vFloat3(mesh->mNormals[face.mIndices[0]].x, mesh->mNormals[face.mIndices[0]].y, mesh->mNormals[face.mIndices[0]].z);
+			}
+			else
+			{
+				// plane of triangle, cross product of edge vectors vert1 and vert2
+				triangles[j].m_normal = vUtilities::cross(vert1, vert2);
+
+				// choose longest alternative normal for maximum precision
+				vFloat3 n1 = vUtilities::cross(vert2, vert3);
+				if(n1.length() > triangles[j].m_normal.length())
+					triangles[j].m_normal = n1; // higher precision when triangle has sharp angles
+
+				vFloat3 n2 = vUtilities::cross(vert3, vert1);
+				if(n2.length() > triangles[j].m_normal.length())
+					triangles[j].m_normal = n2;
+
+				triangles[j].m_normal.normalize();
+			}
+
+			// precompute dot product between normal and first triangle vertex
+			triangles[j].m_d = vUtilities::dot(triangles[j].m_normal, vertices[triangles[j].m_indices[0]].m_vert);
+
+			// edge planes
+			triangles[j].m_e1 = vUtilities::cross(triangles[j].m_normal, vert1);
+			triangles[j].m_e1.normalize();
+
+			triangles[j].m_d1 = vUtilities::dot(triangles[j].m_e1, vertices[triangles[j].m_indices[0]].m_vert);
+
+			triangles[j].m_e2 = vUtilities::cross(triangles[j].m_normal, vert2);
+			triangles[j].m_e2.normalize();
+
+			triangles[j].m_d2 = vUtilities::dot(triangles[j].m_e2, vertices[triangles[j].m_indices[1]].m_vert);
+
+			triangles[j].m_e3 = vUtilities::cross(triangles[j].m_normal, vert3);
+			triangles[j].m_e3.normalize();
+
+			triangles[j].m_d3 = vUtilities::dot(triangles[j].m_e3, vertices[triangles[j].m_indices[2]].m_vert);
+		}
+	}
+
+	vMeshData meshData;
+	meshData.m_triangles = triangles;
+	meshData.m_vertices = vertices;
+	meshData.m_cfbvh = bb.createBVH(vertices, triangles);
+
+	return meshData;
 }

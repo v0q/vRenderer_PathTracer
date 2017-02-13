@@ -5,17 +5,26 @@ typedef struct vVert {
 	float4 m_normal;
 } vVert;
 
+typedef struct vTriangle {
+	vVert m_v1;
+	vVert m_v2;
+	vVert m_v3;
+} vTriangle;
+
+//typedef struct vTriangle {
+//	unsigned int m_indices[3];
+//	float4 m_normal;
+//	float4 m_center;
+//	float4 m_bottom;
+//	float4 m_top;
+//} vTriangle;
+
 typedef struct vBVH {
 	float4 m_normal[7];
 	float m_dNear[7];
 	float m_dFar[7];
 } vBVH;
 
-typedef struct vTriangle {
-	vVert m_v1;
-	vVert m_v2;
-	vVert m_v3;
-} vTriangle;
 
 typedef struct vMesh {
 	vTriangle *m_mesh;
