@@ -8,10 +8,17 @@
 #include "RayIntersection.cuh"
 #include "MathHelpers.cuh"
 
-__constant__ __device__ uint numMeshes = 0;
+#define BVH_MAX_STACK_SIZE 32
+
+__constant__ __device__ uint bvhBoxes = 0;
+__constant__ __device__ uint kSamps = 1;
 __constant__ __device__ float kInvGamma = 1.f/2.2f;
-__constant__ __device__ uint kSamps = 8;
-__constant__ __device__ float kInvSamps = 1.f/8.f;
+__constant__ __device__ float kInvSamps = 1.f/1.f;
+
+texture<uint1, 1, cudaReadModeElementType> t_triIndices;
+texture<float2, 1, cudaReadModeElementType> t_bvhLimits;
+texture<uint4, 1, cudaReadModeElementType> t_bvhChildrenOrTriangles;
+texture<float4, 1, cudaReadModeElementType> t_triangles;
 
 typedef struct Sphere {
 	float m_r;       // radius
@@ -35,18 +42,19 @@ typedef struct Sphere {
 } Sphere;
 
 __constant__ Sphere spheres[] = {			//Scene: radius, position, emission, color, material
-	{ 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f, 0.0f },			{ 0.075f, 0.f, 0.f, 0.0f }, { 0.75f, 0.0f, 0.0f, 0.0f } }, //Left
-	{ 1e5f, { -1e5f + 99.0f, 40.8f, 81.6f, 0.0f },		{ 0.f, 0.075f, 0.f, 0.0f }, { 0.0f, 0.75f, 0.0f, 0.0f } }, //Right
-	{ 1e5f, { 50.0f, 40.8f, 1e5f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Back
-	{ 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f, 0.0f } }, //Frnt
+//	{ 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f, 0.0f },			{ 0.075f, 0.f, 0.f, 0.0f }, { 0.75f, 0.0f, 0.0f, 0.0f } }, //Left
+//	{ 1e5f, { -1e5f + 99.0f, 40.8f, 81.6f, 0.0f },		{ 0.f, 0.075f, 0.f, 0.0f }, { 0.0f, 0.75f, 0.0f, 0.0f } }, //Right
+//	{ 1e5f, { 50.0f, 40.8f, 1e5f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Back
+//	{ 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f, 0.0f } }, //Frnt
 	{ 1e5f, { 50.0f, 1e5f, 81.6f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
-	{ 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Top
-	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
-	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
-	{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f, 0.0f },	{ 2.0f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
+//	{ 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Top
+//	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
+//	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
+	{ 150.0f, { 50.0f, 300.6f - .77f, 81.6f, 0.0f },	{ 2.0f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
 };
 
-__device__ inline bool intersectScene(const Ray *_ray, const vMesh *_scene, vHitData *_hitData)
+//__device__ inline bool intersectScene(const Ray *_ray, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, uint4 *_bvhChildrenOrTriangles, vHitData *_hitData)
+__device__ inline bool intersectScene(const Ray *_ray, vHitData *_hitData)
 {
 	/* initialise t to a very large number,
 	so t will be guaranteed to be smaller
@@ -70,19 +78,88 @@ __device__ inline bool intersectScene(const Ray *_ray, const vMesh *_scene, vHit
 			_hitData->m_emission = sphere.m_emission;
 		}
 	}
-	for(unsigned int j = 0; j < numMeshes; ++j)
+
+	int stackIdx = 0;
+	int bvhStack[BVH_MAX_STACK_SIZE];
+
+	bvhStack[stackIdx++] = 0;
+
+	while(stackIdx)
 	{
-		if(intersectBVH(_scene[j].m_bvh, _ray))
+		int bvhIndex = bvhStack[stackIdx - 1];
+		uint4 bvhData = tex1Dfetch(t_bvhChildrenOrTriangles, bvhIndex);
+//		uint4 bvhData = _bvhChildrenOrTriangles[bvhIndex];
+
+		stackIdx--;
+		// Inner node
+		if(!(bvhData.x & 0x80000000))
 		{
-			for(unsigned int i = 0; i < _scene[j].m_triCount; ++i)
+			float2 limitsX = tex1Dfetch(t_bvhLimits, 3 * bvhIndex);
+			float2 limitsY = tex1Dfetch(t_bvhLimits, 3 * bvhIndex + 1);
+			float2 limitsZ = tex1Dfetch(t_bvhLimits, 3 * bvhIndex + 2);
+//			float2 limitsX = _bvhLimits[3 * bvhIndex];
+//			float2 limitsY = _bvhLimits[3 * bvhIndex + 1];
+//			float2 limitsZ = _bvhLimits[3 * bvhIndex + 2];
+
+			float3 bottom = make_float3(limitsX.x, limitsY.x, limitsZ.x);
+			float3 top = make_float3(limitsX.y, limitsY.y, limitsZ.y);
+			if(intersectCFBVH(_ray, bottom, top))
 			{
-				float dist = intersectTriangle(_scene[j].m_mesh[i].m_v1.m_vert, _scene[j].m_mesh[i].m_v2.m_vert, _scene[j].m_mesh[i].m_v3.m_vert, _ray);
-				if(dist != 0.0f && dist < t) {
-					t = dist;
-					_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-					_hitData->m_normal = _scene[j].m_mesh[i].m_v1.m_normal;
-					_hitData->m_color = make_float4(1.f, 1.f, 1.f, 0.f);
-					_hitData->m_emission = make_float4(0.f, 0.f, 4.5f, 0.f);
+				bvhStack[stackIdx++] = bvhData.y;
+				bvhStack[stackIdx++] = bvhData.z;
+
+				if(stackIdx > BVH_MAX_STACK_SIZE)
+					return false;
+			}
+		}
+		else
+		{
+			for(unsigned int i = bvhData.w; i < bvhData.w + (bvhData.x ^ 0x80000000); ++i)
+			{
+				unsigned int triIndex = tex1Dfetch(t_triIndices, i).x;
+//				unsigned int triIndex = _triIdxList[i];
+
+				float4 center = tex1Dfetch(t_triangles, 5 * triIndex);
+				float4 normal = tex1Dfetch(t_triangles, 5 * triIndex + 1);
+//				float4 center = _triangleData[5 * triIndex];
+//				float4 normal = _triangleData[5 * triIndex + 1];
+
+				float k = dot(normal, _ray->m_dir);
+				if(k == 0.f)
+					continue;
+
+				float s = (normal.w - dot(normal, _ray->m_origin)) / k;
+				if(s <= epsilon)
+					continue;
+
+				float4 hit = _ray->m_dir * s;
+				hit += _ray->m_origin;
+
+//				float4 ee1 = _triangleData[5 * triIndex + 2];
+				float4 ee1 = tex1Dfetch(t_triangles, 5 * triIndex + 2);
+				float kt1 = dot(ee1, hit) - ee1.w;
+				if(kt1 < epsilon)
+					continue;
+
+//				float4 ee2 = _triangleData[5 * triIndex + 3];
+				float4 ee2 = tex1Dfetch(t_triangles, 5 * triIndex + 3);
+				float kt2 = dot(ee2, hit) - ee2.w;
+				if(kt2 < epsilon)
+					continue;
+
+//				float4 ee3 = _triangleData[5 * triIndex + 4];
+				float4 ee3 = tex1Dfetch(t_triangles, 5 * triIndex + 4);
+				float kt3 = dot(ee3, hit) - ee3.w;
+				if(kt3 < epsilon)
+					continue;
+
+				float distSquared = distanceSquared(_ray->m_origin - hit);
+				if(distSquared < t * t) {
+					t = distance(_ray->m_origin - hit);
+					_hitData->m_hitPoint = hit;
+					_hitData->m_color = make_float4(1.0f, 0.0f, 0.0f, 0.0f);
+					_hitData->m_normal = normal;
+					_hitData->m_emission = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
 				}
 			}
 		}
@@ -99,18 +176,20 @@ __device__ static unsigned int hash(unsigned int *seed0, unsigned int *seed1)
 	return *seed0**seed1;
 }
 
-__device__ float4 trace(const Ray *_camray, const vMesh *_scene, unsigned int *_seed0, unsigned int *_seed1)
+//__device__ float4 trace(const Ray *_camray, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, uint4 *_bvhChildrenOrTriangles, unsigned int *_seed0, unsigned int *_seed1)
+__device__ float4 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
 	float4 accum_color = make_float4(0.0f, 0.0f, 0.0f, 0.f);
 	float4 mask = make_float4(1.0f, 1.0f, 1.0f, 0.f);
 
-	for(unsigned int bounces = 0; bounces < 4; bounces++)
+	for(unsigned int bounces = 0; bounces < 5; bounces++)
 	{
 		vHitData hitData;
 
-		if(!intersectScene(&ray, _scene, &hitData)) {
+//		if(!intersectScene(&ray, _triangleData, _triIdxList, _bvhLimits, _bvhChildrenOrTriangles, &hitData)) {
+		if(!intersectScene(&ray, &hitData)) {
 			return make_float4(0.f, 0.f, 0.f, 0.f);
 		}
 
@@ -152,7 +231,9 @@ __device__ float4 trace(const Ray *_camray, const vMesh *_scene, unsigned int *_
 	return accum_color;
 }
 
-__global__ void render(cudaSurfaceObject_t _tex, const vMesh *_scene, float4 *_colors, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+//__global__ void render(cudaSurfaceObject_t _tex, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, uint4 *_bvhChildrenOrTriangles,
+//											 float4 *_colors, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -177,7 +258,8 @@ __global__ void render(cudaSurfaceObject_t _tex, const vMesh *_scene, float4 *_c
 			float4 d = camera.m_dir + cx*((.25 + x) / _w - .5) + cy*((.25 + y) / _h - .5);
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam(camera.m_origin + d * 40, normalize(d));
-			_colors[ind] += trace(&newcam, _scene, &s1, &s2) * (kInvSamps);
+//			_colors[ind] += trace(&newcam, _triangleData, _triIdxList, _bvhLimits, _bvhChildrenOrTriangles, &s1, &s2) * (kInvSamps);
+			_colors[ind] += trace(&newcam, &s1, &s2) * (kInvSamps);
 		}
 
 		float coef = 1.f/_frame;
@@ -190,18 +272,43 @@ __global__ void render(cudaSurfaceObject_t _tex, const vMesh *_scene, float4 *_c
 	}
 }
 
-void cu_runRenderKernel(cudaSurfaceObject_t _texture, const vMesh *_scene, float4 *_colorArr, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+void cu_runRenderKernel(// Buffers
+												cudaSurfaceObject_t _texture, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, uint4 *_bvhChildrenOrTriangles,
+												// Buffer sizes for texture initialisation
+												unsigned int _triCount, unsigned int _bvhBoxCount, unsigned int _triIdxCount,
+												float4 *_colorArr, float4 *_cam, float4 *_dir,
+												unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
+	static bool m_initialised = false;
+	if(!m_initialised)
+	{
+		// bind the scene data to CUDA textures!
+		m_initialised = true;
+
+		cudaChannelFormatDesc channel1desc = cudaCreateChannelDesc<uint1>();
+		cudaBindTexture(NULL, &t_triIndices, _triIdxList, &channel1desc, _triIdxCount * sizeof(uint1));
+
+		cudaChannelFormatDesc channel2desc = cudaCreateChannelDesc<uint4>();
+		cudaBindTexture(NULL, &t_bvhChildrenOrTriangles, _bvhChildrenOrTriangles, &channel2desc, _bvhBoxCount * sizeof(uint4));
+
+		cudaChannelFormatDesc channel3desc = cudaCreateChannelDesc<float2>();
+		cudaBindTexture(NULL, &t_bvhLimits, _bvhLimits, &channel3desc, _bvhBoxCount * 3 * sizeof(float2));
+
+		cudaChannelFormatDesc channel5desc = cudaCreateChannelDesc<float4>();
+		cudaBindTexture(NULL, &t_triangles, _triangleData, &channel5desc, _triCount * 5 * sizeof(float4));
+	}
+
 	dim3 dimBlock(16, 16);
 	dim3 dimGrid((_w / dimBlock.x),
 							 (_h / dimBlock.y));
 
-	render<<<dimGrid, dimBlock>>>(_texture, _scene, _colorArr, _cam, _dir, _w, _h, _frame, _time);
+//	render<<<dimGrid, dimBlock>>>(_texture, _triangleData, _triIdxList, _bvhLimits, _bvhChildrenOrTriangles, _colorArr, _cam, _dir, _w, _h, _frame, _time);
+	render<<<dimGrid, dimBlock>>>(_texture, _colorArr, _cam, _dir, _w, _h, _frame, _time);
 }
 
-void cu_updateMeshCount(unsigned int _numMeshes)
+void cu_updateBVHBoxCount(unsigned int _bvhBoxes)
 {
-	cudaMemcpyToSymbol(numMeshes, &_numMeshes, sizeof(unsigned int));
+	cudaMemcpyToSymbol(bvhBoxes, &_bvhBoxes, sizeof(unsigned int));
 }
 
 void cu_fillFloat4(float4 *d_ptr, float4 _val, unsigned int _size)

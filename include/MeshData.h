@@ -11,7 +11,7 @@ typedef struct vFloat3
 	vFloat3() {}
 	vFloat3(const float &_x, const float &_y, const float &_z) : x(_x), y(_y), z(_z) {}
 
-	vFloat3 operator=(const vFloat3 &_b)
+	vFloat3& operator=(const vFloat3 &_b)
 	{
 		x = _b.x;
 		y = _b.y;
@@ -20,7 +20,7 @@ typedef struct vFloat3
 		return *this;
 	}
 
-	vFloat3 operator-(const vFloat3 &_b)
+	vFloat3& operator-=(const vFloat3 &_b)
 	{
 		x -= _b.x;
 		y -= _b.y;
@@ -29,7 +29,7 @@ typedef struct vFloat3
 		return *this;
 	}
 
-	vFloat3 operator*(const float &_b)
+	vFloat3& operator*=(const float &_b)
 	{
 		x *= _b;
 		y *= _b;
@@ -38,13 +38,28 @@ typedef struct vFloat3
 		return *this;
 	}
 
-	vFloat3 operator+(const vFloat3 &_b)
+	vFloat3& operator+=(const vFloat3 &_b)
 	{
 		x += _b.x;
 		y += _b.y;
 		z += _b.z;
 
 		return *this;
+	}
+
+	vFloat3 operator-(const vFloat3 &_b)
+	{
+		return vFloat3(x - _b.x, y - _b.y, z - _b.z);
+	}
+
+	vFloat3 operator*(const float &_b)
+	{
+		return vFloat3(x * _b, y * _b, z * _b);
+	}
+
+	vFloat3 operator+(const vFloat3 &_b)
+	{
+		return vFloat3(x + _b.x, y + _b.y, z + _b.z);
 	}
 
 	float length()

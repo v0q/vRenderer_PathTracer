@@ -19,7 +19,8 @@ vMeshLoader::~vMeshLoader()
 vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 {
   Assimp::Importer importer;
-  const aiScene* scene = importer.ReadFile(_mesh.c_str(), aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
+//	const aiScene* scene = importer.ReadFile(_mesh.c_str(), aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
+	const aiScene* scene = importer.ReadFile(_mesh.c_str(), aiProcessPreset_TargetRealtime_MaxQuality);
 	if(!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
   {
     std::cerr << "Failed to load mesh: " << _mesh << "\n";
@@ -33,11 +34,15 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 	float scale = 15.f;
 	float offset = 50.f;
 
+	std::cout << scene->mNumMeshes << "\n";
+
   for(unsigned int i = 0; i < scene->mNumMeshes; ++i)
   {
     aiMesh* mesh = scene->mMeshes[i];
     unsigned int numFaces = mesh->mNumFaces;
 		unsigned int numVerts = mesh->mNumVertices;
+
+		std::cout << "Num verts: " << numVerts << "\n";
 
 		triangles.resize(numFaces);
 		vertices.resize(numVerts);
@@ -46,9 +51,11 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		{
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
 			const aiVector3t<float> normal = mesh->mNormals[j];
+
 			vHVert v;
-			v.m_vert = vFloat3(vert.x, vert.y, vert.z);
+			v.m_vert = vFloat3(vert.x + offset, vert.y + offset/2., vert.z + offset);
 			v.m_normal = vFloat3(normal.x, normal.y, normal.z);
+
 			vertices[j] = v;
 		}
 
@@ -62,13 +69,19 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 			triangles[j].m_indices[1] = face.mIndices[1];
 			triangles[j].m_indices[2] = face.mIndices[2];
 
-			vFloat3 vert1 = vertices[triangles[j].m_indices[1]].m_vert - vertices[triangles[j].m_indices[0]].m_vert;
-			vFloat3 vert2 = vertices[triangles[j].m_indices[2]].m_vert - vertices[triangles[j].m_indices[1]].m_vert;
-			vFloat3 vert3 = vertices[triangles[j].m_indices[0]].m_vert - vertices[triangles[j].m_indices[2]].m_vert;
+			vFloat3 e1 = vertices[triangles[j].m_indices[1]].m_vert - vertices[triangles[j].m_indices[0]].m_vert;
+			vFloat3 e2 = vertices[triangles[j].m_indices[2]].m_vert - vertices[triangles[j].m_indices[1]].m_vert;
+			vFloat3 e3 = vertices[triangles[j].m_indices[0]].m_vert - vertices[triangles[j].m_indices[2]].m_vert;
 
-			triangles[j].m_center = vFloat3((vert1.x + vert2.x + vert3.x) / 3.0f,
-																			(vert1.y + vert2.y + vert3.y) / 3.0f,
-																			(vert1.z + vert2.z + vert3.z) / 3.0f);
+			triangles[j].m_center = vFloat3((e1.x + e2.x + e3.x) / 3.0f,
+																			(e1.y + e2.y + e3.y) / 3.0f,
+																			(e1.z + e2.z + e3.z) / 3.0f);
+
+			for(unsigned int i = 0; i < 3; ++i)
+			{
+				triangles[j].m_bottom = vUtilities::minvFloat3(triangles[j].m_bottom, vertices[triangles[j].m_indices[i]].m_vert);
+				triangles[j].m_top = vUtilities::maxvFloat3(triangles[j].m_top, vertices[triangles[j].m_indices[i]].m_vert);
+			}
 
 			if(mesh->mNormals != NULL)
 			{
@@ -76,15 +89,15 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 			}
 			else
 			{
-				// plane of triangle, cross product of edge vectors vert1 and vert2
-				triangles[j].m_normal = vUtilities::cross(vert1, vert2);
+				// plane of triangle, cross product of edge vectors e1 and e2
+				triangles[j].m_normal = vUtilities::cross(e1, e2);
 
 				// choose longest alternative normal for maximum precision
-				vFloat3 n1 = vUtilities::cross(vert2, vert3);
+				vFloat3 n1 = vUtilities::cross(e2, e3);
 				if(n1.length() > triangles[j].m_normal.length())
 					triangles[j].m_normal = n1; // higher precision when triangle has sharp angles
 
-				vFloat3 n2 = vUtilities::cross(vert3, vert1);
+				vFloat3 n2 = vUtilities::cross(e3, e1);
 				if(n2.length() > triangles[j].m_normal.length())
 					triangles[j].m_normal = n2;
 
@@ -94,18 +107,18 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 			// precompute dot product between normal and first triangle vertex
 			triangles[j].m_d = vUtilities::dot(triangles[j].m_normal, vertices[triangles[j].m_indices[0]].m_vert);
 
-			// edge planes
-			triangles[j].m_e1 = vUtilities::cross(triangles[j].m_normal, vert1);
+			// edge plane
+			triangles[j].m_e1 = vUtilities::cross(triangles[j].m_normal, e1);
 			triangles[j].m_e1.normalize();
 
 			triangles[j].m_d1 = vUtilities::dot(triangles[j].m_e1, vertices[triangles[j].m_indices[0]].m_vert);
 
-			triangles[j].m_e2 = vUtilities::cross(triangles[j].m_normal, vert2);
+			triangles[j].m_e2 = vUtilities::cross(triangles[j].m_normal, e2);
 			triangles[j].m_e2.normalize();
 
 			triangles[j].m_d2 = vUtilities::dot(triangles[j].m_e2, vertices[triangles[j].m_indices[1]].m_vert);
 
-			triangles[j].m_e3 = vUtilities::cross(triangles[j].m_normal, vert3);
+			triangles[j].m_e3 = vUtilities::cross(triangles[j].m_normal, e3);
 			triangles[j].m_e3.normalize();
 
 			triangles[j].m_d3 = vUtilities::dot(triangles[j].m_e3, vertices[triangles[j].m_indices[2]].m_vert);
@@ -114,8 +127,10 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 
 	vMeshData meshData;
 	meshData.m_triangles = triangles;
-	meshData.m_vertices = vertices;
 	meshData.m_cfbvh = bb.createBVH(vertices, triangles);
+	meshData.m_cfbvhTriIndices = bb.getTriIndices();
+	meshData.m_cfbvhTriIndCount = bb.getTriIndCount();
+	meshData.m_cfbvhBoxCount = bb.getBoxCount();
 
 	return meshData;
 }

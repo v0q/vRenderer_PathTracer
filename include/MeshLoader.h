@@ -9,8 +9,10 @@
 typedef struct vMeshData
 {
 	std::vector<vHTriangle> m_triangles;
-	std::vector<vHVert> m_vertices;
 	CacheFriendlyBVHNode *m_cfbvh;
+	unsigned int *m_cfbvhTriIndices;
+	unsigned int m_cfbvhTriIndCount;
+	unsigned int m_cfbvhBoxCount;
 
 	vMeshData() {}
 } vMeshData;

@@ -7,6 +7,7 @@ CacheFriendlyBVHNode* BVH::createBVH(const std::vector<vHVert> &_vertices, const
 {
 	std::vector<BoundingBox> workingTree;
 
+	std::cout << _triangles.size() << "\n";
 	for(unsigned int i = 0; i < _triangles.size(); ++i)
 	{
 		const vHTriangle &tri = _triangles[i];
@@ -204,6 +205,7 @@ BVHNode* BVH::recurseBoundingBoxes(const std::vector<BoundingBox> &_workingTree,
 		for(auto &bb : _workingTree)
 		{
 			leaf->m_triangles.push_back(bb.m_triangles);
+			m_triCount++;
 		}
 		m_boxCount++;
 		return leaf;
@@ -250,8 +252,8 @@ BVHNode* BVH::recurseBoundingBoxes(const std::vector<BoundingBox> &_workingTree,
 	inner->m_leftNode->m_top = ltop;
 
 	inner->m_rightNode = recurseBoundingBoxes(rightTree, _depth + 1);
-	inner->m_rightNode->m_bottom = lbottom;
-	inner->m_rightNode->m_top = ltop;
+	inner->m_rightNode->m_bottom = rbottom;
+	inner->m_rightNode->m_top = rtop;
 
 	m_boxCount++;
 
@@ -270,6 +272,7 @@ void BVH::createCFBVH(BVHNode* root, const std::vector<vHVert> &_vertices, const
 
 	if((cfBoxCount != m_boxCount - 1) || (cfTriCount != m_triCount))
 	{
+		std::cerr << cfBoxCount << " " << m_boxCount << " - " << cfTriCount << " " << m_triCount << "\n";
 		std::cerr << "Failed to create the cache friendly BVH.\n";
 		exit(1);
 	}

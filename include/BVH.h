@@ -86,6 +86,9 @@ public:
 	~BVH() {}
 
 	CacheFriendlyBVHNode* createBVH(const std::vector<vHVert> &_vertices, const std::vector<vHTriangle> &_triangles);
+	unsigned int *getTriIndices() const { return m_triIndices; }
+	unsigned int getBoxCount() const { return m_boxCount; }
+	unsigned int getTriIndCount() const { return m_triCount; }
 private:
 	void createCFBVH(BVHNode* root, const std::vector<vHVert> &_vertices, const std::vector<vHTriangle> &_triangles);
 	void initCFBVH(BVHNode *root, const vHTriangle *_firstTri, unsigned &_cfBoxCount, unsigned &_cfTriCount);

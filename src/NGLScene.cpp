@@ -131,8 +131,9 @@ void NGLScene::initializeGL()
 	m_text.reset(new ngl::Text(QFont("Arial", 12)));
 	m_text->setScreenSize(width(), height());
 
-	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/lowpolytree.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/monkey.obj"));
+	m_renderer->initMesh(vMeshLoader::loadMesh("models/lowpolytree.obj"));
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)
@@ -206,7 +207,7 @@ void NGLScene::paintGL()
 	m_text->renderText(10, 20, text);
 	text = QString("Render time/frame: %1ms").arg(duration);
 	m_text->renderText(10, 40, text);
-	text = QString("%1 samples per pixel").arg(m_renderer->getFrameCount()*8);
+	text = QString("%1 samples per pixel").arg(m_renderer->getFrameCount());
 	m_text->renderText(10, 60, text);
 	++m_frames;
 }
