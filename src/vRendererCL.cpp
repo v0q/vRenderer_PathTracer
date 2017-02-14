@@ -117,33 +117,7 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 		exit(EXIT_FAILURE);
 	}
 
-	m_kernel = cl::Kernel(m_program, "render");
-
-  {
-    std::ifstream clFile("cl/src/DevicePointer.cl");
-    if(!clFile)
-    {
-      std::cerr << "Could not find 'cl/src/DevicePointer.cl'\n";
-      exit(0);
-    }
-    std::string devicePointerSrc((std::istreambuf_iterator<char>(clFile)),
-                                  std::istreambuf_iterator<char>());
-
-    cl::Program dpProgram = cl::Program(m_context, devicePointerSrc.c_str());
-    cl_int result = dpProgram.build({ m_device });
-    if(result)
-    {
-      std::cerr << "Failed compile the program: " << result << "\n";
-      std::string buildlog = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device);
-      FILE *log = fopen("errorlog.txt", "w");
-      fprintf(log, "%s\n", buildlog.c_str());
-
-      std::cerr << "Build log saved to errorlog.txt:\n";
-      exit(EXIT_FAILURE);
-    }
-
-    m_devPointerKernel = cl::Kernel(dpProgram, "initDevicePointer");
-  }
+  m_kernel = cl::Kernel(m_program, "render");
 
 	m_queue = cl::CommandQueue(m_context, m_device);
 	m_colorArray = cl::Buffer(m_context, CL_MEM_WRITE_ONLY, m_width*m_height*sizeof(cl_float3));
@@ -195,21 +169,23 @@ void vRendererCL::render()
 	event.wait();
 
   m_kernel.setArg(0, m_glTexture);
-  m_kernel.setArg(1, m_meshes[0].first);
-  m_kernel.setArg(2, m_meshes[0].second);
-  m_kernel.setArg(3, m_colorArray);
-  m_kernel.setArg(4, m_camera);
-  m_kernel.setArg(5, m_camdir);
-  m_kernel.setArg(6, m_width);
-  m_kernel.setArg(7, m_height);
-  m_kernel.setArg(8, m_frame++);
-  m_kernel.setArg(9, static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count()));
+  m_kernel.setArg(1, m_triangleData);
+  m_kernel.setArg(2, m_triIdxList);
+  m_kernel.setArg(3, m_bvhLimits);
+  m_kernel.setArg(4, m_bvhChildrenOrTriangles);
+  m_kernel.setArg(5, m_colorArray);
+  m_kernel.setArg(6, m_camera);
+  m_kernel.setArg(7, m_camdir);
+  m_kernel.setArg(8, m_width);
+  m_kernel.setArg(9, m_height);
+  m_kernel.setArg(10, m_frame++);
+  m_kernel.setArg(11, static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count()));
 
-	if((err = m_queue.enqueueNDRangeKernel(m_kernel, cl::NullRange, globalRange, localRange, nullptr, &event)) != CL_SUCCESS)
-	{
-		std::cout << "Failed to enqueue the kernel: " << err << "\n";
-		exit(EXIT_FAILURE);
-	}
+  if((err = m_queue.enqueueNDRangeKernel(m_kernel, cl::NullRange, globalRange, localRange, nullptr, &event)) != CL_SUCCESS)
+  {
+    std::cout << "Failed to enqueue the kernel: " << err << "\n";
+    exit(EXIT_FAILURE);
+  }
 	event.wait();
 
 	cl::finish();
@@ -251,65 +227,103 @@ void vRendererCL::updateCamera(const float *_cam, const float *_dir)
   m_frame = 1;
 }
 
-void vRendererCL::initMesh(const std::vector<vFloat3> &_vertData)
+void vRendererCL::initMesh(const vMeshData &_meshData)
 {
 	cl_int err;
-  unsigned int sz = _vertData.size();
 
-  m_triCount = (sz - 2)/6;
-  vMesh mesh;
-  vTriangle *triangles = new vTriangle[m_triCount];
+  // Triangle data
+  cl_float4 *triData = new cl_float4[_meshData.m_triangles.size() * 5];
+  for(unsigned int i = 0; i < _meshData.m_triangles.size(); ++i)
+  {
+    triData[5 * i	+ 0].x = _meshData.m_triangles[i].m_center.x;
+    triData[5 * i	+ 0].y = _meshData.m_triangles[i].m_center.y;
+    triData[5 * i	+ 0].z = _meshData.m_triangles[i].m_center.z;
+    triData[5 * i	+ 0].w = 0.f;
 
-	for(unsigned int i = 0; i < _vertData.size(); i += 6)
-	{
-		vVert v1, v2, v3;
-    v1.m_vert.x = _vertData[i].x;
-    v1.m_vert.y = _vertData[i].y;
-    v1.m_vert.z = _vertData[i].z;
-		v1.m_vert.w = 0.f;
-		v1.m_normal.x = _vertData[i+1].x;
-		v1.m_normal.y = _vertData[i+1].y;
-		v1.m_normal.z = _vertData[i+1].z;
-		v1.m_normal.w = 0.f;
-    v2.m_vert.x = _vertData[i+2].x;
-    v2.m_vert.y = _vertData[i+2].y;
-    v2.m_vert.z = _vertData[i+2].z;
-		v2.m_vert.w = 0.f;
-		v2.m_normal.x = _vertData[i+3].x;
-		v2.m_normal.y = _vertData[i+3].y;
-		v2.m_normal.z = _vertData[i+3].z;
-		v2.m_normal.w = 0.f;
-    v3.m_vert.x = _vertData[i+4].x;
-    v3.m_vert.y = _vertData[i+4].y;
-    v3.m_vert.z = _vertData[i+4].z;
-		v3.m_vert.w = 0.f;
-		v3.m_normal.x = _vertData[i+5].x;
-		v3.m_normal.y = _vertData[i+5].y;
-		v3.m_normal.z = _vertData[i+5].z;
-		v3.m_normal.w = 0.f;
-		triangles[i/6].m_v1 = v1;
-		triangles[i/6].m_v2 = v2;
-		triangles[i/6].m_v3 = v3;
-	}
+    triData[5 * i + 1].x = _meshData.m_triangles[i].m_normal.x;
+    triData[5 * i + 1].y = _meshData.m_triangles[i].m_normal.y;
+    triData[5 * i + 1].z = _meshData.m_triangles[i].m_normal.z;
+    triData[5 * i + 1].w = _meshData.m_triangles[i].m_d;
 
-  mesh.m_bb.m_x.x = _vertData[sz - 2].x;
-  mesh.m_bb.m_x.y = _vertData[sz - 1].x;
-  mesh.m_bb.m_y.x = _vertData[sz - 2].y;
-  mesh.m_bb.m_y.y = _vertData[sz - 1].y;
-  mesh.m_bb.m_z.x = _vertData[sz - 2].z;
-  mesh.m_bb.m_z.y = _vertData[sz - 1].z;
-  mesh.m_triCount = m_triCount;
+    triData[5 * i + 2].x = _meshData.m_triangles[i].m_e1.x;
+    triData[5 * i + 2].y = _meshData.m_triangles[i].m_e1.y;
+    triData[5 * i + 2].z = _meshData.m_triangles[i].m_e1.z;
+    triData[5 * i + 2].w = _meshData.m_triangles[i].m_d1;
 
-  cl::Buffer meshBuffer = cl::Buffer(m_context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(vMesh), &mesh, &err);
-  cl::Buffer triangleBuffer = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR, m_triCount*sizeof(vTriangle), &triangles[0], &err);
+    triData[5 * i + 3].x = _meshData.m_triangles[i].m_e2.x;
+    triData[5 * i + 3].y = _meshData.m_triangles[i].m_e2.y;
+    triData[5 * i + 3].z = _meshData.m_triangles[i].m_e2.z;
+    triData[5 * i + 3].w = _meshData.m_triangles[i].m_d2;
 
-  m_meshes.push_back(std::make_pair(meshBuffer, triangleBuffer));
+    triData[5 * i + 4].x = _meshData.m_triangles[i].m_e3.x;
+    triData[5 * i + 4].y = _meshData.m_triangles[i].m_e3.y;
+    triData[5 * i + 4].z = _meshData.m_triangles[i].m_e3.z;
+    triData[5 * i + 4].w = _meshData.m_triangles[i].m_d3;
+  }
 
-//  validateCuda(cudaMalloc(&meshBuffer, sizeof(vMesh)), "Malloc mesh buffer");
-//	validateCuda(cudaMalloc(&triangleBuffer, m_triCount*sizeof(vTriangle)), "Malloc triangle buffer");
-//	validateCuda(cudaMemcpy(meshBuffer, &mesh, sizeof(vMesh), cudaMemcpyHostToDevice), "Copy mesh to host");
-//	validateCuda(cudaMemcpy(triangleBuffer, &triangles[0], m_triCount*sizeof(vTriangle), cudaMemcpyHostToDevice), "Copy triangles to host");
-//	validateCuda(cudaMemcpy(&(meshBuffer->m_mesh), &triangleBuffer, sizeof(vTriangle *), cudaMemcpyHostToDevice), "Copy triangles host to mesh host");
+  cl::ImageFormat format;
+  format.image_channel_order = CL_RGBA;
+  format.image_channel_data_type = CL_FLOAT;
+  m_triangleData = cl::Image1D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, _meshData.m_triangles.size() * 5, triData, &err);
 
-	delete [] triangles;
+  std::cout << "Triangle data allocation and copy err: " << err << "\n";
+
+  m_triCount = _meshData.m_triangles.size();
+
+  delete [] triData;
+
+  m_triIdxCount = _meshData.m_cfbvhTriIndCount;
+
+  // BVH Limits
+  cl_float2 *bvhLimits = new cl_float2[_meshData.m_cfbvhBoxCount * 3];
+  for(unsigned int i = 0; i < _meshData.m_cfbvhBoxCount; ++i)
+  {
+    bvhLimits[3 * i + 0].x = _meshData.m_cfbvh[i].m_bottom.x;
+    bvhLimits[3 * i + 0].y = _meshData.m_cfbvh[i].m_top.x;
+
+    bvhLimits[3 * i + 1].x = _meshData.m_cfbvh[i].m_bottom.y;
+    bvhLimits[3 * i + 1].y = _meshData.m_cfbvh[i].m_top.z;
+
+    bvhLimits[3 * i + 2].x = _meshData.m_cfbvh[i].m_bottom.y;
+    bvhLimits[3 * i + 2].y = _meshData.m_cfbvh[i].m_top.z;
+  }
+
+  cl::ImageFormat format2;
+  format2.image_channel_order = CL_RG;
+  format2.image_channel_data_type = CL_FLOAT;
+  m_bvhLimits = cl::Image1D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format2, _meshData.m_cfbvhBoxCount * 3, bvhLimits, &err);
+  std::cout << "BVH limits allocation and copy err: " << err << "\n";
+
+  m_bvhBoxCount = _meshData.m_cfbvhBoxCount;
+
+  delete [] bvhLimits;
+
+  // Triangle indices
+
+  cl::ImageFormat format3;
+  format3.image_channel_order = CL_R;
+  format3.image_channel_data_type = CL_UNSIGNED_INT8;
+  m_triIdxList = cl::Image1D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format3, _meshData.m_cfbvhTriIndCount, _meshData.m_cfbvhTriIndices, &err);
+
+  std::cout << "Triangle index allocation and copy err: " << err << "\n";
+
+  // No need to have this and the limits in separate loops but makes it easier to follow
+  cl_uint4 *bvhChildrenOrTriangles = new cl_uint4[_meshData.m_cfbvhBoxCount];
+  for(unsigned int i = 0; i < _meshData.m_cfbvhBoxCount; ++i)
+  {
+    bvhChildrenOrTriangles[i].x = _meshData.m_cfbvh[i].m_u.m_leaf.m_count;
+    bvhChildrenOrTriangles[i].y = _meshData.m_cfbvh[i].m_u.m_inner.m_rightIndex;
+    bvhChildrenOrTriangles[i].z = _meshData.m_cfbvh[i].m_u.m_inner.m_leftIndex;
+    bvhChildrenOrTriangles[i].w = _meshData.m_cfbvh[i].m_u.m_leaf.m_startIndexInTriIndexList;
+  }
+
+
+  cl::ImageFormat format4;
+  format4.image_channel_order = CL_RGBA;
+  format4.image_channel_data_type = CL_UNSIGNED_INT8;
+  m_bvhChildrenOrTriangles = cl::Image1D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format4, _meshData.m_cfbvhBoxCount, bvhChildrenOrTriangles, &err);
+
+  std::cout << "BVH child nodes and triangles allocation and copy err: " << err << "\n";
+
+  delete [] bvhChildrenOrTriangles;
 }

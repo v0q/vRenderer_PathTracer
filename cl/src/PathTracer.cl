@@ -1,6 +1,7 @@
 #include "cl/include/PathTracer.h"
 #include "cl/include/RayIntersection.h"
 
+#define BVH_MAX_STACK_SIZE 32
 __constant float invGamma = 1.f/2.2f;
 
 __constant Sphere spheres[] = {
@@ -19,15 +20,11 @@ Ray createRay(float4 _o, float4 _d)
 {
 	Ray ray;
 	ray.m_origin = _o;
-	ray.m_dir = _d;
-  ray.m_invDir = 1.f / _d;
-  ray.m_sign.x = (ray.m_invDir.x < 0);
-  ray.m_sign.y = (ray.m_invDir.y < 0);
-  ray.m_sign.z = (ray.m_invDir.z < 0);
+  ray.m_dir = _d;
 	return ray;
 }
 
-bool intersectScene(const Ray *_ray, __global const vMesh *_scene, vHitData *_hitData)
+bool intersectScene(const Ray *_ray, __read_only image1d_t _triangles, __read_only image1d_t _triIndices, __read_only image1d_t _bvhLimits, __read_only image1d_t _bvhChildrenOrTriangles, vHitData *_hitData)
 {
 	/* initialise t to a very large number,
 	so t will be guaranteed to be smaller
@@ -50,21 +47,86 @@ bool intersectScene(const Ray *_ray, __global const vMesh *_scene, vHitData *_hi
 			_hitData->m_color = sphere.m_col;
 			_hitData->m_emission = sphere.m_emission;
 		}
-	}
-  if(intersectBoundingBox(_ray, _scene[0].m_bb.m_x, _scene[0].m_bb.m_y, _scene[0].m_bb.m_z))
+  }
+
+  int stackIdx = 0;
+  int bvhStack[BVH_MAX_STACK_SIZE];
+
+  bvhStack[stackIdx++] = 0;
+
+  while(stackIdx)
   {
-    for(unsigned int i = 0; i < _scene[0].m_triCount; ++i)
+    int bvhIndex = bvhStack[stackIdx - 1];
+    uint4 bvhData = read_imageui(_bvhChildrenOrTriangles, (int)(bvhIndex)).xyzw;
+
+    stackIdx--;
+    // Inner node
+    if(!(bvhData.x & 0x80000000))
     {
-      float dist = intersectTriangle(_scene[0].m_mesh[i].m_v1.m_vert, _scene[0].m_mesh[i].m_v2.m_vert, _scene[0].m_mesh[i].m_v3.m_vert, _ray);
-      if(dist != 0.0f && dist < t) {
-        t = dist;
-        _hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-        _hitData->m_normal = _scene[0].m_mesh[i].m_v1.m_normal;
-        _hitData->m_color = (float4)(1.f, 1.f, 1.f, 0.f);
-        _hitData->m_emission = (float4)(0.f, 0.0f, 0.0f, 0.f);
+      float2 limitsX = read_imagef(_bvhLimits, (int)(3 * bvhIndex)).xy;
+      float2 limitsY = read_imagef(_bvhLimits, (int)(3 * bvhIndex + 1)).xy;
+      float2 limitsZ = read_imagef(_bvhLimits, (int)(3 * bvhIndex + 2)).xy;
+
+      float3 bottom = (float3)(limitsX.x, limitsY.x, limitsZ.x);
+      float3 top = (float3)(limitsX.y, limitsY.y, limitsZ.y);
+      if(intersectCFBVH(_ray, bottom, top))
+      {
+        bvhStack[stackIdx++] = bvhData.y;
+        bvhStack[stackIdx++] = bvhData.z;
+
+        if(stackIdx > BVH_MAX_STACK_SIZE)
+          return false;
+      }
+    }
+    else
+    {
+      for(unsigned int i = bvhData.w; i < bvhData.w + (bvhData.x ^ 0x80000000); ++i)
+      {
+        unsigned int triIndex = read_imageui(_triIndices, (int)(i)).x;
+
+        float4 center = read_imagef(_triangles, (int)(5 * triIndex));
+        float4 normal = read_imagef(_triangles, (int)(5 * triIndex + 1));
+
+        float k = dot(normal, _ray->m_dir);
+        if(k == 0.f)
+          continue;
+
+        float s = (normal.w - dot(normal, _ray->m_origin)) / k;
+        if(s <= epsilon)
+          continue;
+
+        float4 hit = _ray->m_dir * s;
+        hit += _ray->m_origin;
+
+        float4 ee1 = read_imagef(_triangles, (int)(5 * triIndex + 2));
+        float kt1 = dot(ee1, hit) - ee1.w;
+        if(kt1 < epsilon)
+          continue;
+
+        float4 ee2 = read_imagef(_triangles, (int)(5 * triIndex + 3));
+        float kt2 = dot(ee2, hit) - ee2.w;
+        if(kt2 < epsilon)
+          continue;
+
+        float4 ee3 = read_imagef(_triangles, (int)(5 * triIndex + 4));
+        float kt3 = dot(ee3, hit) - ee3.w;
+        if(kt3 < epsilon)
+          continue;
+
+        float distSquared = dot(_ray->m_origin - hit, _ray->m_origin - hit);
+        if(distSquared < t * t)
+        {
+          t = length(_ray->m_origin - hit);
+
+          _hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+          _hitData->m_normal = normal;
+          _hitData->m_color = (float4)(1.0f, 1.0f, 1.0f, 0.f);
+          _hitData->m_emission = (float4)(0.0f, 0.0f, 0.0f, 0.f);
+        }
       }
     }
   }
+
 
 	return t < inf; /* true when ray interesects the scene */
 }
@@ -87,7 +149,7 @@ static float get_random(unsigned int *_seed0, unsigned int *_seed1)
 	return (res.f - 2.0f) / 2.0f;
 }
 
-float4 trace(const Ray *_camray, __global const vMesh *_scene, unsigned int *_seed0, unsigned int *_seed1)
+float4 trace(const Ray *_camray, __read_only image1d_t _triangles, __read_only image1d_t _triIndices, __read_only image1d_t _bvhLimits, __read_only image1d_t _bvhChildrenOrTriangles, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
@@ -99,7 +161,7 @@ float4 trace(const Ray *_camray, __global const vMesh *_scene, unsigned int *_se
 		vHitData hitData;
 
 		/* if ray misses scene, return background colour */
-    if(!intersectScene(&ray, _scene, &hitData)) {
+    if(!intersectScene(&ray, _triangles, _triIndices, _bvhLimits, _bvhChildrenOrTriangles, &hitData)) {
 			return (float4)(0.f, 0.f, 0.f, 0.f);
 		}
 
@@ -139,12 +201,11 @@ float4 trace(const Ray *_camray, __global const vMesh *_scene, unsigned int *_se
 }
 
 
-__kernel void render(__write_only image2d_t _texture, __global vMesh *_scene, __global const vTriangle *_triangles, __global float4 *_colors, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__kernel void render(__write_only image2d_t _texture, __read_only image1d_t _triangles, __read_only image1d_t _triIndices, __read_only image1d_t _bvhLimits, __read_only image1d_t _bvhChildrenOrTriangles,
+                     __global float4 *_colors, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	const unsigned int x = get_global_id(0);
 	const unsigned int y = get_global_id(1);
-
-  _scene[0].m_mesh = _triangles;
 
 	if(x < _w && y < _h)
 	{
@@ -163,7 +224,7 @@ __kernel void render(__write_only image2d_t _texture, __global vMesh *_scene, __
 		cy.y *= .5135f;
 		cy.z *= .5135f;
 
-		unsigned int samps = 8;
+    unsigned int samps = 1;
 		for(unsigned int s = 0; s < samps; s++)
 		{
 			// compute primary ray direction
@@ -176,7 +237,7 @@ __kernel void render(__write_only image2d_t _texture, __global vMesh *_scene, __
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam = createRay(camera.m_origin + d * 40, normalize(d));
 
-      _colors[ind] += trace(&newcam, _scene, &seed0, &seed1);
+      _colors[ind] += trace(&newcam, _triangles, _triIndices, _bvhLimits, _bvhChildrenOrTriangles, &seed0, &seed1);
 		}
 		float coef = 1.f/(samps*_frame);
 

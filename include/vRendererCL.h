@@ -42,7 +42,7 @@ public:
   void render() override;
   void cleanUp() override;
   void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) override;
-	void initMesh(const std::vector<vFloat3> &_vertData) override;
+  void initMesh(const vMeshData &_meshData) override;
   unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
   cl::Platform m_platform;
@@ -50,20 +50,26 @@ private:
   cl::Context m_context;
   cl::Program m_program;
   cl::Kernel m_kernel;
-  cl::Kernel m_devPointerKernel;
   cl::Memory m_glTexture;
   cl::Buffer m_colorArray;
   cl::CommandQueue m_queue;
-  std::vector<std::pair<cl::Buffer, cl::Buffer>> m_meshes;
 	std::vector<cl::Memory> m_GLBuffers;
 
 	cl_float4 m_camera;
 	cl_float4 m_camdir;
 
+  // Mesh buffers
+  cl::Image1D m_triangleData;
+  cl::Image1D m_bvhLimits;
+  cl::Image1D m_bvhChildrenOrTriangles;
+  cl::Image1D m_triIdxList;
+
   unsigned int m_width;
   unsigned int m_height;
   unsigned int m_frame;
   unsigned int m_triCount;
+  unsigned int m_bvhBoxCount;
+  unsigned int m_triIdxCount;
 
   bool m_initialised;
 };
