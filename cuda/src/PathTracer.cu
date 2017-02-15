@@ -11,9 +11,9 @@
 #define BVH_MAX_STACK_SIZE 32
 
 __constant__ __device__ uint bvhBoxes = 0;
-__constant__ __device__ uint kSamps = 1;
+__constant__ __device__ uint kSamps = 2;
 __constant__ __device__ float kInvGamma = 1.f/2.2f;
-__constant__ __device__ float kInvSamps = 1.f/1.f;
+__constant__ __device__ float kInvSamps = 1.f/2.f;
 
 texture<uint1, 1, cudaReadModeElementType> t_triIndices;
 texture<float2, 1, cudaReadModeElementType> t_bvhLimits;

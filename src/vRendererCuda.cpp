@@ -82,21 +82,21 @@ void vRendererCuda::render()
   wdsc.res.array.array = m_cudaImgArray;
   cudaSurfaceObject_t writeSurface;
 	validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc), "Create a writeable cuda surface");
-	cu_runRenderKernel(writeSurface,
-										 m_triangleData,
-										 m_triIdxList,
-										 m_bvhLimits,
-										 m_bvhChildrenOrTriangles,
-										 m_triCount,
-										 m_bvhBoxCount,
-										 m_triIdxCount,
-										 m_colorArray,
-										 m_camera,
-										 m_camdir,
-										 m_width,
-										 m_height,
-										 m_frame++,
-										 std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
+//	cu_runRenderKernel(writeSurface,
+//										 m_triangleData,
+//										 m_triIdxList,
+//										 m_bvhLimits,
+//										 m_bvhChildrenOrTriangles,
+//										 m_triCount,
+//										 m_bvhBoxCount,
+//										 m_triIdxCount,
+//										 m_colorArray,
+//										 m_camera,
+//										 m_camdir,
+//										 m_width,
+//										 m_height,
+//										 m_frame++,
+//										 std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
 	validateCuda(cudaDestroySurfaceObject(writeSurface), "Clean up the surface");
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer), "Free the mapped GL texture buffer");
 	validateCuda(cudaStreamSynchronize(0), "Synchronize");
@@ -124,84 +124,84 @@ void vRendererCuda::cleanUp()
 
 void vRendererCuda::initMesh(const vMeshData &_meshData)
 {
-	// Triangle data
-	float4 *triData = new float4[_meshData.m_triangles.size() * 5];
-	for(unsigned int i = 0; i < _meshData.m_triangles.size(); ++i)
-	{
-		triData[5 * i	+ 0].x = _meshData.m_triangles[i].m_center.x;
-		triData[5 * i	+ 0].y = _meshData.m_triangles[i].m_center.y;
-		triData[5 * i	+ 0].z = _meshData.m_triangles[i].m_center.z;
-		triData[5 * i	+ 0].w = 0.f;
+//	// Triangle data
+//	float4 *triData = new float4[_meshData.m_triangles.size() * 5];
+//	for(unsigned int i = 0; i < _meshData.m_triangles.size(); ++i)
+//	{
+//		triData[5 * i	+ 0].x = _meshData.m_triangles[i].m_center.x;
+//		triData[5 * i	+ 0].y = _meshData.m_triangles[i].m_center.y;
+//		triData[5 * i	+ 0].z = _meshData.m_triangles[i].m_center.z;
+//		triData[5 * i	+ 0].w = 0.f;
 
-		triData[5 * i + 1].x = _meshData.m_triangles[i].m_normal.x;
-		triData[5 * i + 1].y = _meshData.m_triangles[i].m_normal.y;
-		triData[5 * i + 1].z = _meshData.m_triangles[i].m_normal.z;
-		triData[5 * i + 1].w = _meshData.m_triangles[i].m_d;
+//		triData[5 * i + 1].x = _meshData.m_triangles[i].m_normal.x;
+//		triData[5 * i + 1].y = _meshData.m_triangles[i].m_normal.y;
+//		triData[5 * i + 1].z = _meshData.m_triangles[i].m_normal.z;
+//		triData[5 * i + 1].w = _meshData.m_triangles[i].m_d;
 
-		triData[5 * i + 2].x = _meshData.m_triangles[i].m_e1.x;
-		triData[5 * i + 2].y = _meshData.m_triangles[i].m_e1.y;
-		triData[5 * i + 2].z = _meshData.m_triangles[i].m_e1.z;
-		triData[5 * i + 2].w = _meshData.m_triangles[i].m_d1;
+//		triData[5 * i + 2].x = _meshData.m_triangles[i].m_e1.x;
+//		triData[5 * i + 2].y = _meshData.m_triangles[i].m_e1.y;
+//		triData[5 * i + 2].z = _meshData.m_triangles[i].m_e1.z;
+//		triData[5 * i + 2].w = _meshData.m_triangles[i].m_d1;
 
-		triData[5 * i + 3].x = _meshData.m_triangles[i].m_e2.x;
-		triData[5 * i + 3].y = _meshData.m_triangles[i].m_e2.y;
-		triData[5 * i + 3].z = _meshData.m_triangles[i].m_e2.z;
-		triData[5 * i + 3].w = _meshData.m_triangles[i].m_d2;
+//		triData[5 * i + 3].x = _meshData.m_triangles[i].m_e2.x;
+//		triData[5 * i + 3].y = _meshData.m_triangles[i].m_e2.y;
+//		triData[5 * i + 3].z = _meshData.m_triangles[i].m_e2.z;
+//		triData[5 * i + 3].w = _meshData.m_triangles[i].m_d2;
 
-		triData[5 * i + 4].x = _meshData.m_triangles[i].m_e3.x;
-		triData[5 * i + 4].y = _meshData.m_triangles[i].m_e3.y;
-		triData[5 * i + 4].z = _meshData.m_triangles[i].m_e3.z;
-		triData[5 * i + 4].w = _meshData.m_triangles[i].m_d3;
-	}
+//		triData[5 * i + 4].x = _meshData.m_triangles[i].m_e3.x;
+//		triData[5 * i + 4].y = _meshData.m_triangles[i].m_e3.y;
+//		triData[5 * i + 4].z = _meshData.m_triangles[i].m_e3.z;
+//		triData[5 * i + 4].w = _meshData.m_triangles[i].m_d3;
+//	}
 
-	validateCuda(cudaMalloc(&m_triangleData, _meshData.m_triangles.size() * 5 * sizeof(float4)), "Allocate memory for triangle data on GPU");
-	validateCuda(cudaMemcpy(m_triangleData, triData, _meshData.m_triangles.size() * 5 * sizeof(float4), cudaMemcpyHostToDevice), "Copy triangle data to GPU");
+//	validateCuda(cudaMalloc(&m_triangleData, _meshData.m_triangles.size() * 5 * sizeof(float4)), "Allocate memory for triangle data on GPU");
+//	validateCuda(cudaMemcpy(m_triangleData, triData, _meshData.m_triangles.size() * 5 * sizeof(float4), cudaMemcpyHostToDevice), "Copy triangle data to GPU");
 
-	m_triCount = _meshData.m_triangles.size();
+//	m_triCount = _meshData.m_triangles.size();
 
-	delete [] triData;
+//	delete [] triData;
 
-	// Triangle indices
-	validateCuda(cudaMalloc(&m_triIdxList, _meshData.m_cfbvhTriIndCount * sizeof(unsigned int)), "Allocate memory for triangle indices on GPU");
-	validateCuda(cudaMemcpy(m_triIdxList, _meshData.m_cfbvhTriIndices, _meshData.m_cfbvhTriIndCount * sizeof(unsigned int), cudaMemcpyHostToDevice), "Copy triangle indices to GPU");
+//	// Triangle indices
+//	validateCuda(cudaMalloc(&m_triIdxList, _meshData.m_cfbvhTriIndCount * sizeof(unsigned int)), "Allocate memory for triangle indices on GPU");
+//	validateCuda(cudaMemcpy(m_triIdxList, _meshData.m_cfbvhTriIndices, _meshData.m_cfbvhTriIndCount * sizeof(unsigned int), cudaMemcpyHostToDevice), "Copy triangle indices to GPU");
 
-	m_triIdxCount = _meshData.m_cfbvhTriIndCount;
+//	m_triIdxCount = _meshData.m_cfbvhTriIndCount;
 
-	// BVH Limits
-	float2 *bvhLimits = new float2[_meshData.m_cfbvhBoxCount * 3];
-	for(unsigned int i = 0; i < _meshData.m_cfbvhBoxCount; ++i)
-	{
-		bvhLimits[3 * i + 0].x = _meshData.m_cfbvh[i].m_bottom.x;
-		bvhLimits[3 * i + 0].y = _meshData.m_cfbvh[i].m_top.x;
+//	// BVH Limits
+//	float2 *bvhLimits = new float2[_meshData.m_cfbvhBoxCount * 3];
+//	for(unsigned int i = 0; i < _meshData.m_cfbvhBoxCount; ++i)
+//	{
+//		bvhLimits[3 * i + 0].x = _meshData.m_cfbvh[i].m_bottom.x;
+//		bvhLimits[3 * i + 0].y = _meshData.m_cfbvh[i].m_top.x;
 
-		bvhLimits[3 * i + 1].x = _meshData.m_cfbvh[i].m_bottom.y;
-		bvhLimits[3 * i + 1].y = _meshData.m_cfbvh[i].m_top.z;
+//		bvhLimits[3 * i + 1].x = _meshData.m_cfbvh[i].m_bottom.y;
+//		bvhLimits[3 * i + 1].y = _meshData.m_cfbvh[i].m_top.z;
 
-		bvhLimits[3 * i + 2].x = _meshData.m_cfbvh[i].m_bottom.y;
-		bvhLimits[3 * i + 2].y = _meshData.m_cfbvh[i].m_top.z;
-	}
+//		bvhLimits[3 * i + 2].x = _meshData.m_cfbvh[i].m_bottom.y;
+//		bvhLimits[3 * i + 2].y = _meshData.m_cfbvh[i].m_top.z;
+//	}
 
-	validateCuda(cudaMalloc(&m_bvhLimits, _meshData.m_cfbvhBoxCount * 3 * sizeof(float2)), "Allocate memory for bvh limits on GPU");
-	validateCuda(cudaMemcpy(m_bvhLimits, bvhLimits, _meshData.m_cfbvhBoxCount * 3 * sizeof(float2), cudaMemcpyHostToDevice), "Copy bvh limits to GPU");
+//	validateCuda(cudaMalloc(&m_bvhLimits, _meshData.m_cfbvhBoxCount * 3 * sizeof(float2)), "Allocate memory for bvh limits on GPU");
+//	validateCuda(cudaMemcpy(m_bvhLimits, bvhLimits, _meshData.m_cfbvhBoxCount * 3 * sizeof(float2), cudaMemcpyHostToDevice), "Copy bvh limits to GPU");
 
-	m_bvhBoxCount = _meshData.m_cfbvhBoxCount;
+//	m_bvhBoxCount = _meshData.m_cfbvhBoxCount;
 
-	delete [] bvhLimits;
+//	delete [] bvhLimits;
 
-	// No need to have this and the limits in separate loops but makes it easier to follow
-	uint4 *bvhChildrenOrTriangles = new uint4[_meshData.m_cfbvhBoxCount];
-	for(unsigned int i = 0; i < _meshData.m_cfbvhBoxCount; ++i)
-	{
-		bvhChildrenOrTriangles[i].x = _meshData.m_cfbvh[i].m_u.m_leaf.m_count;
-		bvhChildrenOrTriangles[i].y = _meshData.m_cfbvh[i].m_u.m_inner.m_rightIndex;
-		bvhChildrenOrTriangles[i].z = _meshData.m_cfbvh[i].m_u.m_inner.m_leftIndex;
-		bvhChildrenOrTriangles[i].w = _meshData.m_cfbvh[i].m_u.m_leaf.m_startIndexInTriIndexList;
-	}
+//	// No need to have this and the limits in separate loops but makes it easier to follow
+//	uint4 *bvhChildrenOrTriangles = new uint4[_meshData.m_cfbvhBoxCount];
+//	for(unsigned int i = 0; i < _meshData.m_cfbvhBoxCount; ++i)
+//	{
+//		bvhChildrenOrTriangles[i].x = _meshData.m_cfbvh[i].m_u.m_leaf.m_count;
+//		bvhChildrenOrTriangles[i].y = _meshData.m_cfbvh[i].m_u.m_inner.m_rightIndex;
+//		bvhChildrenOrTriangles[i].z = _meshData.m_cfbvh[i].m_u.m_inner.m_leftIndex;
+//		bvhChildrenOrTriangles[i].w = _meshData.m_cfbvh[i].m_u.m_leaf.m_startIndexInTriIndexList;
+//	}
 
-	validateCuda(cudaMalloc(&m_bvhChildrenOrTriangles, _meshData.m_cfbvhBoxCount * sizeof(uint4)), "Allocate memory for bvh child nodes and triangle data on GPU");
-	validateCuda(cudaMemcpy(m_bvhChildrenOrTriangles, bvhChildrenOrTriangles, _meshData.m_cfbvhBoxCount * sizeof(uint4), cudaMemcpyHostToDevice), "Copy bvh child nodes and triangle data to GPU");
+//	validateCuda(cudaMalloc(&m_bvhChildrenOrTriangles, _meshData.m_cfbvhBoxCount * sizeof(uint4)), "Allocate memory for bvh child nodes and triangle data on GPU");
+//	validateCuda(cudaMemcpy(m_bvhChildrenOrTriangles, bvhChildrenOrTriangles, _meshData.m_cfbvhBoxCount * sizeof(uint4), cudaMemcpyHostToDevice), "Copy bvh child nodes and triangle data to GPU");
 
-	delete [] bvhChildrenOrTriangles;
+//	delete [] bvhChildrenOrTriangles;
 }
 
 void vRendererCuda::validateCuda(cudaError_t _err, const std::string &_msg)

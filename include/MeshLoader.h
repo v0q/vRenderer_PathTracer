@@ -4,12 +4,12 @@
 #include <assimp/scene.h>
 #include <string>
 
-#include "BVH.h"
+#include "SBVH.h"
 
 typedef struct vMeshData
 {
 	std::vector<vHTriangle> m_triangles;
-	CacheFriendlyBVHNode *m_cfbvh;
+//	CacheFriendlySBVHNode *m_cfbvh;
 	unsigned int *m_cfbvhTriIndices;
 	unsigned int m_cfbvhTriIndCount;
 	unsigned int m_cfbvhBoxCount;
