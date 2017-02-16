@@ -20,16 +20,13 @@ SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/NGLScene.cpp \
           $$PWD/src/NGLSceneMouseControls.cpp \
           $$PWD/src/MeshLoader.cpp \
-          $$PWD/src/Platform.cpp \
           $$PWD/src/SBVH.cpp \
-          $$PWD/src/SBVHNodes.cpp \
-          $$PWD/src/Utilities.cpp
+          $$PWD/src/SBVHNodes.cpp
 # same for the .h files
 HEADERS+= $$PWD/include/NGLScene.h \
           $$PWD/include/WindowParams.h \
           $$PWD/include/MeshLoader.h \
           $$PWD/include/AABB.h \
-          $$PWD/include/Platform.h \
           $$PWD/include/SBVH.h \
           $$PWD/include/SBVHNodes.h \
           $$PWD/include/Utilities.h \
