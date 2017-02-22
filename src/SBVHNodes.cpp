@@ -1,10 +1,5 @@
 #include "SBVHNodes.h"
 
-float SBVHNode::surfaceArea() const
-{
-	return m_bounds.surfaceArea();
-}
-
 void SBVHNode::computeIntersectionProbability(const float &_probability)
 {
 	m_intersectionProbability = _probability;
@@ -14,6 +9,22 @@ void SBVHNode::computeIntersectionProbability(const float &_probability)
 		SBVHNode *child = childNode(i);
 		child->computeIntersectionProbability(_probability * (child->surfaceArea() / surfaceArea()));
 	}
+}
+
+unsigned int SBVHNode::nodeCount() const
+{
+	unsigned int count = 1;
+	for(unsigned int i = 0; i < numChildNodes(); ++i)
+	{
+		count += childNode(i)->nodeCount();
+	}
+
+	return count;
+}
+
+float SBVHNode::surfaceArea() const
+{
+	return m_bounds.surfaceArea();
 }
 
 float SBVHNode::computeSAHCost() const

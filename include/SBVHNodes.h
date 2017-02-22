@@ -18,6 +18,8 @@ public:
 		return 0;
 	}
 
+	AABB getBounds() const { return m_bounds; }
+	unsigned int nodeCount() const;
 	float surfaceArea() const;
 	float computeSAHCost() const;
 	void computeIntersectionProbability(const float &_probability);
@@ -86,6 +88,9 @@ public:
 	{
 		return m_lastTriIndex - m_firstTriIndex;
 	}
+
+	unsigned int firstIndex() const { return m_firstTriIndex; }
+	unsigned int lastIndex() const { return m_lastTriIndex; }
 
 private:
 	unsigned int m_firstTriIndex;

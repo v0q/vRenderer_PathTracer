@@ -122,86 +122,44 @@ void vRendererCuda::cleanUp()
   }
 }
 
-void vRendererCuda::initMesh(const vMeshData &_meshData)
+void vRendererCuda::initMesh(const SBVH &_sbvhData)
 {
-//	// Triangle data
-//	float4 *triData = new float4[_meshData.m_triangles.size() * 5];
-//	for(unsigned int i = 0; i < _meshData.m_triangles.size(); ++i)
-//	{
-//		triData[5 * i	+ 0].x = _meshData.m_triangles[i].m_center.x;
-//		triData[5 * i	+ 0].y = _meshData.m_triangles[i].m_center.y;
-//		triData[5 * i	+ 0].z = _meshData.m_triangles[i].m_center.z;
-//		triData[5 * i	+ 0].w = 0.f;
+	std::vector<const SBVHNode *> stack{_sbvhData.root()};
+	std::vector<unsigned int> triIndices;
+	std::vector<ngl::Vec3> verts;
+	while(stack.size())
+	{
+		const SBVHNode *node = stack.back();
+		stack.pop_back();
 
-//		triData[5 * i + 1].x = _meshData.m_triangles[i].m_normal.x;
-//		triData[5 * i + 1].y = _meshData.m_triangles[i].m_normal.y;
-//		triData[5 * i + 1].z = _meshData.m_triangles[i].m_normal.z;
-//		triData[5 * i + 1].w = _meshData.m_triangles[i].m_d;
+		AABB bounds[2];
+//		int indices[2];
 
-//		triData[5 * i + 2].x = _meshData.m_triangles[i].m_e1.x;
-//		triData[5 * i + 2].y = _meshData.m_triangles[i].m_e1.y;
-//		triData[5 * i + 2].z = _meshData.m_triangles[i].m_e1.z;
-//		triData[5 * i + 2].w = _meshData.m_triangles[i].m_d1;
+		for(unsigned int i = 0; i < 2; ++i)
+		{
+			const SBVHNode *child = node->childNode(i);
+			bounds[i] = child->getBounds();
 
-//		triData[5 * i + 3].x = _meshData.m_triangles[i].m_e2.x;
-//		triData[5 * i + 3].y = _meshData.m_triangles[i].m_e2.y;
-//		triData[5 * i + 3].z = _meshData.m_triangles[i].m_e2.z;
-//		triData[5 * i + 3].w = _meshData.m_triangles[i].m_d2;
+			if(!child->isLeaf())
+			{
+				stack.push_back(child);
+				continue;
+//				indices[i] =
+			}
 
-//		triData[5 * i + 4].x = _meshData.m_triangles[i].m_e3.x;
-//		triData[5 * i + 4].y = _meshData.m_triangles[i].m_e3.y;
-//		triData[5 * i + 4].z = _meshData.m_triangles[i].m_e3.z;
-//		triData[5 * i + 4].w = _meshData.m_triangles[i].m_d3;
-//	}
+			const LeafNode *leaf = dynamic_cast<const LeafNode *>(child);
 
-//	validateCuda(cudaMalloc(&m_triangleData, _meshData.m_triangles.size() * 5 * sizeof(float4)), "Allocate memory for triangle data on GPU");
-//	validateCuda(cudaMemcpy(m_triangleData, triData, _meshData.m_triangles.size() * 5 * sizeof(float4), cudaMemcpyHostToDevice), "Copy triangle data to GPU");
-
-//	m_triCount = _meshData.m_triangles.size();
-
-//	delete [] triData;
-
-//	// Triangle indices
-//	validateCuda(cudaMalloc(&m_triIdxList, _meshData.m_cfbvhTriIndCount * sizeof(unsigned int)), "Allocate memory for triangle indices on GPU");
-//	validateCuda(cudaMemcpy(m_triIdxList, _meshData.m_cfbvhTriIndices, _meshData.m_cfbvhTriIndCount * sizeof(unsigned int), cudaMemcpyHostToDevice), "Copy triangle indices to GPU");
-
-//	m_triIdxCount = _meshData.m_cfbvhTriIndCount;
-
-//	// BVH Limits
-//	float2 *bvhLimits = new float2[_meshData.m_cfbvhBoxCount * 3];
-//	for(unsigned int i = 0; i < _meshData.m_cfbvhBoxCount; ++i)
-//	{
-//		bvhLimits[3 * i + 0].x = _meshData.m_cfbvh[i].m_bottom.x;
-//		bvhLimits[3 * i + 0].y = _meshData.m_cfbvh[i].m_top.x;
-
-//		bvhLimits[3 * i + 1].x = _meshData.m_cfbvh[i].m_bottom.y;
-//		bvhLimits[3 * i + 1].y = _meshData.m_cfbvh[i].m_top.z;
-
-//		bvhLimits[3 * i + 2].x = _meshData.m_cfbvh[i].m_bottom.y;
-//		bvhLimits[3 * i + 2].y = _meshData.m_cfbvh[i].m_top.z;
-//	}
-
-//	validateCuda(cudaMalloc(&m_bvhLimits, _meshData.m_cfbvhBoxCount * 3 * sizeof(float2)), "Allocate memory for bvh limits on GPU");
-//	validateCuda(cudaMemcpy(m_bvhLimits, bvhLimits, _meshData.m_cfbvhBoxCount * 3 * sizeof(float2), cudaMemcpyHostToDevice), "Copy bvh limits to GPU");
-
-//	m_bvhBoxCount = _meshData.m_cfbvhBoxCount;
-
-//	delete [] bvhLimits;
-
-//	// No need to have this and the limits in separate loops but makes it easier to follow
-//	uint4 *bvhChildrenOrTriangles = new uint4[_meshData.m_cfbvhBoxCount];
-//	for(unsigned int i = 0; i < _meshData.m_cfbvhBoxCount; ++i)
-//	{
-//		bvhChildrenOrTriangles[i].x = _meshData.m_cfbvh[i].m_u.m_leaf.m_count;
-//		bvhChildrenOrTriangles[i].y = _meshData.m_cfbvh[i].m_u.m_inner.m_rightIndex;
-//		bvhChildrenOrTriangles[i].z = _meshData.m_cfbvh[i].m_u.m_inner.m_leftIndex;
-//		bvhChildrenOrTriangles[i].w = _meshData.m_cfbvh[i].m_u.m_leaf.m_startIndexInTriIndexList;
-//	}
-
-//	validateCuda(cudaMalloc(&m_bvhChildrenOrTriangles, _meshData.m_cfbvhBoxCount * sizeof(uint4)), "Allocate memory for bvh child nodes and triangle data on GPU");
-//	validateCuda(cudaMemcpy(m_bvhChildrenOrTriangles, bvhChildrenOrTriangles, _meshData.m_cfbvhBoxCount * sizeof(uint4), cudaMemcpyHostToDevice), "Copy bvh child nodes and triangle data to GPU");
-
-//	delete [] bvhChildrenOrTriangles;
+			for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
+			{
+				for(unsigned int k = 0; k < 3; ++k)
+				{
+					const ngl::Vec3 &vert = _sbvhData.getVert(_sbvhData.getTriangle(j).m_indices[0]);
+					verts.push_back(vert);
+				}
+				triIndices.push_back(_sbvhData.getTriIndex(j));
+			}
+		}
+	}
 }
 
 void vRendererCuda::validateCuda(cudaError_t _err, const std::string &_msg)

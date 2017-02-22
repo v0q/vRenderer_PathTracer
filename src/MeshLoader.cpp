@@ -15,7 +15,7 @@ vMeshLoader::~vMeshLoader()
 {
 }
 
-vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
+SBVH& vMeshLoader::loadMesh(const std::string &_mesh)
 {
   Assimp::Importer importer;
 //	const aiScene* scene = importer.ReadFile(_mesh.c_str(), aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
@@ -24,7 +24,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
   {
     std::cerr << "Failed to load mesh: " << _mesh << "\n";
 		std::cerr << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
-		return vMeshData();
+		exit(EXIT_FAILURE);
   }
 
 	std::vector<ngl::Vec3> vertices;
@@ -87,7 +87,6 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 	}
 
 	SBVH bb(triangles, vertices);
-	exit(0);
 //	bb.createSBVH(vertices, triangles);
 //	vMeshData meshData;
 //	meshData.m_triangles = triangles;
@@ -97,5 +96,5 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 //	meshData.m_cfbvhBoxCount = bb.getBoxCount();
 
 //	return;
-//	return meshData;
+	return bb;
 }

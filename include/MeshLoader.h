@@ -22,6 +22,6 @@ class vMeshLoader
 public:
 	vMeshLoader(const std::string &_mesh);
 	~vMeshLoader();
-	static vMeshData loadMesh(const std::string &_mesh);
+	static SBVH& loadMesh(const std::string &_mesh);
 private:
 };
