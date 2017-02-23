@@ -38,6 +38,7 @@ void SBVH::exec()
 	std::cout << "  Min overlap: " << m_minOverlap << "\n\n";
 
 	std::cout << "SBVH Tree: \n";
+	std::cout << "  " << m_triangles.size() << " tris, " << m_vertices.size() << " verts\n";
 	std::cout << "  Nodes: " << m_root->nodeCount() << "\n";
 
 	std::cout << "---------------\n\n";
@@ -104,7 +105,6 @@ SBVHNode* SBVH::createLeafNode(const NodeSpec &_nSpec)
 		m_triIndices.push_back(m_triRefStack.back().m_triIndex);
 		m_triRefStack.pop_back();
 	}
-
 	return new LeafNode(_nSpec.m_bounds, m_triIndices.size() - _nSpec.m_numRef, m_triIndices.size());
 }
 
@@ -130,7 +130,7 @@ SBVH::ObjectSplitCandidate SBVH::findObjectSplitCandidate(const NodeSpec &_nSpec
 		 * Sweep from left
 		 */
 		AABB lBound;
-		for(unsigned int i = 0; i < _nSpec.m_numRef; ++i)
+		for(unsigned int i = 0; i < _nSpec.m_numRef - 1; ++i)
 		{
 			lBound.extendBB(m_triRefStack[firstRefIndex + i].m_bounds);
 			leftBounds[i] = lBound;
@@ -144,7 +144,7 @@ SBVH::ObjectSplitCandidate SBVH::findObjectSplitCandidate(const NodeSpec &_nSpec
 		for(unsigned int i = _nSpec.m_numRef - 1; i > 0; --i)
 		{
 			rBound.extendBB(m_triRefStack[firstRefIndex + i].m_bounds);
-			float cost = _nodeCost + rBound.surfaceArea() * kTriangleCost * i + leftBounds[i].surfaceArea() * kTriangleCost * (_nSpec.m_numRef - i);
+			float cost = _nodeCost + rBound.surfaceArea() * kTriangleCost * (_nSpec.m_numRef - i) + leftBounds[i].surfaceArea() * kTriangleCost * i;
 			if(cost < candidate.m_cost)
 			{
 				candidate.m_cost = cost;
@@ -265,11 +265,11 @@ void SBVH::splitReference(TriRef &o_leftRef, TriRef &o_rightRef, const TriRef &_
 
 	// Loop over vertices/edges.
 	const unsigned *inds = m_triangles[_ref.m_triIndex].m_indices;
-	ngl::Vec3 &v1 = m_vertices[inds[2]];
+	ngl::Vec3 v1 = m_vertices[inds[2]];
 
 	for(unsigned int i = 0; i < 3; ++i)
 	{
-		const ngl::Vec3 &v0 = v1;
+		ngl::Vec3 v0 = v1;
 		v1 = m_vertices[inds[i]];
 		float v0p = v0.m_openGL[_axis];
 		float v1p = v1.m_openGL[_axis];

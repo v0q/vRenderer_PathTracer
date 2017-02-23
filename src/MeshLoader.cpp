@@ -15,7 +15,7 @@ vMeshLoader::~vMeshLoader()
 {
 }
 
-SBVH& vMeshLoader::loadMesh(const std::string &_mesh)
+vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 {
   Assimp::Importer importer;
 //	const aiScene* scene = importer.ReadFile(_mesh.c_str(), aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
@@ -29,8 +29,8 @@ SBVH& vMeshLoader::loadMesh(const std::string &_mesh)
 
 	std::vector<ngl::Vec3> vertices;
 	std::vector<vHTriangle> triangles;
-	float scale = 15.f;
-	float offset = 50.f;
+	float scale = 20.f;
+	float offset = -10.f;
 
 	std::cout << scene->mNumMeshes << "\n";
 
@@ -48,7 +48,7 @@ SBVH& vMeshLoader::loadMesh(const std::string &_mesh)
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
-			vertices[j] = ngl::Vec3(vert.x + offset, vert.y + offset/2., vert.z + offset);
+			vertices[j] = ngl::Vec3(vert.x + offset, vert.y + offset, vert.z + offset);
 		}
 
 		for(unsigned int j = 0; j < numFaces; ++j)
@@ -59,9 +59,11 @@ SBVH& vMeshLoader::loadMesh(const std::string &_mesh)
 			triangles[j].m_indices[1] = face.mIndices[1];
 			triangles[j].m_indices[2] = face.mIndices[2];
 
-			ngl::Vec3 e1 = vertices[triangles[j].m_indices[1]] - vertices[triangles[j].m_indices[0]];
-			ngl::Vec3 e2 = vertices[triangles[j].m_indices[2]] - vertices[triangles[j].m_indices[1]];
-			ngl::Vec3 e3 = vertices[triangles[j].m_indices[0]] - vertices[triangles[j].m_indices[2]];
+			std::cout << face.mIndices[0] << " " << face.mIndices[1] << " " << face.mIndices[2] << "\n";
+
+			ngl::Vec3 e1 = vertices[face.mIndices[1]] - vertices[face.mIndices[0]];
+			ngl::Vec3 e2 = vertices[face.mIndices[2]] - vertices[face.mIndices[1]];
+			ngl::Vec3 e3 = vertices[face.mIndices[0]] - vertices[face.mIndices[2]];
 
 			if(mesh->mNormals != NULL)
 			{
@@ -87,14 +89,6 @@ SBVH& vMeshLoader::loadMesh(const std::string &_mesh)
 	}
 
 	SBVH bb(triangles, vertices);
-//	bb.createSBVH(vertices, triangles);
-//	vMeshData meshData;
-//	meshData.m_triangles = triangles;
-//	meshData.m_cfbvh = bb.createBVH(vertices, triangles);
-//	meshData.m_cfbvhTriIndices = bb.getTriIndices();
-//	meshData.m_cfbvhTriIndCount = bb.getTriIndCount();
-//	meshData.m_cfbvhBoxCount = bb.getBoxCount();
 
-//	return;
-	return bb;
+	return vMeshData(triangles, vertices, bb);
 }

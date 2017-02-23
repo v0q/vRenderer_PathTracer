@@ -71,7 +71,7 @@ public:
 
 	bool isLeaf() const override
 	{
-		return false;
+		return true;
 	}
 
 	unsigned int numChildNodes() const override

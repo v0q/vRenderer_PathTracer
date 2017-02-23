@@ -9,12 +9,14 @@
 typedef struct vMeshData
 {
 	std::vector<vHTriangle> m_triangles;
-//	CacheFriendlySBVHNode *m_cfbvh;
-	unsigned int *m_cfbvhTriIndices;
-	unsigned int m_cfbvhTriIndCount;
-	unsigned int m_cfbvhBoxCount;
+	std::vector<ngl::Vec3> m_vertices;
+	SBVH m_sbvh;
 
-	vMeshData() {}
+	vMeshData(const std::vector<vHTriangle> &_tris, const std::vector<ngl::Vec3> &_verts, const SBVH &_sbvh) :
+		m_triangles(_tris),
+		m_vertices(_verts),
+		m_sbvh(_sbvh)
+	{}
 } vMeshData;
 
 class vMeshLoader
@@ -22,6 +24,6 @@ class vMeshLoader
 public:
 	vMeshLoader(const std::string &_mesh);
 	~vMeshLoader();
-	static SBVH& loadMesh(const std::string &_mesh);
+	static vMeshData loadMesh(const std::string &_mesh);
 private:
 };

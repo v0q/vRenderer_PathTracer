@@ -62,8 +62,8 @@ typedef struct vHitData {
 	float4 m_color;
 } vHitData;
 
-void cu_runRenderKernel(cudaSurfaceObject_t _texture, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, uint4 *_bvhChildrenOrTriangles,
-												unsigned int _triCount, unsigned int _bvhBoxCount, unsigned int _triIdxCount,
+void cu_runRenderKernel(cudaSurfaceObject_t _texture, float4 *_vertices, float4 *_bvhData, unsigned int *_triIdxList,
+												unsigned int _vertCount, unsigned int _bvhNodeCount, unsigned int _triIdxCount,
 												float4 *_colorArr, float4 *_cam, float4 *_dir,
 												unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time);
 void cu_updateBVHBoxCount(unsigned int _bvhBoxes);

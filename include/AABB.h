@@ -45,7 +45,7 @@ public:
 	inline void intersectBB(const AABB &_aabb)
 	{
 		m_min = vUtilities::maxVec3(m_min, _aabb.maxBounds());
-		m_max = vUtilities::maxVec3(m_max, _aabb.minBounds());
+		m_max = vUtilities::minVec3(m_max, _aabb.minBounds());
 	}
 
 	///

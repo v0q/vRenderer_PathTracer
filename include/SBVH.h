@@ -82,7 +82,7 @@ private:
 
 public:
 	SBVH() = delete;
-	SBVH(std::vector<vHTriangle> &_tris, std::vector<ngl::Vec3> &_verts) :
+	SBVH(const std::vector<vHTriangle> &_tris, const std::vector<ngl::Vec3> &_verts) :
 		m_triangles(_tris),
 		m_vertices(_verts)
 	{
@@ -91,9 +91,7 @@ public:
 	}
 	~SBVH() {}
 
-	SBVHNode *root() const { return m_root; }
-	vHTriangle getTriangle(const unsigned int &_ind) const { return m_triangles[_ind]; }
-	ngl::Vec3 getVert(const unsigned int &_ind) const { return m_vertices[_ind]; }
+	SBVHNode *getRoot() const { return m_root; }
 	unsigned int getTriIndex(const unsigned int &_ind) const { return m_triIndices[_ind]; }
 
 private:
@@ -114,8 +112,8 @@ private:
 
 	SBVHNode *m_root;
 
-	std::vector<vHTriangle> &m_triangles;
-	std::vector<ngl::Vec3> &m_vertices;
+	std::vector<vHTriangle> m_triangles;
+	std::vector<ngl::Vec3> m_vertices;
 	std::vector<TriRef> m_triRefStack;
 	std::vector<unsigned int> m_triIndices;
 

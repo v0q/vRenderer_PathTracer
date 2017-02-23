@@ -105,3 +105,106 @@ inline __device__ float distance(const float4 &_v)
 {
 	return sqrtf(dot(_v, _v));
 }
+
+///
+/// Based on the CudaTracerLib by Hannes Hergeth (https://github.com/hhergeth/CudaTracerLib)
+///
+inline __device__ int min_min(const int &_a, const int &_b, const int &_c)
+{
+	int v;
+	asm(
+		"vmin.s32.s32.s32.min %0, %1, %2, %3;"
+	:
+		"=r"(v) :
+			"r"(_a),
+			"r"(_b),
+			"r"(_c));
+
+	return v;
+}
+
+inline __device__ int min_max(const int &_a, const int &_b, const int &_c)
+{
+	int v;
+	asm(
+		"vmin.s32.s32.s32.max %0, %1, %2, %3;"
+	:
+		"=r"(v) :
+			"r"(_a),
+			"r"(_b),
+			"r"(_c));
+
+	return v;
+}
+
+inline __device__ int max_min(const int &_a, const int &_b, const int &_c)
+{
+	int v;
+	asm("vmax.s32.s32.s32.min %0, %1, %2, %3;"
+	:
+		"=r"(v) :
+			"r"(_a),
+			"r"(_b),
+			"r"(_c));
+
+	return v;
+}
+
+inline __device__ int max_max(const int &_a, const int &_b, const int &_c)
+{
+	int v;
+	asm("vmax.s32.s32.s32.max %0, %1, %2, %3;"
+	:
+		"=r"(v) :
+			"r"(_a),
+			"r"(_b),
+			"r"(_c));
+
+	return v;
+}
+
+inline __device__ float fmin_fmin(const float &_a, const float &_b, const float &_c)
+{
+	return __int_as_float(
+												min_min(__float_as_int(_a),
+																__float_as_int(_b),
+																__float_as_int(_c))
+											);
+}
+
+inline __device__ float fmin_fmax(const float &_a, const float &_b, const float &_c)
+{
+	return __int_as_float(
+												min_max(__float_as_int(_a),
+																__float_as_int(_b),
+																__float_as_int(_c))
+											);
+}
+
+inline __device__ float fmax_fmin(const float &_a, const float &_b, const float &_c)
+{
+	return __int_as_float(
+												max_min(__float_as_int(_a),
+																__float_as_int(_b),
+																__float_as_int(_c))
+											);
+}
+
+inline __device__ float fmax_fmax(const float &_a, const float &_b, const float &_c)
+{
+	return __int_as_float(
+												max_max(__float_as_int(_a),
+																__float_as_int(_b),
+																__float_as_int(_c))
+											);
+}
+
+inline __device__ float spanBeginKepler(const float &_a0, const float &_a1, const float &_b0, const float &_b1, const float &_c0, const float &_c1, const float &_d)
+{
+	return fmax_fmax(min(_a0, _a1), min(_b0, _b1), fmin_fmax(_c0, _c1, _d));
+}
+
+inline __device__ float spanEndKepler(const float &_a0, const float &_a1, const float &_b0, const float &_b1, const float &_c0, const float &_c1, const float &_d)
+{
+	return fmin_fmin(max(_a0, _a1), max(_b0, _b1), fmax_fmin(_c0, _c1, _d));
+}
