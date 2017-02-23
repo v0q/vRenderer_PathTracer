@@ -175,6 +175,7 @@ void vRendererCuda::initMesh(const vMeshData &_sbvhData)
 			bounds[0] = node->getBounds();
 			const LeafNode *leaf = dynamic_cast<const LeafNode *>(node);
 			indices[0] = ~triIndices.size();
+			indices[1] = 0x80000000;
 			for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
 			{
 				for(unsigned int k = 0; k < 3; ++k)
@@ -205,6 +206,11 @@ void vRendererCuda::initMesh(const vMeshData &_sbvhData)
 
 	validateCuda(cudaMalloc(&m_triIdxList, triIndices.size()*sizeof(unsigned int)), "Malloc triangle index device pointer");
 	validateCuda(cudaMemcpy(m_triIdxList, &triIndices[0], triIndices.size()*sizeof(unsigned int), cudaMemcpyHostToDevice), "Copy triangle indices to gpu");
+
+	for(unsigned int i = 0; i < bvhData.size(); i += 4)
+	{
+		std::cout << bvhData[i*4 + 3].x << " " << bvhData[i*4 + 3].y << "\n";
+	}
 
 	m_vertCount = verts.size();
 	m_bvhNodeCount = bvhData.size();

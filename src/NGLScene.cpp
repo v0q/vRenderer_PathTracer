@@ -56,8 +56,7 @@ void NGLScene::initializeGL()
 
   m_renderer->init((unsigned int)width(), (unsigned int)height());
 
-  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);			   // Grey Background
-
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_MULTISAMPLE);
@@ -162,6 +161,7 @@ void NGLScene::paintGL()
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
   m_renderer->render();
+	exit(0);
 
 	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 
