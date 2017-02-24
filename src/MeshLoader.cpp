@@ -48,7 +48,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
-			vertices[j] = ngl::Vec3(vert.x + offset, vert.y + offset, vert.z + offset);
+			vertices[j] = ngl::Vec3(vert.x + offset, vert.y, vert.z + offset);
 		}
 
 		for(unsigned int j = 0; j < numFaces; ++j)

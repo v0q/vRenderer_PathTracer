@@ -3,11 +3,13 @@
 #include <chrono>
 #include <cuda_gl_interop.h>
 
+#include "Utilities.cuh"
+
 vRendererCuda::vRendererCuda() :
   m_frame(1),
 	m_vertCount(0),
-	m_triIdxCount(0),
 	m_bvhNodeCount(0),
+	m_triIdxCount(0),
 	m_initialised(false)
 {
   std::cout << "Cuda vRenderer ctor called\n";
@@ -158,16 +160,17 @@ void vRendererCuda::initMesh(const vMeshData &_sbvhData)
 				indices[i] = ~triIndices.size();
 				for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
 				{
+					unsigned int triInd = _sbvhData.m_sbvh.getTriIndex(j);
 					for(unsigned int k = 0; k < 3; ++k)
 					{
-						const ngl::Vec3 &vert = _sbvhData.m_vertices[_sbvhData.m_triangles[j].m_indices[k]];
+						const ngl::Vec3 &vert = _sbvhData.m_vertices[_sbvhData.m_triangles[triInd].m_indices[k]];
 						verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
 					}
 //					std::cout << "Triangle index: " << _sbvhData.m_sbvh.getTriIndex(j) << "\n";
-					triIndices.push_back(_sbvhData.m_sbvh.getTriIndex(j));
+					triIndices.push_back(triInd);
 				}
 				// Terminate triangle
-				verts.push_back(make_float4(0x80000000, 0, 0, 0));
+				verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
 			}
 		}
 		else
@@ -178,28 +181,37 @@ void vRendererCuda::initMesh(const vMeshData &_sbvhData)
 			indices[1] = 0x80000000;
 			for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
 			{
+				unsigned int triInd = _sbvhData.m_sbvh.getTriIndex(j);
 				for(unsigned int k = 0; k < 3; ++k)
 				{
-					const ngl::Vec3 &vert = _sbvhData.m_vertices[_sbvhData.m_triangles[j].m_indices[k]];
+					const ngl::Vec3 &vert = _sbvhData.m_vertices[_sbvhData.m_triangles[triInd].m_indices[k]];
 					verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
 				}
 				std::cout << "Triangle index: " << _sbvhData.m_sbvh.getTriIndex(j) << "\n";
-				triIndices.push_back(_sbvhData.m_sbvh.getTriIndex(j));
+				triIndices.push_back(triInd);
 			}
 			// Terminate triangle
-			verts.push_back(make_float4(0x80000000, 0, 0, 0));
+			verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
 		}
 		// Node bounding box
 		// Stored int child 1 XY, child 2 XY, child 1 & 2 Z
 		std::cout << "Index: " << idx << "\n";
-		bvhData[idx*4] = make_float4(bounds[0].minBounds().m_x, bounds[0].maxBounds().m_x, bounds[0].minBounds().m_y, bounds[0].maxBounds().m_y);
+		bvhData[idx*4 + 0] = make_float4(bounds[0].minBounds().m_x, bounds[0].maxBounds().m_x, bounds[0].minBounds().m_y, bounds[0].maxBounds().m_y);
 		bvhData[idx*4 + 1] = make_float4(bounds[1].minBounds().m_x, bounds[1].maxBounds().m_x, bounds[1].minBounds().m_y, bounds[1].maxBounds().m_y);
 		bvhData[idx*4 + 2] = make_float4(bounds[0].minBounds().m_z, bounds[0].maxBounds().m_z, bounds[1].minBounds().m_z, bounds[1].maxBounds().m_z);
-		bvhData[idx*4 + 3] = make_float4(indices[0], indices[1], 0, 0);
+
+		// Doing "trickery" and storing our indices as floats by not mangling with the bits:
+		// 1 (int) = 0x00000001
+		// 1.0 (float) = 0x3F800000
+		// 0x00000001 = 1.40129846432481707092372958329E-45 (float)
+//		std::cout << intAsFloat(indices[0] << " " << indices[1] << "\n";
+		bvhData[idx*4 + 3] = make_float4(intAsFloat(indices[0]), intAsFloat(indices[1]), 0, 0);
 	}
 
 	validateCuda(cudaMalloc(&m_vertices, verts.size()*sizeof(float4)), "Malloc vertex device pointer");
 	validateCuda(cudaMemcpy(m_vertices, &verts[0], verts.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy vertex data to gpu");
+
+	std::cout << verts.size() << "\n";
 
 	validateCuda(cudaMalloc(&m_bvhData, bvhData.size()*sizeof(float4)), "Malloc BVH node device pointer");
 	validateCuda(cudaMemcpy(m_bvhData, &bvhData[0], bvhData.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy bvh node data to gpu");
@@ -209,7 +221,7 @@ void vRendererCuda::initMesh(const vMeshData &_sbvhData)
 
 	for(unsigned int i = 0; i < bvhData.size(); i += 4)
 	{
-		std::cout << bvhData[i*4 + 3].x << " " << bvhData[i*4 + 3].y << "\n";
+		std::cout << "BVHData " << bvhData[i*4 + 3].x << " " << bvhData[i*4 + 3].y << "\n";
 	}
 
 	m_vertCount = verts.size();

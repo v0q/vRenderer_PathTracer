@@ -32,7 +32,8 @@ vrenderer_cuda {
   CUDA_SOURCES += $$PWD/cuda/src/PathTracer.cu
   CUDA_HEADERS += $$PWD/cuda/include/PathTracer.cuh \
                   $$PWD/cuda/include/RayIntersection.cuh \
-                  $$PWD/cuda/include/MathHelpers.cuh
+                  $$PWD/cuda/include/MathHelpers.cuh \
+                  $$PWD/cuda/include/Utilities.cuh
   CUDA_OBJECTS_DIR = $$PWD/cuda/obj
 
   INCLUDEPATH += $$PWD/cuda/include
