@@ -1,4 +1,3 @@
 # vRenderer
-Path tracer for an University assignment
-
 ##WIP
+Path tracer for an University assignment
