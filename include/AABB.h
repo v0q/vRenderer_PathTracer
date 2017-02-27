@@ -44,8 +44,8 @@ public:
 	///
 	inline void intersectBB(const AABB &_aabb)
 	{
-		m_min = vUtilities::maxVec3(m_min, _aabb.maxBounds());
-		m_max = vUtilities::minVec3(m_max, _aabb.minBounds());
+		m_min = vUtilities::maxVec3(m_min, _aabb.minBounds());
+		m_max = vUtilities::minVec3(m_max, _aabb.maxBounds());
 	}
 
 	///
@@ -104,6 +104,13 @@ public:
 	inline ngl::Vec3 getCentroid() const
 	{
 		return (m_min + m_max) / 2.f;
+	}
+
+	inline void printBounds() const
+	{
+		std::cout << "AABB bounds:\n";
+		std::cout << "  Min: [" << m_min.m_x << ", " << m_min.m_y << ", " << m_min.m_z << "]\n";
+		std::cout << "  Min: [" << m_max.m_x << ", " << m_max.m_y << ", " << m_max.m_z << "]\n";
 	}
 
 private:

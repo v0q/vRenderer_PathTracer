@@ -7,7 +7,9 @@ constexpr float kNodeCost = 1.f;
 constexpr unsigned int kMinLeafSize = 1;
 constexpr unsigned int kSpatialBins = 32;
 constexpr unsigned int kMaxDepth = 64;
+constexpr unsigned int kMaxLeafSize = 64;
 
+#include <iostream>
 namespace vUtilities
 {
 	inline ngl::Vec3 minVec3(const ngl::Vec3 &_v1, const ngl::Vec3 &_v2)

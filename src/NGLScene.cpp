@@ -5,6 +5,7 @@
 #include <vector>
 #include <assert.h>
 #include <chrono>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
@@ -15,6 +16,8 @@
 #elif __VRENDERER_OPENCL__
 	#include "vRendererCL.h"
 #endif
+
+namespace OCIO = OCIO_NAMESPACE;
 
 NGLScene::NGLScene() :
   m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
@@ -103,6 +106,16 @@ void NGLScene::initializeGL()
 		1.0f, 0.0f,
 		1.0f, 1.0f
 	};
+
+	OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+
+	const char *display = config->getDefaultDisplay();
+	const char *view = config->getDefaultView(display);
+	const char *transform = config->getDisplayColorSpaceName(display, view);
+
+	OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, transform);
+
+	std::cout << display << " " << view << " " << transform << "\n";
 
 	glGenBuffers(1, &m_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);

@@ -48,7 +48,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
-			vertices[j] = ngl::Vec3(vert.x + offset, vert.y, vert.z + offset);
+			vertices[j] = ngl::Vec3(vert.x + offset + std::rand()/(float)RAND_MAX, vert.y + offset + std::rand()/(float)RAND_MAX, vert.z + offset + std::rand()/(float)RAND_MAX);
 		}
 
 		for(unsigned int j = 0; j < numFaces; ++j)
@@ -58,8 +58,6 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 			triangles[j].m_indices[0] = face.mIndices[0];
 			triangles[j].m_indices[1] = face.mIndices[1];
 			triangles[j].m_indices[2] = face.mIndices[2];
-
-			std::cout << face.mIndices[0] << " " << face.mIndices[1] << " " << face.mIndices[2] << "\n";
 
 			ngl::Vec3 e1 = vertices[face.mIndices[1]] - vertices[face.mIndices[0]];
 			ngl::Vec3 e2 = vertices[face.mIndices[2]] - vertices[face.mIndices[1]];
@@ -88,7 +86,9 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		}
 	}
 
-	SBVH bb(triangles, vertices);
+	BVH bb(&triangles[0], &vertices[0], triangles.size());
+
+	exit(EXIT_FAILURE);
 
 	return vMeshData(triangles, vertices, bb);
 }

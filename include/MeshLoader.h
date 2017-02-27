@@ -4,18 +4,18 @@
 #include <assimp/scene.h>
 #include <string>
 
-#include "SBVH.h"
+#include "BVH.h"
 
 typedef struct vMeshData
 {
 	std::vector<vHTriangle> m_triangles;
 	std::vector<ngl::Vec3> m_vertices;
-	SBVH m_sbvh;
+	BVH m_bvh;
 
-	vMeshData(const std::vector<vHTriangle> &_tris, const std::vector<ngl::Vec3> &_verts, const SBVH &_sbvh) :
+	vMeshData(const std::vector<vHTriangle> &_tris, const std::vector<ngl::Vec3> &_verts, const BVH &_bvh) :
 		m_triangles(_tris),
 		m_vertices(_verts),
-		m_sbvh(_sbvh)
+		m_bvh(_bvh)
 	{}
 } vMeshData;
 

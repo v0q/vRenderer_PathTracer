@@ -2,26 +2,12 @@
 basic OpenGL demo modified from http://qt-project.org/doc/qt-5.0/qtgui/openglwindow.html
 ****************************************************************************/
 #include <QtGui/QGuiApplication>
-#include <OpenColorIO/OpenColorIO.h>
 #include <iostream>
 #include "NGLScene.h"
 
-namespace OCIO = OCIO_NAMESPACE;
-
 int main(int argc, char **argv)
 {
-
 	QGuiApplication app(argc, argv);
-
-	OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-
-	const char *display = config->getDefaultDisplay();
-	const char *view = config->getDefaultView(display);
-	const char *transform = config->getDisplayColorSpaceName(display, view);
-
-	OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, transform);
-
-	std::cout << display << " " << view << " " << transform << "\n";
 
   // create an OpenGL format specifier
   QSurfaceFormat format;

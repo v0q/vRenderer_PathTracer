@@ -123,111 +123,108 @@ void vRendererCuda::cleanUp()
 
 void vRendererCuda::initMesh(const vMeshData &_sbvhData)
 {
-	std::vector<std::pair<const SBVHNode *, unsigned int>> stack{std::make_pair(_sbvhData.m_sbvh.getRoot(), 0)};
-	std::vector<float4> bvhData;
-	std::vector<float4> verts;
-	std::vector<unsigned int> triIndices;
+//	std::vector<std::pair<const SBVHNode *, unsigned int>> stack{std::make_pair(_sbvhData.m_sbvh.getRoot(), 0)};
+//	std::vector<float4> bvhData;
+//	std::vector<float4> verts;
+//	std::vector<unsigned int> triIndices;
 
-	bvhData.resize(4);
+//	bvhData.resize(4);
 
-	while(stack.size())
-	{
-		const SBVHNode *node = stack.back().first;
-		unsigned int idx = stack.back().second;
-		stack.pop_back();
+//	while(stack.size())
+//	{
+//		const SBVHNode *node = stack.back().first;
+//		unsigned int idx = stack.back().second;
+//		stack.pop_back();
 
-		AABB bounds[2];
-		int indices[2];
-		if(!node->isLeaf())
-		{
-			for(unsigned int i = 0; i < 2; ++i)
-			{
-				const SBVHNode *child = node->childNode(i);
-				bounds[i] = child->getBounds();
+//		AABB bounds[2];
+//		int indices[2];
+//		if(!node->isLeaf())
+//		{
+//			for(unsigned int i = 0; i < 2; ++i)
+//			{
+//				const SBVHNode *child = node->childNode(i);
+//				bounds[i] = child->getBounds();
 
-				if(!child->isLeaf())
-				{
-					unsigned int cidx = bvhData.size() * sizeof(float4);
-					std::cout << "Child index: " << cidx << "\n";
-					indices[i] = cidx;
-					stack.push_back(std::make_pair(child, cidx));
+//				if(!child->isLeaf())
+//				{
+//					unsigned int cidx = bvhData.size() * sizeof(float4);
+//					indices[i] = cidx;
+//					stack.push_back(std::make_pair(child, cidx));
 
-					bvhData.resize(bvhData.size() + 4);
-					continue;
-				}
+//					bvhData.resize(bvhData.size() + 4);
+//					continue;
+//				}
 
-				const LeafNode *leaf = dynamic_cast<const LeafNode *>(child);
-				indices[i] = ~triIndices.size();
-				for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
-				{
-					unsigned int triInd = _sbvhData.m_sbvh.getTriIndex(j);
-					for(unsigned int k = 0; k < 3; ++k)
-					{
-						const ngl::Vec3 &vert = _sbvhData.m_vertices[_sbvhData.m_triangles[triInd].m_indices[k]];
-						verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
-					}
-//					std::cout << "Triangle index: " << _sbvhData.m_sbvh.getTriIndex(j) << "\n";
-					triIndices.push_back(triInd);
-				}
-				// Terminate triangle
-				verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
-			}
-		}
-		else
-		{
-			bounds[0] = node->getBounds();
-			const LeafNode *leaf = dynamic_cast<const LeafNode *>(node);
-			indices[0] = ~triIndices.size();
-			indices[1] = 0x80000000;
-			for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
-			{
-				unsigned int triInd = _sbvhData.m_sbvh.getTriIndex(j);
-				for(unsigned int k = 0; k < 3; ++k)
-				{
-					const ngl::Vec3 &vert = _sbvhData.m_vertices[_sbvhData.m_triangles[triInd].m_indices[k]];
-					verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
-				}
-				std::cout << "Triangle index: " << _sbvhData.m_sbvh.getTriIndex(j) << "\n";
-				triIndices.push_back(triInd);
-			}
-			// Terminate triangle
-			verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
-		}
-		// Node bounding box
-		// Stored int child 1 XY, child 2 XY, child 1 & 2 Z
-		std::cout << "Index: " << idx << "\n";
-		bvhData[idx*4 + 0] = make_float4(bounds[0].minBounds().m_x, bounds[0].maxBounds().m_x, bounds[0].minBounds().m_y, bounds[0].maxBounds().m_y);
-		bvhData[idx*4 + 1] = make_float4(bounds[1].minBounds().m_x, bounds[1].maxBounds().m_x, bounds[1].minBounds().m_y, bounds[1].maxBounds().m_y);
-		bvhData[idx*4 + 2] = make_float4(bounds[0].minBounds().m_z, bounds[0].maxBounds().m_z, bounds[1].minBounds().m_z, bounds[1].maxBounds().m_z);
+//				const LeafNode *leaf = dynamic_cast<const LeafNode *>(child);
+//				indices[i] = ~triIndices.size();
+//				for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
+//				{
+//					unsigned int triInd = _sbvhData.m_sbvh.getTriIndex(j);
+//					for(unsigned int k = 0; k < 3; ++k)
+//					{
+//						const ngl::Vec3 &vert = _sbvhData.m_vertices[_sbvhData.m_triangles[triInd].m_indices[k]];
+//						verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
+//					}
+////					std::cout << "Triangle index: " << _sbvhData.m_sbvh.getTriIndex(j) << "\n";
+//					triIndices.push_back(triInd);
+//				}
+//				// Terminate triangle
+//				verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
+//			}
+//		}
+//		else
+//		{
+//			bounds[0] = node->getBounds();
+//			const LeafNode *leaf = dynamic_cast<const LeafNode *>(node);
+//			indices[0] = ~triIndices.size();
+//			indices[1] = 0x80000000;
+//			for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
+//			{
+//				unsigned int triInd = _sbvhData.m_sbvh.getTriIndex(j);
+//				for(unsigned int k = 0; k < 3; ++k)
+//				{
+//					const ngl::Vec3 &vert = _sbvhData.m_vertices[_sbvhData.m_triangles[triInd].m_indices[k]];
+//					verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
+//				}
+//				triIndices.push_back(triInd);
+//			}
+//			// Terminate triangle
+//			verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
+//		}
+//		// Node bounding box
+//		// Stored int child 1 XY, child 2 XY, child 1 & 2 Z
+//		bvhData[idx*4 + 0] = make_float4(bounds[0].minBounds().m_x, bounds[0].maxBounds().m_x, bounds[0].minBounds().m_y, bounds[0].maxBounds().m_y);
+//		bvhData[idx*4 + 1] = make_float4(bounds[1].minBounds().m_x, bounds[1].maxBounds().m_x, bounds[1].minBounds().m_y, bounds[1].maxBounds().m_y);
+//		bvhData[idx*4 + 2] = make_float4(bounds[0].minBounds().m_z, bounds[0].maxBounds().m_z, bounds[1].minBounds().m_z, bounds[1].maxBounds().m_z);
 
-		// Doing "trickery" and storing our indices as floats by not mangling with the bits:
-		// 1 (int) = 0x00000001
-		// 1.0 (float) = 0x3F800000
-		// 0x00000001 = 1.40129846432481707092372958329E-45 (float)
-//		std::cout << intAsFloat(indices[0] << " " << indices[1] << "\n";
-		bvhData[idx*4 + 3] = make_float4(intAsFloat(indices[0]), intAsFloat(indices[1]), 0, 0);
-	}
+//		// Doing "trickery" and storing our indices as floats by not mangling with the bits:
+//		// 1 (int) = 0x00000001
+//		// 1.0 (float) = 0x3F800000
+//		// 0x00000001 = 1.40129846432481707092372958329E-45 (float)
+////		std::cout << intAsFloat(indices[0] << " " << indices[1] << "\n";
+//		bvhData[idx*4 + 3] = make_float4(intAsFloat(indices[0]), intAsFloat(indices[1]), 0, 0);
+//	}
 
-	validateCuda(cudaMalloc(&m_vertices, verts.size()*sizeof(float4)), "Malloc vertex device pointer");
-	validateCuda(cudaMemcpy(m_vertices, &verts[0], verts.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy vertex data to gpu");
+//	validateCuda(cudaMalloc(&m_vertices, verts.size()*sizeof(float4)), "Malloc vertex device pointer");
+//	validateCuda(cudaMemcpy(m_vertices, &verts[0], verts.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy vertex data to gpu");
 
-	std::cout << verts.size() << "\n";
+//	std::cout << verts.size() << "\n";
 
-	validateCuda(cudaMalloc(&m_bvhData, bvhData.size()*sizeof(float4)), "Malloc BVH node device pointer");
-	validateCuda(cudaMemcpy(m_bvhData, &bvhData[0], bvhData.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy bvh node data to gpu");
+//	validateCuda(cudaMalloc(&m_bvhData, bvhData.size()*sizeof(float4)), "Malloc BVH node device pointer");
+//	validateCuda(cudaMemcpy(m_bvhData, &bvhData[0], bvhData.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy bvh node data to gpu");
 
-	validateCuda(cudaMalloc(&m_triIdxList, triIndices.size()*sizeof(unsigned int)), "Malloc triangle index device pointer");
-	validateCuda(cudaMemcpy(m_triIdxList, &triIndices[0], triIndices.size()*sizeof(unsigned int), cudaMemcpyHostToDevice), "Copy triangle indices to gpu");
+//	validateCuda(cudaMalloc(&m_triIdxList, triIndices.size()*sizeof(unsigned int)), "Malloc triangle index device pointer");
+//	validateCuda(cudaMemcpy(m_triIdxList, &triIndices[0], triIndices.size()*sizeof(unsigned int), cudaMemcpyHostToDevice), "Copy triangle indices to gpu");
 
-	for(unsigned int i = 0; i < bvhData.size(); i += 4)
-	{
-		std::cout << "BVHData " << bvhData[i*4 + 3].x << " " << bvhData[i*4 + 3].y << "\n";
-	}
+////	for(unsigned int i = 0; i < bvhData.size(); i += 4)
+////	{
+////		std::cout << "BVHData " << bvhData[i*4 + 3].x << " " << bvhData[i*4 + 3].y << "\n";
+////	}
 
-	m_vertCount = verts.size();
-	m_bvhNodeCount = bvhData.size();
-	m_triIdxCount = triIndices.size();
-//	exit(0);
+//	m_vertCount = verts.size();
+//	m_bvhNodeCount = bvhData.size();
+//	m_triIdxCount = triIndices.size();
+////	exit(0);
 }
 
 void vRendererCuda::validateCuda(cudaError_t _err, const std::string &_msg)

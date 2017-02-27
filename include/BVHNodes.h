@@ -3,13 +3,13 @@
 #include <assert.h>
 #include "AABB.h"
 
-class SBVHNode
+class BVHNode
 {
 public:
-	SBVHNode() {}
-	virtual ~SBVHNode() {}
+	BVHNode() {}
+	virtual ~BVHNode() {}
 
-	virtual SBVHNode* childNode(const unsigned int &_index) const = 0;
+	virtual BVHNode* childNode(const unsigned int &_index) const = 0;
 	virtual bool isLeaf() const = 0;
 	virtual unsigned int numChildNodes() const = 0;
 
@@ -21,19 +21,16 @@ public:
 	AABB getBounds() const { return m_bounds; }
 	unsigned int nodeCount() const;
 	float surfaceArea() const;
-	float computeSAHCost() const;
-	void computeIntersectionProbability(const float &_probability);
 	void cleanUp();
 
 protected:
 	AABB m_bounds;
-	float m_intersectionProbability;
 };
 
-class InnerNode : public SBVHNode
+class InnerNode : public BVHNode
 {
 public:
-	InnerNode(const AABB &_bounds, SBVHNode *_leftChild, SBVHNode *_rightChild) :
+	InnerNode(const AABB &_bounds, BVHNode *_leftChild, BVHNode *_rightChild) :
 		m_children{_leftChild, _rightChild}
 	{
 		m_bounds = _bounds;
@@ -49,17 +46,17 @@ public:
 		return 2;
 	}
 
-	SBVHNode* childNode(const unsigned int &_index) const override
+	BVHNode* childNode(const unsigned int &_index) const override
 	{
 		assert(_index < 2);
 		return m_children[_index];
 	}
 
 private:
-	SBVHNode *m_children[2];
+	BVHNode *m_children[2];
 };
 
-class LeafNode : public SBVHNode
+class LeafNode : public BVHNode
 {
 public:
 	LeafNode(const AABB &_bounds, const unsigned int &_firstInd, const unsigned int &_lastInd) :
@@ -79,7 +76,7 @@ public:
 		return 0;
 	}
 
-	SBVHNode* childNode(const unsigned int &_index) const override
+	BVHNode* childNode(const unsigned int &_index) const override
 	{
 		return nullptr;
 	}
