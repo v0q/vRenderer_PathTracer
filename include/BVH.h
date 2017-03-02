@@ -7,6 +7,8 @@ class BVH
 {
 public:
 	BVH(vHTriangle *_triangles, ngl::Vec3 *_verts, unsigned int _numTris);
+	BVHNode *getRoot() const { return m_root; }
+	unsigned int getTriIndex(const unsigned int &_i) const { return m_triIndices[_i]; }
 private:
 	struct TriangleRef
 	{

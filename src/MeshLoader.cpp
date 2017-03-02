@@ -31,6 +31,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 	std::vector<vHTriangle> triangles;
 	float scale = 20.f;
 	float offset = -10.f;
+//	float offset = 0.f;
 
 	std::cout << scene->mNumMeshes << "\n";
 
@@ -40,6 +41,9 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
     unsigned int numFaces = mesh->mNumFaces;
 		unsigned int numVerts = mesh->mNumVertices;
 
+		// Mesh center
+		ngl::Vec3 center(0.f, 0.f, 0.f);
+
 		std::cout << "Num verts: " << numVerts << "\n";
 
 		triangles.resize(numFaces);
@@ -48,7 +52,15 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
-			vertices[j] = ngl::Vec3(vert.x + offset + std::rand()/(float)RAND_MAX, vert.y + offset + std::rand()/(float)RAND_MAX, vert.z + offset + std::rand()/(float)RAND_MAX);
+			vertices[j] = ngl::Vec3(vert.x + offset, vert.y, vert.z + offset);
+			center += vertices[j];
+		}
+
+		center /= numVerts;
+
+		for(unsigned int j = 0; j < numVerts; ++j)
+		{
+			vertices[j] -= center;
 		}
 
 		for(unsigned int j = 0; j < numFaces; ++j)
@@ -87,8 +99,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 	}
 
 	BVH bb(&triangles[0], &vertices[0], triangles.size());
-
-	exit(EXIT_FAILURE);
+//	exit(0);
 
 	return vMeshData(triangles, vertices, bb);
 }

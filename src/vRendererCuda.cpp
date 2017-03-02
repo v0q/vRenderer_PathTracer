@@ -33,7 +33,7 @@ void vRendererCuda::init(const unsigned int &_w, const unsigned int &_h)
 	validateCuda(cudaMalloc(&m_camdir, sizeof(float4)), "Malloc camera direction buffer");
 
 	float4 cam = make_float4(50.0f, 52.0f, 295.6f, 0.0f);
-	float4 camdir = make_float4(0.0f, -0.0425734f, -0.999093f, 0.0f);
+	float4 camdir = make_float4(-0.164325f, -0.170898f, -0.971489f, 0.0f);
 
 	validateCuda(cudaMemcpy(m_camera, &cam, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera origin buffer");
 	validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera direction buffer");
@@ -86,6 +86,7 @@ void vRendererCuda::render()
 	validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc), "Create a writeable cuda surface");
 	cu_runRenderKernel(writeSurface,
 										 m_vertices,
+										 m_normals,
 										 m_bvhData,
 										 m_triIdxList,
 										 m_vertCount,
@@ -109,6 +110,8 @@ void vRendererCuda::cleanUp()
 	{
 		if(m_vertices)
 			validateCuda(cudaFree(m_vertices), "Clean up triangle data buffer");
+		if(m_normals)
+			validateCuda(cudaFree(m_normals), "Clean up normals buffer");
 		if(m_triIdxList)
 			validateCuda(cudaFree(m_triIdxList), "Clean up triangle index buffer");
 		if(m_bvhData)
@@ -121,56 +124,71 @@ void vRendererCuda::cleanUp()
   }
 }
 
-void vRendererCuda::initMesh(const vMeshData &_sbvhData)
+void vRendererCuda::initMesh(const vMeshData &_meshData)
 {
-//	std::vector<std::pair<const SBVHNode *, unsigned int>> stack{std::make_pair(_sbvhData.m_sbvh.getRoot(), 0)};
-//	std::vector<float4> bvhData;
-//	std::vector<float4> verts;
-//	std::vector<unsigned int> triIndices;
+	// Create a stack for node paired with an index
+	std::vector<std::pair<const BVHNode *, unsigned int>> nodeStack{std::make_pair(_meshData.m_bvh.getRoot(), 0)};
 
-//	bvhData.resize(4);
+	// Vector for bvh node data: child node/triangle indices, aabb's
+	std::vector<float4> bvhData;
+	std::vector<float4> verts;
+	std::vector<float4> normals;
+	std::vector<unsigned int> triIndices;
 
-//	while(stack.size())
-//	{
-//		const SBVHNode *node = stack.back().first;
-//		unsigned int idx = stack.back().second;
-//		stack.pop_back();
+	bvhData.resize(4);
+	unsigned int lowestVertIdx = INT_MAX;
+	unsigned int highestVertIdx = 0;
 
-//		AABB bounds[2];
-//		int indices[2];
+	while(nodeStack.size())
+	{
+		const BVHNode *node = nodeStack.back().first;
+		unsigned int idx = nodeStack.back().second;
+		nodeStack.pop_back();
+
+		AABB bounds[2];
+		int indices[2];
 //		if(!node->isLeaf())
 //		{
-//			for(unsigned int i = 0; i < 2; ++i)
-//			{
-//				const SBVHNode *child = node->childNode(i);
-//				bounds[i] = child->getBounds();
+			for(unsigned int i = 0; i < 2; ++i)
+			{
+				// Get the bounds of the node
+				const BVHNode *child = node->childNode(i);
+				bounds[i] = child->getBounds();
 
-//				if(!child->isLeaf())
-//				{
-//					unsigned int cidx = bvhData.size() * sizeof(float4);
-//					indices[i] = cidx;
-//					stack.push_back(std::make_pair(child, cidx));
+				if(!child->isLeaf())
+				{
+					// Index for the next node is an offset in memory
+					unsigned int cidx = bvhData.size();
+					indices[i] = cidx;// * sizeof(float4);
+					nodeStack.push_back(std::make_pair(child, cidx));
 
-//					bvhData.resize(bvhData.size() + 4);
-//					continue;
-//				}
+					// Allocate space for the node data (e.g. bounds, indices etc)
+					bvhData.resize(bvhData.size() + 4);
+					continue;
+				}
 
-//				const LeafNode *leaf = dynamic_cast<const LeafNode *>(child);
-//				indices[i] = ~triIndices.size();
-//				for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
-//				{
-//					unsigned int triInd = _sbvhData.m_sbvh.getTriIndex(j);
-//					for(unsigned int k = 0; k < 3; ++k)
-//					{
-//						const ngl::Vec3 &vert = _sbvhData.m_vertices[_sbvhData.m_triangles[triInd].m_indices[k]];
-//						verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
-//					}
-////					std::cout << "Triangle index: " << _sbvhData.m_sbvh.getTriIndex(j) << "\n";
-//					triIndices.push_back(triInd);
-//				}
-//				// Terminate triangle
-//				verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
-//			}
+				const LeafNode *leaf = dynamic_cast<const LeafNode *>(child);
+				// Triangle index stored as its complement to distinquish them from child nodes (e.g. ~0 = -1, ~1 = -2...)
+				indices[i] = ~verts.size();
+				std::cout << "Leaf index: " << verts.size() << "\n";
+				std::cout << "First index: " << leaf->firstIndex() << ", Last index: " << leaf->lastIndex() << "\n";
+				std::cout << "Next index: " << ((leaf->lastIndex()  - leaf->firstIndex())*3 + 1)+verts.size() << "\n\n";
+				for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
+				{
+					unsigned int triInd = _meshData.m_bvh.getTriIndex(j);
+					for(unsigned int k = 0; k < 3; ++k)
+					{
+						const ngl::Vec3 &vert = _meshData.m_vertices[_meshData.m_triangles[triInd].m_indices[k]];
+						const ngl::Vec3 &norm = _meshData.m_triangles[triInd].m_normal;
+						verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
+						normals.push_back(make_float4(norm.m_x, norm.m_y, norm.m_z, 0.f));
+					}
+					triIndices.push_back(triInd);
+				}
+				// Terminate triangles
+				verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
+				normals.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
+			}
 //		}
 //		else
 //		{
@@ -191,40 +209,64 @@ void vRendererCuda::initMesh(const vMeshData &_sbvhData)
 //			// Terminate triangle
 //			verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
 //		}
-//		// Node bounding box
-//		// Stored int child 1 XY, child 2 XY, child 1 & 2 Z
-//		bvhData[idx*4 + 0] = make_float4(bounds[0].minBounds().m_x, bounds[0].maxBounds().m_x, bounds[0].minBounds().m_y, bounds[0].maxBounds().m_y);
-//		bvhData[idx*4 + 1] = make_float4(bounds[1].minBounds().m_x, bounds[1].maxBounds().m_x, bounds[1].minBounds().m_y, bounds[1].maxBounds().m_y);
-//		bvhData[idx*4 + 2] = make_float4(bounds[0].minBounds().m_z, bounds[0].maxBounds().m_z, bounds[1].minBounds().m_z, bounds[1].maxBounds().m_z);
 
-//		// Doing "trickery" and storing our indices as floats by not mangling with the bits:
-//		// 1 (int) = 0x00000001
-//		// 1.0 (float) = 0x3F800000
-//		// 0x00000001 = 1.40129846432481707092372958329E-45 (float)
-////		std::cout << intAsFloat(indices[0] << " " << indices[1] << "\n";
-//		bvhData[idx*4 + 3] = make_float4(intAsFloat(indices[0]), intAsFloat(indices[1]), 0, 0);
+		// Node bounding box
+		// Stored int child 1 XY, child 2 XY, child 1 & 2 Z
+		bvhData[idx + 0] = make_float4(bounds[0].minBounds().m_x, bounds[0].maxBounds().m_x, bounds[0].minBounds().m_y, bounds[0].maxBounds().m_y);
+		bvhData[idx + 1] = make_float4(bounds[1].minBounds().m_x, bounds[1].maxBounds().m_x, bounds[1].minBounds().m_y, bounds[1].maxBounds().m_y);
+		bvhData[idx + 2] = make_float4(bounds[0].minBounds().m_z, bounds[0].maxBounds().m_z, bounds[1].minBounds().m_z, bounds[1].maxBounds().m_z);
+
+		// Storing indices as floats
+		bvhData[idx + 3] = make_float4(intAsFloat(indices[0]), intAsFloat(indices[1]), 0, 0);
+	}
+
+	validateCuda(cudaMalloc(&m_vertices, verts.size()*sizeof(float4)), "Malloc vertex device pointer");
+	validateCuda(cudaMemcpy(m_vertices, &verts[0], verts.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy vertex data to gpu");
+
+	validateCuda(cudaMalloc(&m_normals, normals.size()*sizeof(float4)), "Malloc normals device pointer");
+	validateCuda(cudaMemcpy(m_normals, &normals[0], normals.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy normal data to gpu");
+
+	validateCuda(cudaMalloc(&m_bvhData, bvhData.size()*sizeof(float4)), "Malloc BVH node device pointer");
+	validateCuda(cudaMemcpy(m_bvhData, &bvhData[0], bvhData.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy bvh node data to gpu");
+
+	validateCuda(cudaMalloc(&m_triIdxList, triIndices.size()*sizeof(unsigned int)), "Malloc triangle index device pointer");
+	validateCuda(cudaMemcpy(m_triIdxList, &triIndices[0], triIndices.size()*sizeof(unsigned int), cudaMemcpyHostToDevice), "Copy triangle indices to gpu");
+
+	for(unsigned int i = 0; i < verts.size(); ++i)
+	{
+		if(*((int*)&verts[i].x) == 0x80000000)
+			++i;
+		if(i >= verts.size())
+			break;
+		std::cout << "v " << verts[i].x << " " << verts[i].y << " " << verts[i].z << "\n";
+	}
+	int ind = 1;
+	for(unsigned int i = 0; i < verts.size(); i += 3)
+	{
+		if(*((int*)&verts[i].x) == 0x80000000)
+			++i;
+		if(i >= verts.size())
+			break;
+		std::cout << "f " << ind << "// " << ind + 1 << "// " << ind + 2 << "//\n";
+		ind += 3;
+	}
+
+//	for(unsigned int i = 0; i < bvhData.size(); i += 4)
+//	{
+//		std::cout << "Index: " << i << "\n";
+//		std::cout << "Child 1:\n";
+//		std::cout << " BB: Min[" << bvhData[i + 0].x << ", " << bvhData[i + 0].z << ", " << bvhData[i + 2].x << "], Max[" << bvhData[i + 0].y << " " << bvhData[i + 0].w << ", " << bvhData[i + 2].y << "]\n";
+
+//		std::cout << "Child 2:\n";
+//		std::cout << " BB: Min[" << bvhData[i + 1].x << ", " << bvhData[i + 1].z << ", " << bvhData[i + 2].z << "], Max[" << bvhData[i + 1].y << " " << bvhData[i + 1].w << ", " << bvhData[i + 2].w << "]\n";
+
+//		std::cout << "Indices " << *((int*)&bvhData[i + 3].x) << " " << *((int*)&bvhData[i + 3].y) << "\n\n";
 //	}
 
-//	validateCuda(cudaMalloc(&m_vertices, verts.size()*sizeof(float4)), "Malloc vertex device pointer");
-//	validateCuda(cudaMemcpy(m_vertices, &verts[0], verts.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy vertex data to gpu");
-
-//	std::cout << verts.size() << "\n";
-
-//	validateCuda(cudaMalloc(&m_bvhData, bvhData.size()*sizeof(float4)), "Malloc BVH node device pointer");
-//	validateCuda(cudaMemcpy(m_bvhData, &bvhData[0], bvhData.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy bvh node data to gpu");
-
-//	validateCuda(cudaMalloc(&m_triIdxList, triIndices.size()*sizeof(unsigned int)), "Malloc triangle index device pointer");
-//	validateCuda(cudaMemcpy(m_triIdxList, &triIndices[0], triIndices.size()*sizeof(unsigned int), cudaMemcpyHostToDevice), "Copy triangle indices to gpu");
-
-////	for(unsigned int i = 0; i < bvhData.size(); i += 4)
-////	{
-////		std::cout << "BVHData " << bvhData[i*4 + 3].x << " " << bvhData[i*4 + 3].y << "\n";
-////	}
-
-//	m_vertCount = verts.size();
-//	m_bvhNodeCount = bvhData.size();
-//	m_triIdxCount = triIndices.size();
-////	exit(0);
+	m_vertCount = verts.size();
+	m_bvhNodeCount = bvhData.size();
+	m_triIdxCount = triIndices.size();
+//	exit(0);
 }
 
 void vRendererCuda::validateCuda(cudaError_t _err, const std::string &_msg)

@@ -110,7 +110,7 @@ public:
 	{
 		std::cout << "AABB bounds:\n";
 		std::cout << "  Min: [" << m_min.m_x << ", " << m_min.m_y << ", " << m_min.m_z << "]\n";
-		std::cout << "  Min: [" << m_max.m_x << ", " << m_max.m_y << ", " << m_max.m_z << "]\n";
+		std::cout << "  Max: [" << m_max.m_x << ", " << m_max.m_y << ", " << m_max.m_z << "]\n";
 	}
 
 private:
