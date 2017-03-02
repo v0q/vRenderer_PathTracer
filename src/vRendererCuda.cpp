@@ -33,7 +33,8 @@ void vRendererCuda::init(const unsigned int &_w, const unsigned int &_h)
 	validateCuda(cudaMalloc(&m_camdir, sizeof(float4)), "Malloc camera direction buffer");
 
 	float4 cam = make_float4(50.0f, 52.0f, 295.6f, 0.0f);
-	float4 camdir = make_float4(-0.164325f, -0.170898f, -0.971489f, 0.0f);
+	float4 camdir = make_float4(0.0f, -0.0425734f, -0.999093f, 0.0f);
+//	float4 camdir = make_float4(-0.164325f, -0.170898f, -0.971489f, 0.0f);
 
 	validateCuda(cudaMemcpy(m_camera, &cam, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera origin buffer");
 	validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera direction buffer");
@@ -136,8 +137,6 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	std::vector<unsigned int> triIndices;
 
 	bvhData.resize(4);
-	unsigned int lowestVertIdx = INT_MAX;
-	unsigned int highestVertIdx = 0;
 
 	while(nodeStack.size())
 	{
@@ -170,9 +169,6 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 				const LeafNode *leaf = dynamic_cast<const LeafNode *>(child);
 				// Triangle index stored as its complement to distinquish them from child nodes (e.g. ~0 = -1, ~1 = -2...)
 				indices[i] = ~verts.size();
-				std::cout << "Leaf index: " << verts.size() << "\n";
-				std::cout << "First index: " << leaf->firstIndex() << ", Last index: " << leaf->lastIndex() << "\n";
-				std::cout << "Next index: " << ((leaf->lastIndex()  - leaf->firstIndex())*3 + 1)+verts.size() << "\n\n";
 				for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
 				{
 					unsigned int triInd = _meshData.m_bvh.getTriIndex(j);
@@ -189,26 +185,6 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 				verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
 				normals.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
 			}
-//		}
-//		else
-//		{
-//			bounds[0] = node->getBounds();
-//			const LeafNode *leaf = dynamic_cast<const LeafNode *>(node);
-//			indices[0] = ~triIndices.size();
-//			indices[1] = 0x80000000;
-//			for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
-//			{
-//				unsigned int triInd = _sbvhData.m_sbvh.getTriIndex(j);
-//				for(unsigned int k = 0; k < 3; ++k)
-//				{
-//					const ngl::Vec3 &vert = _sbvhData.m_vertices[_sbvhData.m_triangles[triInd].m_indices[k]];
-//					verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
-//				}
-//				triIndices.push_back(triInd);
-//			}
-//			// Terminate triangle
-//			verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
-//		}
 
 		// Node bounding box
 		// Stored int child 1 XY, child 2 XY, child 1 & 2 Z
@@ -231,37 +207,6 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 
 	validateCuda(cudaMalloc(&m_triIdxList, triIndices.size()*sizeof(unsigned int)), "Malloc triangle index device pointer");
 	validateCuda(cudaMemcpy(m_triIdxList, &triIndices[0], triIndices.size()*sizeof(unsigned int), cudaMemcpyHostToDevice), "Copy triangle indices to gpu");
-
-	for(unsigned int i = 0; i < verts.size(); ++i)
-	{
-		if(*((int*)&verts[i].x) == 0x80000000)
-			++i;
-		if(i >= verts.size())
-			break;
-		std::cout << "v " << verts[i].x << " " << verts[i].y << " " << verts[i].z << "\n";
-	}
-	int ind = 1;
-	for(unsigned int i = 0; i < verts.size(); i += 3)
-	{
-		if(*((int*)&verts[i].x) == 0x80000000)
-			++i;
-		if(i >= verts.size())
-			break;
-		std::cout << "f " << ind << "// " << ind + 1 << "// " << ind + 2 << "//\n";
-		ind += 3;
-	}
-
-//	for(unsigned int i = 0; i < bvhData.size(); i += 4)
-//	{
-//		std::cout << "Index: " << i << "\n";
-//		std::cout << "Child 1:\n";
-//		std::cout << " BB: Min[" << bvhData[i + 0].x << ", " << bvhData[i + 0].z << ", " << bvhData[i + 2].x << "], Max[" << bvhData[i + 0].y << " " << bvhData[i + 0].w << ", " << bvhData[i + 2].y << "]\n";
-
-//		std::cout << "Child 2:\n";
-//		std::cout << " BB: Min[" << bvhData[i + 1].x << ", " << bvhData[i + 1].z << ", " << bvhData[i + 2].z << "], Max[" << bvhData[i + 1].y << " " << bvhData[i + 1].w << ", " << bvhData[i + 2].w << "]\n";
-
-//		std::cout << "Indices " << *((int*)&bvhData[i + 3].x) << " " << *((int*)&bvhData[i + 3].y) << "\n\n";
-//	}
 
 	m_vertCount = verts.size();
 	m_bvhNodeCount = bvhData.size();

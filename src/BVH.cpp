@@ -2,8 +2,8 @@
 
 #include "BVH.h"
 
-#define BVH_DEBUG
-#define BVH_DEBUG_LEAFS
+//#define BVH_DEBUG
+//#define BVH_DEBUG_LEAFS
 //#define BVH_DEBUG_SPLIT
 //#define BVH_DEBUG_SORT
 
@@ -106,10 +106,8 @@ BVHNode *BVH::buildNode(const NodeSpec &_nodeSpec)
 				leafCost = cost;
 				leftTris = i;
 				splitAxis = axis;
-//				leftSplit = m_leftBounds[firstTriRefIndex + (i - 1)];
-//				rightSplit = rightBound;
-				leftSplit = rightBound;
-				rightSplit = m_leftBounds[firstTriRefIndex + (i - 1)];
+				leftSplit = m_leftBounds[firstTriRefIndex + (i - 1)];
+				rightSplit = rightBound;
 			}
 		}
 	}
@@ -137,8 +135,8 @@ BVHNode *BVH::buildNode(const NodeSpec &_nodeSpec)
 		rightSpec.m_bb = rightSplit;
 		rightSpec.m_numTris = _nodeSpec.m_numTris - leftTris;
 
-		BVHNode *leftChild = buildNode(leftSpec);
 		BVHNode *rightChild = buildNode(rightSpec);
+		BVHNode *leftChild = buildNode(leftSpec);
 
 		return new InnerNode(_nodeSpec.m_bb, leftChild, rightChild);
 	}
@@ -161,15 +159,6 @@ BVHNode* BVH::createLeaf(const NodeSpec &_nodeSpec)
 		std::cout << "    Num tris: " << leaf->numTriangles() << "\n";
 		std::cout << "    Indices: [" << leaf->firstIndex() << "-" << leaf->lastIndex() << "]\n";
 		_nodeSpec.m_bb.printBounds();
-		std::cout << "    Vertices:\n";
-		for(unsigned int i = leaf->firstIndex(); i < leaf->lastIndex(); ++i)
-		{
-			for(unsigned int k = 0; k < 3; ++k)
-			{
-				ngl::Vec3 &vert = m_vertices[m_triangles[getTriIndex(i)].m_indices[k]];
-				std::cout << "      " << vert.m_x << ", " << vert.m_y << ", " << vert.m_z << "\n";
-			}
-		}
 	#endif
 #endif
 

@@ -28,6 +28,8 @@ int main(int argc, char **argv)
   format.setProfile(QSurfaceFormat::CoreProfile);
   // now set the depth buffer to 24 bits
   format.setDepthBufferSize(24);
+	// Set swap interval to 0 so we don't limit our FPS
+	format.setSwapInterval(0);
   // now we are going to create our scene window
   NGLScene window;
   // and set the OpenGL format
