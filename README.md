@@ -11,7 +11,7 @@ Volume Hierarchies_ by Wald et al.
 
 ##Screenshots
 Cuda
-![alt tag](https://raw.githubusercontent.com/v0q/vRenderer/master/screenshots/OpenCLBVH.png)https://github.com/hhergeth/CudaTracerLibhttps://github.com/hhergeth/CudaTracerLibhttps://github.com/hhergeth/CudaTracerLibhttps://github.com/hhergeth/CudaTracerLibhttps://github.com/hhergeth/CudaTracerLib
+![alt tag](https://raw.githubusercontent.com/v0q/vRenderer/master/screenshots/CudaBVH.png)
 
 OpenCL
 ![alt tag](https://raw.githubusercontent.com/v0q/vRenderer/master/screenshots/OpenCLBVH.png)
