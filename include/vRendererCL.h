@@ -8,29 +8,6 @@
 
 #include "vRenderer.h"
 
-typedef struct vBoundingBox {
-  cl_float2 m_x;
-  cl_float2 m_y;
-  cl_float2 m_z;
-} vBoundingBox;
-
-typedef struct vVert {
-	cl_float4 m_vert;
-	cl_float4 m_normal;
-} vVert;
-
-typedef struct vTriangle {
-  vVert m_v1;
-  vVert m_v2;
-  vVert m_v3;
-} vTriangle;
-
-typedef struct vMesh {
-  vTriangle *m_mesh;
-  vBoundingBox m_bb;
-  unsigned int m_triCount;
-} vMesh;
-
 class vRendererCL : public vRenderer
 {
 public:
@@ -45,6 +22,7 @@ public:
   void initMesh(const vMeshData &_meshData) override;
   unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
+  float intAsFloat(const int &_v);
   cl::Platform m_platform;
   cl::Device m_device;
   cl::Context m_context;
@@ -59,9 +37,9 @@ private:
 	cl_float4 m_camdir;
 
   // Mesh buffers
-  cl::Image1D m_triangleData;
-  cl::Image1D m_bvhLimits;
-  cl::Image1D m_bvhChildrenOrTriangles;
+  cl::Image1D m_vertices;
+  cl::Image1D m_normals;
+  cl::Image1D m_bvhNodes;
   cl::Image1D m_triIdxList;
 
   unsigned int m_width;

@@ -2,6 +2,7 @@
 
 vRenderer
 *.ppm
+.DS_Store
 errorlog.txt
 
 # C++ objects and libs

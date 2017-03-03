@@ -60,24 +60,24 @@ inline bool intersectNearAndFar(const float2 _ray, const float2 _limits, float *
   return true;
 }
 
-bool intersectCFBVH(const Ray *_ray, const float3 _bottom, const float3 _top)
+bool intersectCFBVH(const Ray *_ray, const float3 _bottom, const float3 _top, float *_tNear, float *_tFar)
 {
-  float Tnear = -FLT_MAX;
-  float Tfar = FLT_MAX;
+  *_tNear = -FLT_MAX;
+  *_tFar = FLT_MAX;
 
   // X
   if(!intersectNearAndFar((float2)(_ray->m_dir.x, _ray->m_origin.x),
-                          (float2)(_bottom.x, _top.x), &Tnear, &Tfar))
+                          (float2)(_bottom.x, _top.x), _tNear, _tFar))
     return false;
 
   // Y
   if(!intersectNearAndFar((float2)(_ray->m_dir.y, _ray->m_origin.y),
-                          (float2)(_bottom.y, _top.y), &Tnear, &Tfar))
+                          (float2)(_bottom.y, _top.y), _tNear, _tFar))
     return false;
 
   // Z
   if(!intersectNearAndFar((float2)(_ray->m_dir.z, _ray->m_origin.z),
-                          (float2)(_bottom.z, _top.z), &Tnear, &Tfar))
+                          (float2)(_bottom.z, _top.z), _tNear, _tFar))
     return false;
 
   return true;

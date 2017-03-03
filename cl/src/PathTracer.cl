@@ -1,5 +1,6 @@
 #include "cl/include/PathTracer.h"
 #include "cl/include/RayIntersection.h"
+#include "cl/include/Utilities.h"
 
 #define BVH_MAX_STACK_SIZE 32
 __constant float invGamma = 1.f/2.2f;
@@ -24,7 +25,7 @@ Ray createRay(float4 _o, float4 _d)
 	return ray;
 }
 
-bool intersectScene(const Ray *_ray, __read_only image1d_t _triangles, __read_only image1d_t _triIndices, __read_only image1d_t _bvhLimits, __read_only image1d_t _bvhChildrenOrTriangles, vHitData *_hitData)
+bool intersectScene(const Ray *_ray, __read_only image1d_t _vertices, __read_only image1d_t _normals, __read_only image1d_t _bvhNodes, vHitData *_hitData)
 {
 	/* initialise t to a very large number,
 	so t will be guaranteed to be smaller
@@ -49,84 +50,143 @@ bool intersectScene(const Ray *_ray, __read_only image1d_t _triangles, __read_on
 		}
   }
 
-  int stackIdx = 0;
-  int bvhStack[BVH_MAX_STACK_SIZE];
 
-  bvhStack[stackIdx++] = 0;
+//  read_imageui(_bvhChildrenOrTriangles, (int)(bvhIndex)).xyzw;
+//  read_imagef(_bvhLimits, (int)(3 * bvhIndex)).xy;
+//  read_imagef(_triangles, (int)(5 * triIndex));
+  const int EntrypointSentinel = 0x76543210;
+  int startNode = 0;
+  int traversalStack[64];
+  traversalStack[0] = EntrypointSentinel;
 
-  while(stackIdx)
+  char* stackPtr;                       // Current position in traversal stack.
+  int leafAddr;                       // First postponed leaf, non-negative if none.
+  int nodeAddr = EntrypointSentinel;  // Non-negative: current internal node, negative: second postponed leaf.
+  stackPtr = (char*)&traversalStack[0];
+  leafAddr = 0;   // No postponed leaf.
+  nodeAddr = startNode;   // Start from the root.
+
+
+  float3 invDir = (float3)(1.0f / (fabsf(_ray->m_dir.x) > epsilon ? _ray->m_dir.x : epsilon),
+                              1.0f / (fabsf(_ray->m_dir.y) > epsilon ? _ray->m_dir.y : epsilon),
+                              1.0f / (fabsf(_ray->m_dir.z) > epsilon ? _ray->m_dir.z : epsilon));
+  float3 od = (float3)(_ray->m_origin.x * invDir.x,
+                          _ray->m_origin.y * invDir.y,
+                          _ray->m_origin.z * invDir.z);
+
+  while(nodeAddr != EntrypointSentinel)
   {
-    int bvhIndex = bvhStack[stackIdx - 1];
-    uint4 bvhData = read_imageui(_bvhChildrenOrTriangles, (int)(bvhIndex)).xyzw;
-
-    stackIdx--;
-    // Inner node
-    if(!(bvhData.x & 0x80000000))
+    while((unsigned int)nodeAddr < (unsigned int)EntrypointSentinel)
     {
-      float2 limitsX = read_imagef(_bvhLimits, (int)(3 * bvhIndex)).xy;
-      float2 limitsY = read_imagef(_bvhLimits, (int)(3 * bvhIndex + 1)).xy;
-      float2 limitsZ = read_imagef(_bvhLimits, (int)(3 * bvhIndex + 2)).xy;
+      const float4 n0xy = read_imagef(_bvhNodes, nodeAddr + 0); // node 0 bounds xy
+      const float4 n1xy = read_imagef(_bvhNodes, nodeAddr + 1); // node 1 bounds xy
+      const float4 nz = read_imagef(_bvhNodes, nodeAddr + 2); // node 0 & 1 bounds z
+      float4 tmp = read_imagef(_bvhNodes, nodeAddr + 3); // Child indices in x & y
 
-      float3 bottom = (float3)(limitsX.x, limitsY.x, limitsZ.x);
-      float3 top = (float3)(limitsX.y, limitsY.y, limitsZ.y);
-      if(intersectCFBVH(_ray, bottom, top))
-      {
-        bvhStack[stackIdx++] = bvhData.y;
-        bvhStack[stackIdx++] = bvhData.z;
+      int2 indices = (int2)(as_int(tmp.x), as_int(tmp.y));
 
-        if(stackIdx > BVH_MAX_STACK_SIZE)
-          return false;
+      if(indices.y == 0x80000000) {
+        nodeAddr = *(int*)stackPtr;
+        leafAddr = indices.x;
+        stackPtr -= 4;
+        break;
       }
-    }
-    else
-    {
-      for(unsigned int i = bvhData.w; i < bvhData.w + (bvhData.x ^ 0x80000000); ++i)
+
+//      const float c0lox = n0xy.x * invDir.x - od.x;
+//      const float c0hix = n0xy.y * invDir.x - od.x;
+//      const float c0loy = n0xy.z * invDir.y - od.y;
+//      const float c0hiy = n0xy.w * invDir.y - od.y;
+//      const float c0loz = nz.x   * invDir.z - od.z;
+//      const float c0hiz = nz.y   * invDir.z - od.z;
+//      const float c1loz = nz.z   * invDir.z - od.z;
+//      const float c1hiz = nz.w   * invDir.z - od.z;
+//      const float c0min = spanBeginKepler(c0lox, c0hix, c0loy, c0hiy, c0loz, c0hiz, 0);
+//      const float c0max = spanEndKepler(c0lox, c0hix, c0loy, c0hiy, c0loz, c0hiz, 1e20);
+//      const float c1lox = n1xy.x * invDir.x - od.x;
+//      const float c1hix = n1xy.y * invDir.x - od.x;
+//      const float c1loy = n1xy.z * invDir.y - od.y;
+//      const float c1hiy = n1xy.w * invDir.y - od.y;
+//      const float c1min = spanBeginKepler(c1lox, c1hix, c1loy, c1hiy, c1loz, c1hiz, 0);
+//      const float c1max = spanEndKepler(c1lox, c1hix, c1loy, c1hiy, c1loz, c1hiz, 1e20);
+
+      float c0min, c1min, c0max, c1max;
+      bool traverseChild0 = intersectCFBVH(_ray, (float3)(n0xy.x, n0xy.z, nz.x), (float3)(n0xy.y, n0xy.w, nz.y), &c0min, &c0max);
+      bool traverseChild1 = intersectCFBVH(_ray, (float3)(n1xy.x, n1xy.z, nz.z), (float3)(n1xy.y, n1xy.w, nz.w), &c1min, &c1max);
+      bool swp = (c1min < c0min);
+
+      if(!traverseChild0 && !traverseChild1)
       {
-        unsigned int triIndex = read_imageui(_triIndices, (int)(i)).x;
-
-        float4 center = read_imagef(_triangles, (int)(5 * triIndex));
-        float4 normal = read_imagef(_triangles, (int)(5 * triIndex + 1));
-
-        float k = dot(normal, _ray->m_dir);
-        if(k == 0.f)
-          continue;
-
-        float s = (normal.w - dot(normal, _ray->m_origin)) / k;
-        if(s <= epsilon)
-          continue;
-
-        float4 hit = _ray->m_dir * s;
-        hit += _ray->m_origin;
-
-        float4 ee1 = read_imagef(_triangles, (int)(5 * triIndex + 2));
-        float kt1 = dot(ee1, hit) - ee1.w;
-        if(kt1 < epsilon)
-          continue;
-
-        float4 ee2 = read_imagef(_triangles, (int)(5 * triIndex + 3));
-        float kt2 = dot(ee2, hit) - ee2.w;
-        if(kt2 < epsilon)
-          continue;
-
-        float4 ee3 = read_imagef(_triangles, (int)(5 * triIndex + 4));
-        float kt3 = dot(ee3, hit) - ee3.w;
-        if(kt3 < epsilon)
-          continue;
-
-        float distSquared = dot(_ray->m_origin - hit, _ray->m_origin - hit);
-        if(distSquared < t * t)
+        nodeAddr = *(int*)stackPtr;
+        stackPtr -= 4;
+      }
+      else
+      {
+        nodeAddr = (traverseChild0) ? indices.x : indices.y;
+        if(traverseChild0 && traverseChild1)
         {
-          t = length(_ray->m_origin - hit);
-
-          _hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-          _hitData->m_normal = normal;
-          _hitData->m_color = (float4)(1.0f, 1.0f, 1.0f, 0.f);
-          _hitData->m_emission = (float4)(0.0f, 0.0f, 0.0f, 0.f);
+          if(swp) {
+            int tmp = nodeAddr;
+            nodeAddr = indices.y;
+            indices.y = tmp;
+//            swap(nodeAddr, indices.y);
+          }
+          stackPtr += 4;
+          *(int*)stackPtr = indices.y;
         }
       }
-    }
-  }
 
+      if(nodeAddr < 0 && leafAddr >= 0) // Postpone max 1
+      {
+        leafAddr = nodeAddr;
+
+        nodeAddr = *(int*)stackPtr;
+        stackPtr -= 4;
+      }
+//			unsigned int mask;
+//			asm("{\n"
+//				"   .reg .pred p;               \n"
+//				"setp.ge.s32        p, %1, 0;   \n"
+//				"vote.ballot.b32    %0,p;       \n"
+//				"}"
+//				: "=r"(mask)
+//				: "r"(leafAddr));
+
+      int mask = leafAddr >= 0;
+      if(!mask)
+        break;
+    }
+    while(leafAddr < 0)
+    {
+      for(int triAddr = ~leafAddr;; triAddr += 3)
+      {
+        float4 vert0 = read_imagef(_vertices, triAddr);
+        // Did we reach the terminating point of the triangle(s) in the leaf
+//        if(as_int(vert0.x) == 0x80000000)
+//          break;
+        break;
+//        float4 vert1 = read_imagef(_vertices, triAddr + 1);
+//        float4 vert2 = read_imagef(_vertices, triAddr + 2);
+
+//        float dist = intersectTriangle(vert0, vert1, vert2, _ray);
+//        if(dist != 0.0f && dist < t)
+//        {
+//          t = dist;
+//          _hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+//          _hitData->m_normal = read_imagef(_normals, triAddr);
+//          _hitData->m_color = (float4)(1.f, 0.0f, 0.0f, 0.0f);
+//          _hitData->m_emission = (float4)(0.f, 0.0f, 0.0f, 0.0f);
+//        }
+      }
+
+      leafAddr = nodeAddr;
+      if(nodeAddr < 0)
+      {
+        nodeAddr = *(int*)stackPtr;
+        stackPtr -= 4;
+      }
+    }
+    break;
+  }
 
 	return t < inf; /* true when ray interesects the scene */
 }
@@ -149,7 +209,8 @@ static float get_random(unsigned int *_seed0, unsigned int *_seed1)
 	return (res.f - 2.0f) / 2.0f;
 }
 
-float4 trace(const Ray *_camray, __read_only image1d_t _triangles, __read_only image1d_t _triIndices, __read_only image1d_t _bvhLimits, __read_only image1d_t _bvhChildrenOrTriangles, unsigned int *_seed0, unsigned int *_seed1)
+//float4 trace(const Ray* _camray, __read_only image1d_t _vertices, __read_only image1d_t _normals, __read_only image1d_t _bvhNodes, __read_only image1d_t _triIdxList, unsigned int *_seed0, unsigned int *_seed1)
+float4 trace(const Ray* _camray, __read_only image1d_t _vertices, __read_only image1d_t _normals, __read_only image1d_t _bvhNodes, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
@@ -161,7 +222,7 @@ float4 trace(const Ray *_camray, __read_only image1d_t _triangles, __read_only i
 		vHitData hitData;
 
 		/* if ray misses scene, return background colour */
-    if(!intersectScene(&ray, _triangles, _triIndices, _bvhLimits, _bvhChildrenOrTriangles, &hitData)) {
+    if(!intersectScene(&ray, _vertices, _normals, _bvhNodes, &hitData)) {
 			return (float4)(0.f, 0.f, 0.f, 0.f);
 		}
 
@@ -201,7 +262,7 @@ float4 trace(const Ray *_camray, __read_only image1d_t _triangles, __read_only i
 }
 
 
-__kernel void render(__write_only image2d_t _texture, __read_only image1d_t _triangles, __read_only image1d_t _triIndices, __read_only image1d_t _bvhLimits, __read_only image1d_t _bvhChildrenOrTriangles,
+__kernel void render(__write_only image2d_t _texture, __read_only image1d_t _vertices, __read_only image1d_t _normals, __read_only image1d_t _bvhNodes, __read_only image1d_t _triIdxList,
                      __global float4 *_colors, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	const unsigned int x = get_global_id(0);
@@ -237,7 +298,7 @@ __kernel void render(__write_only image2d_t _texture, __read_only image1d_t _tri
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam = createRay(camera.m_origin + d * 40, normalize(d));
 
-      _colors[ind] += trace(&newcam, _triangles, _triIndices, _bvhLimits, _bvhChildrenOrTriangles, &seed0, &seed1);
+      _colors[ind] += trace(&newcam, _vertices, _normals, _bvhNodes, &seed0, &seed1);
 		}
 		float coef = 1.f/(samps*_frame);
 

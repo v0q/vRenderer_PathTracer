@@ -107,15 +107,15 @@ void NGLScene::initializeGL()
 		1.0f, 1.0f
 	};
 
-	OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+//	OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
 
-	const char *display = config->getDefaultDisplay();
-	const char *view = config->getDefaultView(display);
-	const char *transform = config->getDisplayColorSpaceName(display, view);
+//	const char *display = config->getDefaultDisplay();
+//	const char *view = config->getDefaultView(display);
+//	const char *transform = config->getDisplayColorSpaceName(display, view);
 
-	OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, transform);
+//	OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, transform);
 
-	std::cout << display << " " << view << " " << transform << "\n";
+//	std::cout << display << " " << view << " " << transform << "\n";
 
 	glGenBuffers(1, &m_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
@@ -144,9 +144,9 @@ void NGLScene::initializeGL()
 	m_text->setScreenSize(width(), height());
 
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
+  m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/monkey.obj"));
-	m_renderer->initMesh(vMeshLoader::loadMesh("models/lowpolytree.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/lowpolytree.obj"));
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)
