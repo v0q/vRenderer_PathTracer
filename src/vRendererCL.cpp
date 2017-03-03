@@ -70,6 +70,7 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 		std::cout << "Using device: \n";
     m_device = devices[devices.size() - 1];
 		std::cout << "\t" << m_device.getInfo<CL_DEVICE_NAME>() << "\n";
+		std::cout << "\tMax image width: " << m_device.getInfo<CL_DEVICE_IMAGE2D_MAX_WIDTH>() << ", height: " << m_device.getInfo<CL_DEVICE_IMAGE2D_MAX_HEIGHT>() << "\n";
 	}
 
 	std::cout << m_device.getInfo<CL_DEVICE_EXTENSIONS>() << "\n";
@@ -110,6 +111,7 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 	{
 		std::cerr << "Failed compile the program: " << result << "\n";
 		std::string buildlog = m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(m_device);
+		std::cerr << buildlog << "\n";
 		FILE *log = fopen("errorlog.txt", "w");
 		fprintf(log, "%s\n", buildlog.c_str());
 
@@ -197,6 +199,7 @@ void vRendererCL::render()
 	}
 	event.wait();
 	t0 = t1;
+//	exit(0);
 }
 
 void vRendererCL::cleanUp()
@@ -325,14 +328,15 @@ void vRendererCL::initMesh(const vMeshData &_meshData)
     // Storing indices as floats
     bvhData[idx + 3].x = intAsFloat(indices[0]);
     bvhData[idx + 3].y = intAsFloat(indices[1]);
-    bvhData[idx + 3].y = 0.f;
+		bvhData[idx + 3].z = 0.f;
     bvhData[idx + 3].w = 0.f;
   }
 
   cl::ImageFormat format;
   format.image_channel_order = CL_RGBA;
-  format.image_channel_data_type = CL_FLOAT;
-  // Copy buffers to GPU
+	format.image_channel_data_type = CL_FLOAT;
+	// Copy buffers to GPU
+	std::cout << verts.size() << "\n";
   m_vertices = cl::Image1D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, verts.size(), &verts[0], &err);
 
   if(err != CL_SUCCESS)
@@ -366,7 +370,7 @@ void vRendererCL::initMesh(const vMeshData &_meshData)
   {
     std::cerr << "Failed to copy triangle indices to GPU " << err << "\n";
     exit(EXIT_FAILURE);
-  }
+	}
 
 //	validateCuda(cudaMalloc(&m_vertices, verts.size()*sizeof(float4)), "Malloc vertex device pointer");
 //	validateCuda(cudaMemcpy(m_vertices, &verts[0], verts.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy vertex data to gpu");

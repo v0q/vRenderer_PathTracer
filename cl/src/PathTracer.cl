@@ -4,17 +4,28 @@
 
 #define BVH_MAX_STACK_SIZE 32
 __constant float invGamma = 1.f/2.2f;
+__constant unsigned int samps = 2;
+__constant float invSamps = 1.f/2;
 
 __constant Sphere spheres[] = {
-		{ 1e5f,		{ 1e5f + 1.0f, 40.8f, 81.6f, 0.f },			{ 0.0f, 0.0f, 0.0f, 0.f },	{ 0.75f, 0.0f, 0.0f, 0.f } }, //Left
-		{ 1e5f,		{ -1e5f + 99.0f, 40.8f, 81.6f, 0.f },		{ 0.0f, 0.0f, 0.0f, 0.f },	{ 0.0f, 0.75f, 0.0f, 0.f } }, //Right
-		{ 1e5f,		{ 50.0f, 40.8f, 1e5f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Back
-		{ 1e5f,		{ 50.0f, 40.8f, -1e5f + 600.0f, 0.f },	{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.00f, 1.00f, 1.00f, 0.f } }, //Frnt
-		{ 1e5f,		{ 50.0f, 1e5f, 81.6f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Botm
-		{ 1e5f,		{ 50.0f, -1e5f + 81.6f, 81.6f, 0.f },		{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Top
-//		{ 16.5f,	{ 27.0f, 16.5f, 47.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 1
-//		{ 16.5f,	{ 73.0f, 16.5f, 78.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 2
-		{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f, 0.f },		{ 2.0f, 1.8f, 1.6f, 0.f },	{ 0.0f, 0.0f, 0.0f, 0.f } }  // Light
+//	{ 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f, 0.0f },			{ 0.075f, 0.f, 0.f, 0.0f }, { 0.75f, 0.0f, 0.0f, 0.0f } }, //Left
+//	{ 1e5f, { -1e5f + 99.0f, 40.8f, 81.6f, 0.0f },		{ 0.f, 0.075f, 0.f, 0.0f }, { 0.0f, 0.75f, 0.0f, 0.0f } }, //Right
+//	{ 1e5f, { 50.0f, 40.8f, 1e5f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Back
+//	{ 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f, 0.0f } }, //Frnt
+	{ 1e5f, { 50.0f, 1e5f - 40.f, 81.6f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
+//	{ 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Top
+//	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
+//	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
+	{ 150.0f, { 50.0f, 300.6f - .77f, 81.6f, 0.0f },	/*{ 2.0f, 1.8f, 1.6f, 0.0f }*/{ 2.8f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
+//	{ 1e5f,		{ 1e5f + 1.0f, 40.8f, 81.6f, 0.f },			{ 0.0f, 0.0f, 0.0f, 0.f },	{ 0.75f, 0.0f, 0.0f, 0.f } }, //Left
+//	{ 1e5f,		{ -1e5f + 99.0f, 40.8f, 81.6f, 0.f },		{ 0.0f, 0.0f, 0.0f, 0.f },	{ 0.0f, 0.75f, 0.0f, 0.f } }, //Right
+//	{ 1e5f,		{ 50.0f, 40.8f, 1e5f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Back
+//	{ 1e5f,		{ 50.0f, 40.8f, -1e5f + 600.0f, 0.f },	{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.00f, 1.00f, 1.00f, 0.f } }, //Frnt
+//	{ 1e5f,		{ 50.0f, 1e5f, 81.6f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Botm
+//	{ 1e5f,		{ 50.0f, -1e5f + 81.6f, 81.6f, 0.f },		{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Top
+////		{ 16.5f,	{ 27.0f, 16.5f, 47.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 1
+////		{ 16.5f,	{ 73.0f, 16.5f, 78.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 2
+//	{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f, 0.f },		{ 2.0f, 1.8f, 1.6f, 0.f },	{ 0.0f, 0.0f, 0.0f, 0.f } }  // Light
 };
 
 Ray createRay(float4 _o, float4 _d)
@@ -31,7 +42,7 @@ bool intersectScene(const Ray *_ray, __read_only image1d_t _vertices, __read_onl
 	so t will be guaranteed to be smaller
 	when a hit with the scene occurs */
 
-	int n = sizeof(spheres)/sizeof(Sphere);;
+	int n = sizeof(spheres)/sizeof(Sphere);
 	float inf = 1e20f;
 	float t = inf;
 
@@ -50,143 +61,111 @@ bool intersectScene(const Ray *_ray, __read_only image1d_t _vertices, __read_onl
 		}
   }
 
+	const int EntrypointSentinel = 0x76543210;
+	int startNode = 0;
+	int traversalStack[64];
+	traversalStack[0] = EntrypointSentinel;
 
-//  read_imageui(_bvhChildrenOrTriangles, (int)(bvhIndex)).xyzw;
-//  read_imagef(_bvhLimits, (int)(3 * bvhIndex)).xy;
-//  read_imagef(_triangles, (int)(5 * triIndex));
-  const int EntrypointSentinel = 0x76543210;
-  int startNode = 0;
-  int traversalStack[64];
-  traversalStack[0] = EntrypointSentinel;
-
-  char* stackPtr;                       // Current position in traversal stack.
-  int leafAddr;                       // First postponed leaf, non-negative if none.
-  int nodeAddr = EntrypointSentinel;  // Non-negative: current internal node, negative: second postponed leaf.
-  stackPtr = (char*)&traversalStack[0];
-  leafAddr = 0;   // No postponed leaf.
-  nodeAddr = startNode;   // Start from the root.
+	char* stackPtr;                       // Current position in traversal stack.
+	int leafAddr;                       // First postponed leaf, non-negative if none.
+	int nodeAddr = EntrypointSentinel;  // Non-negative: current internal node, negative: second postponed leaf.
+	stackPtr = (char*)&traversalStack[0];
+	leafAddr = 0;   // No postponed leaf.
+	nodeAddr = startNode;   // Start from the root.
 
 
-  float3 invDir = (float3)(1.0f / (fabsf(_ray->m_dir.x) > epsilon ? _ray->m_dir.x : epsilon),
-                              1.0f / (fabsf(_ray->m_dir.y) > epsilon ? _ray->m_dir.y : epsilon),
-                              1.0f / (fabsf(_ray->m_dir.z) > epsilon ? _ray->m_dir.z : epsilon));
-  float3 od = (float3)(_ray->m_origin.x * invDir.x,
-                          _ray->m_origin.y * invDir.y,
-                          _ray->m_origin.z * invDir.z);
+	float3 invDir = (float3)(1.0f / (fabs(_ray->m_dir.x) > epsilon ? _ray->m_dir.x : epsilon),
+													 1.0f / (fabs(_ray->m_dir.y) > epsilon ? _ray->m_dir.y : epsilon),
+													 1.0f / (fabs(_ray->m_dir.z) > epsilon ? _ray->m_dir.z : epsilon));
+	float3 od = (float3)(_ray->m_origin.x * invDir.x,
+											 _ray->m_origin.y * invDir.y,
+											 _ray->m_origin.z * invDir.z);
 
-  while(nodeAddr != EntrypointSentinel)
-  {
-    while((unsigned int)nodeAddr < (unsigned int)EntrypointSentinel)
-    {
-      const float4 n0xy = read_imagef(_bvhNodes, nodeAddr + 0); // node 0 bounds xy
-      const float4 n1xy = read_imagef(_bvhNodes, nodeAddr + 1); // node 1 bounds xy
-      const float4 nz = read_imagef(_bvhNodes, nodeAddr + 2); // node 0 & 1 bounds z
-      float4 tmp = read_imagef(_bvhNodes, nodeAddr + 3); // Child indices in x & y
+	while(nodeAddr != EntrypointSentinel)
+	{
+		while((unsigned int)nodeAddr < (unsigned int)EntrypointSentinel)
+		{
+			const float4 n0xy = read_imagef(_bvhNodes, (int)(nodeAddr + 0)); // node 0 bounds xy
+			const float4 n1xy = read_imagef(_bvhNodes, (int)(nodeAddr + 1)); // node 1 bounds xy
+			const float4 nz = read_imagef(_bvhNodes, (int)(nodeAddr + 2)); // node 0 & 1 bounds z
+			float4 tmp = read_imagef(_bvhNodes, (int)(nodeAddr + 3)); // Child indices in x & y
 
-      int2 indices = (int2)(as_int(tmp.x), as_int(tmp.y));
+			int2 indices = (int2)(floatAsInt(tmp.x), floatAsInt(tmp.y));
 
-      if(indices.y == 0x80000000) {
-        nodeAddr = *(int*)stackPtr;
-        leafAddr = indices.x;
-        stackPtr -= 4;
-        break;
-      }
+			if(indices.y == 0x80000000) {
+				nodeAddr = *(int*)stackPtr;
+				leafAddr = indices.x;
+				stackPtr -= 4;
+				break;
+			}
 
-//      const float c0lox = n0xy.x * invDir.x - od.x;
-//      const float c0hix = n0xy.y * invDir.x - od.x;
-//      const float c0loy = n0xy.z * invDir.y - od.y;
-//      const float c0hiy = n0xy.w * invDir.y - od.y;
-//      const float c0loz = nz.x   * invDir.z - od.z;
-//      const float c0hiz = nz.y   * invDir.z - od.z;
-//      const float c1loz = nz.z   * invDir.z - od.z;
-//      const float c1hiz = nz.w   * invDir.z - od.z;
-//      const float c0min = spanBeginKepler(c0lox, c0hix, c0loy, c0hiy, c0loz, c0hiz, 0);
-//      const float c0max = spanEndKepler(c0lox, c0hix, c0loy, c0hiy, c0loz, c0hiz, 1e20);
-//      const float c1lox = n1xy.x * invDir.x - od.x;
-//      const float c1hix = n1xy.y * invDir.x - od.x;
-//      const float c1loy = n1xy.z * invDir.y - od.y;
-//      const float c1hiy = n1xy.w * invDir.y - od.y;
-//      const float c1min = spanBeginKepler(c1lox, c1hix, c1loy, c1hiy, c1loz, c1hiz, 0);
-//      const float c1max = spanEndKepler(c1lox, c1hix, c1loy, c1hiy, c1loz, c1hiz, 1e20);
+			float c0min, c1min, c0max, c1max;
+			bool traverseChild0 = intersectCFBVH(_ray, (float3)(n0xy.x, n0xy.z, nz.x), (float3)(n0xy.y, n0xy.w, nz.y), &c0min, &c0max);
+			bool traverseChild1 = intersectCFBVH(_ray, (float3)(n1xy.x, n1xy.z, nz.z), (float3)(n1xy.y, n1xy.w, nz.w), &c1min, &c1max);
+			bool swp = (c1min < c0min);
 
-      float c0min, c1min, c0max, c1max;
-      bool traverseChild0 = intersectCFBVH(_ray, (float3)(n0xy.x, n0xy.z, nz.x), (float3)(n0xy.y, n0xy.w, nz.y), &c0min, &c0max);
-      bool traverseChild1 = intersectCFBVH(_ray, (float3)(n1xy.x, n1xy.z, nz.z), (float3)(n1xy.y, n1xy.w, nz.w), &c1min, &c1max);
-      bool swp = (c1min < c0min);
+			if(!traverseChild0 && !traverseChild1)
+			{
+				nodeAddr = *(int*)stackPtr;
+				stackPtr -= 4;
+			}
+			else
+			{
+				nodeAddr = (traverseChild0) ? indices.x : indices.y;
+				if(traverseChild0 && traverseChild1)
+				{
+					if(swp) {
+						int tmp = nodeAddr;
+						nodeAddr = indices.y;
+						indices.y = tmp;
+					}
+					stackPtr += 4;
+					*(int*)stackPtr = indices.y;
+				}
+			}
 
-      if(!traverseChild0 && !traverseChild1)
-      {
-        nodeAddr = *(int*)stackPtr;
-        stackPtr -= 4;
-      }
-      else
-      {
-        nodeAddr = (traverseChild0) ? indices.x : indices.y;
-        if(traverseChild0 && traverseChild1)
-        {
-          if(swp) {
-            int tmp = nodeAddr;
-            nodeAddr = indices.y;
-            indices.y = tmp;
-//            swap(nodeAddr, indices.y);
-          }
-          stackPtr += 4;
-          *(int*)stackPtr = indices.y;
-        }
-      }
+			if(nodeAddr < 0 && leafAddr >= 0) // Postpone max 1
+			{
+				leafAddr = nodeAddr;
 
-      if(nodeAddr < 0 && leafAddr >= 0) // Postpone max 1
-      {
-        leafAddr = nodeAddr;
+				nodeAddr = *(int*)stackPtr;
+				stackPtr -= 4;
+			}
 
-        nodeAddr = *(int*)stackPtr;
-        stackPtr -= 4;
-      }
-//			unsigned int mask;
-//			asm("{\n"
-//				"   .reg .pred p;               \n"
-//				"setp.ge.s32        p, %1, 0;   \n"
-//				"vote.ballot.b32    %0,p;       \n"
-//				"}"
-//				: "=r"(mask)
-//				: "r"(leafAddr));
+			int mask = (leafAddr >= 0);
+			if(!mask)
+				break;
+		}
+		while(leafAddr < 0)
+		{
+			for(int triAddr = ~leafAddr;; triAddr += 3)
+			{
+				float4 vert0 = read_imagef(_vertices, (int)(triAddr));
+				// Did we reach the terminating point of the triangle(s) in the leaf
+				if(floatAsInt(vert0.x) == 0x80000000)
+					break;
+				float4 vert1 = read_imagef(_vertices, (int)(triAddr + 1));
+				float4 vert2 = read_imagef(_vertices, (int)(triAddr + 2));
 
-      int mask = leafAddr >= 0;
-      if(!mask)
-        break;
-    }
-    while(leafAddr < 0)
-    {
-      for(int triAddr = ~leafAddr;; triAddr += 3)
-      {
-        float4 vert0 = read_imagef(_vertices, triAddr);
-        // Did we reach the terminating point of the triangle(s) in the leaf
-//        if(as_int(vert0.x) == 0x80000000)
-//          break;
-        break;
-//        float4 vert1 = read_imagef(_vertices, triAddr + 1);
-//        float4 vert2 = read_imagef(_vertices, triAddr + 2);
+				float dist = intersectTriangle(vert0, vert1, vert2, _ray);
+				if(dist != 0.0f && dist < t)
+				{
+					t = dist;
+					_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+					_hitData->m_normal = read_imagef(_normals, triAddr);
+					_hitData->m_color = (float4)(1.f, 0.647058824f, 0.0f, 0.0f);
+					_hitData->m_emission = (float4)(0.f, 0.0f, 0.0f, 0.0f);
+				}
+			}
 
-//        float dist = intersectTriangle(vert0, vert1, vert2, _ray);
-//        if(dist != 0.0f && dist < t)
-//        {
-//          t = dist;
-//          _hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-//          _hitData->m_normal = read_imagef(_normals, triAddr);
-//          _hitData->m_color = (float4)(1.f, 0.0f, 0.0f, 0.0f);
-//          _hitData->m_emission = (float4)(0.f, 0.0f, 0.0f, 0.0f);
-//        }
-      }
-
-      leafAddr = nodeAddr;
-      if(nodeAddr < 0)
-      {
-        nodeAddr = *(int*)stackPtr;
-        stackPtr -= 4;
-      }
-    }
-    break;
-  }
+			leafAddr = nodeAddr;
+			if(nodeAddr < 0)
+			{
+				nodeAddr = *(int*)stackPtr;
+				stackPtr -= 4;
+			}
+		}
+	}
 
 	return t < inf; /* true when ray interesects the scene */
 }
@@ -285,7 +264,6 @@ __kernel void render(__write_only image2d_t _texture, __read_only image1d_t _ver
 		cy.y *= .5135f;
 		cy.z *= .5135f;
 
-    unsigned int samps = 1;
 		for(unsigned int s = 0; s < samps; s++)
 		{
 			// compute primary ray direction
@@ -298,9 +276,9 @@ __kernel void render(__write_only image2d_t _texture, __read_only image1d_t _ver
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam = createRay(camera.m_origin + d * 40, normalize(d));
 
-      _colors[ind] += trace(&newcam, _vertices, _normals, _bvhNodes, &seed0, &seed1);
+			_colors[ind] += trace(&newcam, _vertices, _normals, _bvhNodes, &seed0, &seed1) * invSamps;
 		}
-		float coef = 1.f/(samps*_frame);
+		float coef = 1.f/_frame;
 
 		write_imagef(_texture, (int2)(x, y), (float4)(pow(clamp(_colors[ind].x * coef, 0.f, 1.f), invGamma),
 																									pow(clamp(_colors[ind].y * coef, 0.f, 1.f), invGamma),

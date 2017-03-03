@@ -23,7 +23,7 @@ NGLScene::NGLScene() :
   m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
-  setTitle("Blank NGL");
+	setTitle("vRenderer");
 	m_renderTexture = false;
 	m_fpsTimer = startTimer(0);
 	m_fps = 0;
@@ -144,9 +144,9 @@ void NGLScene::initializeGL()
 	m_text->setScreenSize(width(), height());
 
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
-  m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/monkey.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/lowpolytree.obj"));
+	m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)
@@ -220,7 +220,7 @@ void NGLScene::paintGL()
 	m_text->renderText(10, 20, text);
 	text = QString("Render time/frame: %1ms").arg(duration);
 	m_text->renderText(10, 40, text);
-	text = QString("%1 samples per pixel").arg(m_renderer->getFrameCount());
+	text = QString("%1 samples per pixel").arg(m_renderer->getFrameCount() * 2);
 	m_text->renderText(10, 60, text);
 	++m_frames;
 }

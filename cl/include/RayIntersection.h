@@ -21,6 +21,53 @@ float intersectSphere(const Sphere *_sphere, const Ray *_ray)
   return 0.0f;
 }
 
+float intersectTriangle(const float4 _v1, const float4 _v2, const float4 _v3, const Ray *_ray)
+{
+	float4 e1, e2;  //Edge1, Edge2
+	float4 p, q, t;
+	float det, inv_det, u, v;
+	float dist;
+
+	//Find vectors for two edges sharing V1
+	e1 = _v2 - _v1;
+	e2 = _v3 - _v1;
+	//Begin calculating determinant - also used to calculate u parameter
+
+	p = cross(_ray->m_dir, e2);
+	//if determinant is near zero, ray lies in plane of triangle or ray is parallel to plane of triangle
+	det = dot(e1, p);
+	//NOT CULLING
+	if(det > -epsilon && det < epsilon)
+		return 0.f;
+	inv_det = 1.f / det;
+
+	//calculate distance from V1 to ray origin
+	t = _ray->m_origin - _v1;
+
+	//Calculate u parameter and test bound
+	u = dot(t, p) * inv_det;
+	//The intersection lies outside of the triangle
+	if(u < 0.f || u > 1.f)
+		return 0.f;
+
+	//Prepare to test v parameter
+	q = cross(t, e1);
+
+	//Calculate V parameter and test bound
+	v = dot(_ray->m_dir, q) * inv_det;
+	//The intersection lies outside of the triangle
+	if(v < 0.f || u + v  > 1.f)
+		return 0.f;
+
+	dist = dot(e2, q) * inv_det;
+
+	if(dist > epsilon)
+		return dist;
+
+	// No hit, no win
+	return 0.f;
+}
+
 ///
 /// \brief intersect
 /// \param _ray One axis direction component stored in x and origin in y

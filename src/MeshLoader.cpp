@@ -29,7 +29,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 
 	std::vector<ngl::Vec3> vertices;
 	std::vector<vHTriangle> triangles;
-	float scale = 15.f;
+	float scale = 25.f;
 	float offset = 50.f;
 //	float offset = 0.f;
 
