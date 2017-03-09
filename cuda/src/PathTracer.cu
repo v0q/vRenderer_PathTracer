@@ -70,7 +70,7 @@ __device__ __inline__ void swap(int &_a, int &_b)
 }
 
 //__device__ inline bool intersectScene(const Ray *_ray, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, uint4 *_bvhChildrenOrTriangles, vHitData *_hitData)
-__device__ inline bool intersectScene(const Ray *_ray, vHitData *_hitData)
+__device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4 *_normals, float4 *_bvhData, vHitData *_hitData)
 {
 	/* initialise t to a very large number,
 	so t will be guaranteed to be smaller
@@ -119,10 +119,14 @@ __device__ inline bool intersectScene(const Ray *_ray, vHitData *_hitData)
 	{
 		while((unsigned int)nodeAddr < (unsigned int)EntrypointSentinel)
 		{
-			const float4 n0xy = tex1Dfetch(t_bvhData, nodeAddr + 0); // node 0 bounds xy
-			const float4 n1xy = tex1Dfetch(t_bvhData, nodeAddr + 1); // node 1 bounds xy
-			const float4 nz = tex1Dfetch(t_bvhData, nodeAddr + 2); // node 0 & 1 bounds z
-			float4 tmp = tex1Dfetch(t_bvhData, nodeAddr + 3); // Child indices in x & y
+//			const float4 n0xy = tex1Dfetch(t_bvhData, nodeAddr + 0); // node 0 bounds xy
+//			const float4 n1xy = tex1Dfetch(t_bvhData, nodeAddr + 1); // node 1 bounds xy
+//			const float4 nz = tex1Dfetch(t_bvhData, nodeAddr + 2); // node 0 & 1 bounds z
+//			float4 tmp = tex1Dfetch(t_bvhData, nodeAddr + 3); // Child indices in x & y
+			const float4 n0xy = _bvhData[nodeAddr + 0]; // node 0 bounds xy
+			const float4 n1xy = _bvhData[nodeAddr + 1]; // node 1 bounds xy
+			const float4 nz = _bvhData[nodeAddr + 2]; // node 0 & 1 bounds z
+			float4 tmp = _bvhData[nodeAddr + 3]; // Child indices in x & y
 
 			int2 indices = make_int2(__float_as_int(tmp.x), __float_as_int(tmp.y));
 
@@ -196,20 +200,24 @@ __device__ inline bool intersectScene(const Ray *_ray, vHitData *_hitData)
 		{
 			for(int triAddr = ~leafAddr;; triAddr += 3)
 			{
-				float4 vert0 = tex1Dfetch(t_vertices, triAddr);
+//				float4 vert0 = tex1Dfetch(t_vertices, triAddr);
+				float4 vert0 = _vertices[triAddr];
 				// Did we reach the terminating point of the triangle(s) in the leaf
 				if(__float_as_int(vert0.x) == 0x80000000)
 					break;
 
-				float4 vert1 = tex1Dfetch(t_vertices, triAddr + 1);
-				float4 vert2 = tex1Dfetch(t_vertices, triAddr + 2);
+//				float4 vert1 = tex1Dfetch(t_vertices, triAddr + 1);
+//				float4 vert2 = tex1Dfetch(t_vertices, triAddr + 2);
+				float4 vert1 = _vertices[triAddr + 1];
+				float4 vert2 = _vertices[triAddr + 2];
 
 				float dist = intersectTriangle(vert0, vert1, vert2, _ray);
 				if(dist != 0.0f && dist < t)
 				{
 					t = dist;
 					_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-					_hitData->m_normal = tex1Dfetch(t_normals, triAddr);
+//					_hitData->m_normal = tex1Dfetch(t_normals, triAddr);
+					_hitData->m_normal = _normals[triAddr];
 					_hitData->m_color = make_float4(1.f, 0.647058824f, 0.0f, 0.0f);
 					_hitData->m_emission = make_float4(0.f, 0.0f, 0.0f, 0.0f);
 				}
@@ -235,7 +243,7 @@ __device__ static unsigned int hash(unsigned int *seed0, unsigned int *seed1)
 }
 
 //__device__ float4 trace(const Ray *_camray, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, uint4 *_bvhChildrenOrTriangles, unsigned int *_seed0, unsigned int *_seed1)
-__device__ float4 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *_seed1)
+__device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals, float4 *_bvhData, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
@@ -247,7 +255,7 @@ __device__ float4 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *
 		vHitData hitData;
 
 //		if(!intersectScene(&ray, _triangleData, _triIdxList, _bvhLimits, _bvhChildrenOrTriangles, &hitData)) {
-		if(!intersectScene(&ray, &hitData)) {
+		if(!intersectScene(&ray, _vertices, _normals, _bvhData, &hitData)) {
 			return make_float4(0.f, 0.f, 0.f, 0.f);
 		}
 
@@ -291,7 +299,7 @@ __device__ float4 trace(const Ray *_camray, unsigned int *_seed0, unsigned int *
 
 //__global__ void render(cudaSurfaceObject_t _tex, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, uint4 *_bvhChildrenOrTriangles,
 //											 float4 *_colors, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
-__global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_vertices, float4 *_normals, float4 *_bvhData, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -317,7 +325,7 @@ __global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_cam, 
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam(camera.m_origin + d * 40, normalize(d));
 //			_colors[ind] += trace(&newcam, _triangleData, _triIdxList, _bvhLimits, _bvhChildrenOrTriangles, &s1, &s2) * (kInvSamps);
-			_colors[ind] += trace(&newcam, &s1, &s2) * (kInvSamps);
+			_colors[ind] += trace(&newcam, _vertices, _normals, _bvhData, &s1, &s2) * (kInvSamps);
 		}
 
 		float coef = 1.f/_frame;
@@ -343,150 +351,6 @@ __device__ int floatAsInt( float fval )
 		return fi.i;
 }
 
-
-__global__ void readBVHNode(float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h)
-{
-
-	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
-
-	if(x < _w && y < _h) {
-		Ray camera(*_cam, *_dir);
-
-		float4 cx = make_float4(_w * .5135 / _h, 0.0f, 0.0f, 0.0f); // ray direction offset in x direction
-		float4 cy = normalize(cross(cx, camera.m_dir)) * .5135; // ray direction offset in y direction (.5135 is field of view angle)
-
-		// compute primary ray direction
-		float4 d = camera.m_dir + cx*((.25 + x) / _w - .5) + cy*((.25 + y) / _h - .5);
-		// create primary ray, add incoming radiance to pixelcolor
-		Ray _ray(camera.m_origin, camera.m_dir);
-
-		const int EntrypointSentinel = 0x76543210;
-		int startNode = 0;
-		int traversalStack[64];
-		traversalStack[0] = EntrypointSentinel;
-
-		char* stackPtr;                       // Current position in traversal stack.
-		int leafAddr;                       // First postponed leaf, non-negative if none.
-		int nodeAddr = EntrypointSentinel;  // Non-negative: current internal node, negative: second postponed leaf.
-		stackPtr = (char*)&traversalStack[0];
-		leafAddr = 0;   // No postponed leaf.
-		nodeAddr = startNode;   // Start from the root.
-
-
-		float3 invDir = make_float3(1.0f / (fabsf(_ray.m_dir.x) > epsilon ? _ray.m_dir.x : epsilon),
-																1.0f / (fabsf(_ray.m_dir.y) > epsilon ? _ray.m_dir.y : epsilon),
-																1.0f / (fabsf(_ray.m_dir.z) > epsilon ? _ray.m_dir.z : epsilon));
-		float3 od = make_float3(_ray.m_origin.x * invDir.x,
-														_ray.m_origin.y * invDir.y,
-														_ray.m_origin.z * invDir.z);
-
-		int ind = 1;
-		while(nodeAddr != EntrypointSentinel)
-		{
-			while((unsigned int)nodeAddr < (unsigned int)EntrypointSentinel)
-			{
-				const float4 n0xy = tex1Dfetch(t_bvhData, nodeAddr + 0); // node 0 bounds xy
-				const float4 n1xy = tex1Dfetch(t_bvhData, nodeAddr + 1); // node 1 bounds xy
-				const float4 nz = tex1Dfetch(t_bvhData, nodeAddr + 2); // node 0 & 1 bounds z
-				float4 tmp = tex1Dfetch(t_bvhData, nodeAddr + 3); // Child indices in x & y
-
-				int2 indices = make_int2(__float_as_int(tmp.x), __float_as_int(tmp.y));
-
-				if(indices.y == 0x80000000) {
-					nodeAddr = *(int*)stackPtr;
-					leafAddr = indices.x;
-					stackPtr -= 4;
-					break;
-				}
-
-				const float c0lox = n0xy.x * invDir.x - od.x;
-				const float c0hix = n0xy.y * invDir.x - od.x;
-				const float c0loy = n0xy.z * invDir.y - od.y;
-				const float c0hiy = n0xy.w * invDir.y - od.y;
-				const float c0loz = nz.x   * invDir.z - od.z;
-				const float c0hiz = nz.y   * invDir.z - od.z;
-				const float c1loz = nz.z   * invDir.z - od.z;
-				const float c1hiz = nz.w   * invDir.z - od.z;
-				const float c0min = spanBeginKepler(c0lox, c0hix, c0loy, c0hiy, c0loz, c0hiz, 0);
-				const float c0max = spanEndKepler(c0lox, c0hix, c0loy, c0hiy, c0loz, c0hiz, 1e20);
-				const float c1lox = n1xy.x * invDir.x - od.x;
-				const float c1hix = n1xy.y * invDir.x - od.x;
-				const float c1loy = n1xy.z * invDir.y - od.y;
-				const float c1hiy = n1xy.w * invDir.y - od.y;
-				const float c1min = spanBeginKepler(c1lox, c1hix, c1loy, c1hiy, c1loz, c1hiz, 0);
-				const float c1max = spanEndKepler(c1lox, c1hix, c1loy, c1hiy, c1loz, c1hiz, 1e20);
-
-				bool swp = (c1min < c0min);
-				bool traverseChild0 = (c0max >= c0min);
-				bool traverseChild1 = (c1max >= c1min);
-
-				if(!traverseChild0 && !traverseChild1)
-				{
-					nodeAddr = *(int*)stackPtr;
-					stackPtr -= 4;
-				}
-				else
-				{
-					nodeAddr = (traverseChild0) ? indices.x : indices.y;
-					if(traverseChild0 && traverseChild1)
-					{
-						if(swp)
-							swap(nodeAddr, indices.y);
-						stackPtr += 4;
-						*(int*)stackPtr = indices.y;
-					}
-				}
-
-				if(nodeAddr < 0 && leafAddr >= 0) // Postpone max 1
-				{
-					leafAddr = nodeAddr;
-
-					nodeAddr = *(int*)stackPtr;
-					stackPtr -= 4;
-				}
-				unsigned int mask;
-				asm("{\n"
-					"   .reg .pred p;               \n"
-					"setp.ge.s32        p, %1, 0;   \n"
-					"vote.ballot.b32    %0,p;       \n"
-					"}"
-					: "=r"(mask)
-					: "r"(leafAddr));
-
-//				int mask = leafAddr >= 0;
-				if(!mask)
-					break;
-			}
-			while(leafAddr < 0)
-			{
-				for(int triAddr = ~leafAddr;; triAddr += 3)
-				{
-					float4 vert0 = tex1Dfetch(t_vertices, triAddr);
-					// Did we reach the terminating point of the triangle(s) in the leaf
-					if(__float_as_int(vert0.x) == 0x80000000)
-						break;
-					float4 vert1 = tex1Dfetch(t_vertices, triAddr + 1);
-					float4 vert2 = tex1Dfetch(t_vertices, triAddr + 2);
-
-					printf("v %f %f %f\n", vert0.x, vert0.y, vert0.z);
-					printf("v %f %f %f\n", vert1.x, vert1.y, vert1.z);
-					printf("v %f %f %f\n", vert2.x, vert2.y, vert2.z);
-					printf("f %d// %d// %d//\n\n", ind, ind + 1, ind + 2);
-					ind += 3;
-				}
-
-				leafAddr = nodeAddr;
-				if(nodeAddr < 0)
-				{
-					nodeAddr = *(int*)stackPtr;
-					stackPtr -= 4;
-				}
-			}
-		}
-	}
-}
-
 void cu_runRenderKernel(// Buffers
 												cudaSurfaceObject_t _texture, float4 *_vertices, float4 *_normals, float4 *_bvhData, unsigned int *_triIdxList,
 												// Buffer sizes for texture initialisation
@@ -494,31 +358,31 @@ void cu_runRenderKernel(// Buffers
 												float4 *_colorArr, float4 *_cam, float4 *_dir,
 												unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
-	static bool m_initialised = false;
-	if(!m_initialised)
-	{
-		// bind the scene data to CUDA textures!
-		m_initialised = true;
+//	static bool m_initialised = false;
+//	if(!m_initialised)
+//	{
+//		// bind the scene data to CUDA textures!
+//		m_initialised = true;
 
-		cudaChannelFormatDesc vertDesc = cudaCreateChannelDesc<float4>();
-		cudaBindTexture(NULL, &t_vertices, _vertices, &vertDesc, _vertCount * sizeof(float4));
+//		cudaChannelFormatDesc vertDesc = cudaCreateChannelDesc<float4>();
+//		cudaBindTexture(NULL, &t_vertices, _vertices, &vertDesc, _vertCount * sizeof(float4));
 
-		cudaChannelFormatDesc normDesc = cudaCreateChannelDesc<float4>();
-		cudaBindTexture(NULL, &t_normals, _normals, &normDesc, _vertCount * sizeof(float4));
+//		cudaChannelFormatDesc normDesc = cudaCreateChannelDesc<float4>();
+//		cudaBindTexture(NULL, &t_normals, _normals, &normDesc, _vertCount * sizeof(float4));
 
-		cudaChannelFormatDesc bvhDesc = cudaCreateChannelDesc<float4>();
-		cudaBindTexture(NULL, &t_bvhData, _bvhData, &bvhDesc, _bvhNodeCount * sizeof(float4));
+//		cudaChannelFormatDesc bvhDesc = cudaCreateChannelDesc<float4>();
+//		cudaBindTexture(NULL, &t_bvhData, _bvhData, &bvhDesc, _bvhNodeCount * sizeof(float4));
 
-		cudaChannelFormatDesc triIndDesc = cudaCreateChannelDesc<uint1>();
-		cudaBindTexture(NULL, &t_triIndices, _triIdxList, &triIndDesc, _triIdxCount * sizeof(uint));
-	}
+//		cudaChannelFormatDesc triIndDesc = cudaCreateChannelDesc<uint1>();
+//		cudaBindTexture(NULL, &t_triIndices, _triIdxList, &triIndDesc, _triIdxCount * sizeof(uint));
+//	}
 
 	dim3 dimBlock(16, 16);
 	dim3 dimGrid((_w / dimBlock.x),
 							 (_h / dimBlock.y));
 
 //	render<<<dimGrid, dimBlock>>>(_texture, _triangleData, _triIdxList, _bvhLimits, _bvhChildrenOrTriangles, _colorArr, _cam, _dir, _w, _h, _frame, _time);
-	render<<<dimGrid, dimBlock>>>(_texture, _colorArr, _cam, _dir, _w, _h, _frame, _time);
+	render<<<dimGrid, dimBlock>>>(_texture, _colorArr, _vertices, _normals, _bvhData, _cam, _dir, _w, _h, _frame, _time);
 //	readBVHNode<<<1, 1>>>(_cam, _dir, _w, _h);
 //	exit(0);
 }

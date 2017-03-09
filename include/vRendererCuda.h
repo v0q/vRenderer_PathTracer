@@ -22,7 +22,6 @@ private:
 
   cudaGraphicsResource_t m_cudaGLTextureBuffer;
 	cudaArray *m_cudaImgArray;
-	std::vector<vMesh *> m_meshes;
 
 	// Cuda buffers
 	float4 *m_camera;
