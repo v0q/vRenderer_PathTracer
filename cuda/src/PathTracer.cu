@@ -178,6 +178,7 @@ __device__ inline bool intersectScene(const Ray *_ray, vHitData *_hitData)
 				nodeAddr = *(int*)stackPtr;
 				stackPtr -= 4;
 			}
+
 			unsigned int mask;
 			asm("{\n"
 				"   .reg .pred p;               \n"
@@ -213,7 +214,6 @@ __device__ inline bool intersectScene(const Ray *_ray, vHitData *_hitData)
 					_hitData->m_emission = make_float4(0.f, 0.0f, 0.0f, 0.0f);
 				}
 			}
-
 			leafAddr = nodeAddr;
 			if(nodeAddr < 0)
 			{
@@ -445,16 +445,16 @@ __global__ void readBVHNode(float4 *_cam, float4 *_dir, unsigned int _w, unsigne
 					nodeAddr = *(int*)stackPtr;
 					stackPtr -= 4;
 				}
-	//			unsigned int mask;
-	//			asm("{\n"
-	//				"   .reg .pred p;               \n"
-	//				"setp.ge.s32        p, %1, 0;   \n"
-	//				"vote.ballot.b32    %0,p;       \n"
-	//				"}"
-	//				: "=r"(mask)
-	//				: "r"(leafAddr));
+				unsigned int mask;
+				asm("{\n"
+					"   .reg .pred p;               \n"
+					"setp.ge.s32        p, %1, 0;   \n"
+					"vote.ballot.b32    %0,p;       \n"
+					"}"
+					: "=r"(mask)
+					: "r"(leafAddr));
 
-				int mask = leafAddr >= 0;
+//				int mask = leafAddr >= 0;
 				if(!mask)
 					break;
 			}

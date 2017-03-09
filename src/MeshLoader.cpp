@@ -29,7 +29,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 
 	std::vector<ngl::Vec3> vertices;
 	std::vector<vHTriangle> triangles;
-	float scale = 25.f;
+	float scale = 250.f;
 	float offset = 50.f;
 //	float offset = 0.f;
 
@@ -98,7 +98,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		}
 	}
 
-	BVH bb(&triangles[0], &vertices[0], triangles.size());
+	SBVH bb(&triangles[0], &vertices[0], triangles.size());
 //	exit(0);
 
 	return vMeshData(triangles, vertices, bb);

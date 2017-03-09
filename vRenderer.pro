@@ -20,14 +20,14 @@ SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/NGLScene.cpp \
           $$PWD/src/NGLSceneMouseControls.cpp \
           $$PWD/src/MeshLoader.cpp \
-          $$PWD/src/BVH.cpp \
+          $$PWD/src/SBVH.cpp \
           $$PWD/src/BVHNodes.cpp
 # same for the .h files
 HEADERS+= $$PWD/include/NGLScene.h \
           $$PWD/include/WindowParams.h \
           $$PWD/include/MeshLoader.h \
           $$PWD/include/AABB.h \
-          $$PWD/include/BVH.h \
+          $$PWD/include/SBVH.h \
           $$PWD/include/BVHNodes.h \
           $$PWD/include/Utilities.h \
           $$PWD/include/vDataTypes.h \

@@ -146,7 +146,8 @@ void NGLScene::initializeGL()
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/lowpolytree.obj"));
-	m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
+	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res4.ply"));
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)
