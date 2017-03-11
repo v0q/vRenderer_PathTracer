@@ -14,8 +14,9 @@ public:
   void registerTextureBuffer(GLuint &_texture) override;
   void render() override;
   void cleanUp() override;
-  void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) override;
+	void updateCamera() override;
 	void initMesh(const vMeshData &_meshData) override;
+	void initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h);
   unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
 	void validateCuda(cudaError_t _err, const std::string &_msg = "");
@@ -33,6 +34,8 @@ private:
 	float4 *m_normals;
 	float4 *m_bvhData;
 	unsigned int *m_triIdxList;
+
+	float4 *m_hdr;
 
   unsigned int m_width;
   unsigned int m_height;

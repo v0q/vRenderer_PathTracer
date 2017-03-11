@@ -32,9 +32,9 @@ void vRendererCuda::init(const unsigned int &_w, const unsigned int &_h)
 	validateCuda(cudaMalloc(&m_camera, sizeof(float4)), "Malloc camera origin buffer");
 	validateCuda(cudaMalloc(&m_camdir, sizeof(float4)), "Malloc camera direction buffer");
 
-	float4 cam = make_float4(50.0f, 52.0f, 295.6f, 0.0f);
-	float4 camdir = make_float4(0.0f, -0.0425734f, -0.999093f, 0.0f);
-//	float4 camdir = make_float4(-0.164325f, -0.170898f, -0.971489f, 0.0f);
+//	float4 cam = make_float4(0.f, 0.f, 295.6f, 0.0f);
+	float4 cam = make_float4(0.f, 0.f, 0.f, 0.0f);
+	float4 camdir = make_float4(0.0f, 0.f, -1.f, 0.0f);
 
 	validateCuda(cudaMemcpy(m_camera, &cam, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera origin buffer");
 	validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera direction buffer");
@@ -53,28 +53,24 @@ void vRendererCuda::registerTextureBuffer(GLuint &_texture)
 	validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLTextureBuffer, _texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
 }
 
-void vRendererCuda::updateCamera(const float *_cam, const float *_dir)
+void vRendererCuda::updateCamera()
 {
-	if(_cam != nullptr)
-	{
-		validateCuda(cudaMemcpy(m_camera, _cam, sizeof(float4), cudaMemcpyHostToDevice), "Update camera origin buffer");
-	}
-	if(_dir != nullptr)
-	{
-		validateCuda(cudaMemcpy(m_camdir, _dir, sizeof(float4), cudaMemcpyHostToDevice), "Update camera direction buffer");
-	}
+	m_virtualCamera->consume();
+	validateCuda(cudaMemcpy(m_camera, &m_virtualCamera->getOrig().m_openGL[0], sizeof(float4), cudaMemcpyHostToDevice), "Update camera origin buffer");
+	validateCuda(cudaMemcpy(m_camdir, &m_virtualCamera->getDir().m_openGL[0], sizeof(float4), cudaMemcpyHostToDevice), "Update camera direction buffer");
 
 	m_frame = 1;
 	cu_fillFloat4(m_colorArray, make_float4(0.0f, 0.0f, 0.0f, 0.0f), m_width*m_height);
 	cudaDeviceSynchronize();
 }
 
-unsigned int _triCount;
-unsigned int _bvhBoxCount;
-unsigned int _triIdxCount;
-
 void vRendererCuda::render()
 {
+	if(m_virtualCamera->isDirty())
+	{
+		updateCamera();
+	}
+
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	validateCuda(cudaGraphicsMapResources(1, &m_cudaGLTextureBuffer), "Map GL texture buffer");
@@ -86,6 +82,7 @@ void vRendererCuda::render()
   cudaSurfaceObject_t writeSurface;
 	validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc), "Create a writeable cuda surface");
 	cu_runRenderKernel(writeSurface,
+										 m_hdr,
 										 m_vertices,
 										 m_normals,
 										 m_bvhData,
@@ -117,6 +114,8 @@ void vRendererCuda::cleanUp()
 			validateCuda(cudaFree(m_triIdxList), "Clean up triangle index buffer");
 		if(m_bvhData)
 			validateCuda(cudaFree(m_bvhData), "Clean up BVH node buffer");
+		if(m_hdr)
+			validateCuda(cudaFree(m_hdr), "Clean up HDR buffer");
 
 		validateCuda(cudaFree(m_colorArray), "Clean up color buffer");
 		validateCuda(cudaFree(m_camera), "Clean up camera buffer");
@@ -212,6 +211,21 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	m_bvhNodeCount = bvhData.size();
 	m_triIdxCount = triIndices.size();
 //	exit(0);
+}
+
+void vRendererCuda::initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h)
+{
+	float4 *dataAsFloats = new float4[_w*_h];
+
+	for(unsigned int i = 0; i < _w*_h; ++i)
+		dataAsFloats[i] = make_float4(_pixelBuffer[i].r, _pixelBuffer[i].g, _pixelBuffer[i].b, _pixelBuffer[i].a);
+
+	validateCuda(cudaMalloc(&m_hdr, _w*_h*sizeof(float4)), "Malloc HDR map device pointer");
+	validateCuda(cudaMemcpy(m_hdr, dataAsFloats, _w*_h*sizeof(float4), cudaMemcpyHostToDevice), "Copy HDR map to gpu");
+
+	cu_setHDRDim(_w, _h);
+
+	delete [] dataAsFloats;
 }
 
 void vRendererCuda::validateCuda(cudaError_t _err, const std::string &_msg)

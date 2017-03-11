@@ -23,7 +23,9 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 NGLScene::NGLScene() :
-  m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f))
+	m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f)),
+	m_yaw(0.f),
+	m_pitch(0.f)
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
 	setTitle("vRenderer");
@@ -32,10 +34,13 @@ NGLScene::NGLScene() :
 	m_fps = 0;
 	m_frames = 0;
 	m_timer.start();
+
+	m_virtualCamera = new Camera;
 }
 
 NGLScene::~NGLScene()
 {
+	delete m_virtualCamera;
   glDeleteBuffers(1, &m_vbo);
   std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
 }
@@ -61,6 +66,7 @@ void NGLScene::initializeGL()
 #endif
 
   m_renderer->init((unsigned int)width(), (unsigned int)height());
+	m_renderer->setCamera(m_virtualCamera);
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -148,14 +154,13 @@ void NGLScene::initializeGL()
 
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
 //  m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
-//  m_renderer->initMesh(vMeshLoader::loadMesh("models/lowpolytree.obj"));
-//  m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
-  m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.ply"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
+	m_renderer->initMesh(vMeshLoader::loadMesh("models/happy_buddha.obj"));
 
   Imf::Rgba *pixelBuffer;
   try
   {
-    Imf::RgbaInputFile in("hdr/test.exr");
+		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
     Imath::Box2i win = in.dataWindow();
 
     Imath::V2i dim(win.max.x - win.min.x + 1,

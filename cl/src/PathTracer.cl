@@ -11,7 +11,7 @@ __constant Sphere spheres[] = {
 //	{ 1e5f, { 50.0f, 1e5f - 40.f, 81.6f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
 //	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
 //	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
-  { 1e5f,   { 0.f, 0.f, 0.f, 0.0f },    { 0.8f, 0.8, 0.8, 0.0f }, { 0.f, 0.f, 0.f, 0.f } }, //Botm
+//  { 1e5f,   { 0.f, 0.f, 0.f, 0.0f },    { 0.8f, 0.8, 0.8, 0.0f }, { 0.f, 0.f, 0.f, 0.f } }, //Botm
 //  { 150.0f, { 50.0f, 300.6f - .77f, 81.6f, 0.0f },  { 2.8f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
 };
 
@@ -195,8 +195,18 @@ float4 trace(const Ray* _camray, __global const float4 *_vertices, __global cons
 		vHitData hitData;
 
 		/* if ray misses scene, return background colour */
-    if(!intersectScene(&ray, _vertices, _normals, _bvhNodes, &hitData)) {
-			return (float4)(0.f, 0.f, 0.f, 0.f);
+		if(!intersectScene(&ray, _vertices, _normals, _bvhNodes, &hitData))
+		{
+			float2 longlat = (float2)(atan2(ray.m_dir.x, ray.m_dir.z), acos(ray.m_dir.y));
+			longlat.x = longlat.x < 0 ? longlat.x + 2.0 * PI : longlat.x;
+			longlat.x /= 2.0 * PI;
+			longlat.y /= PI;
+
+			int2 uv = (int2)(get_image_width(_hdr) * longlat.x, get_image_height(_hdr) * longlat.y);
+
+			accum_color += (mask * 2.0f * read_imagef(_hdr, uv));
+			return accum_color;
+//			return (float4)(0.f, 0.f, 0.f, 0.f);
 		}
 
 		/* compute the surface normal and flip it if necessary to face the incoming ray */
@@ -221,17 +231,14 @@ float4 trace(const Ray* _camray, __global const float4 *_vertices, __global cons
     ray.m_dir = newdir;
 
     /* add the colour and light contributions to the accumulated colour */
-    if(hitData.m_type == 0)
-    {
-      int2 uv = (int2)(get_image_width(_hdr)*hitData.m_uv.x, get_image_height(_hdr)*hitData.m_uv.y);
-      accum_color += (mask * 2.0f * read_imagef(_hdr, uv));
-      return accum_color;
-    }
-    else
-    {
+//    if(hitData.m_type == 0)
+//    {
+//    }
+//    else
+//    {
       accum_color += mask * hitData.m_emission;
       mask *= hitData.m_color;
-    }
+//    }
 
     /* the mask colour picks up surface colours at each bounce */
 

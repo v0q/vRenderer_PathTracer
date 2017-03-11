@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <OpenEXR/ImfRgba.h>
 
+#include "Camera.h"
 #include "MeshLoader.h"
 
 class vRenderer
@@ -17,8 +18,13 @@ public:
   virtual void registerTextureBuffer(GLuint &_texture) = 0;
   virtual void render() = 0;
   virtual void cleanUp() = 0;
-  virtual void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) = 0;
+	virtual void updateCamera() = 0;
 	virtual void initMesh(const vMeshData &_sbvhData) = 0;
   virtual void initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h) = 0;
   virtual unsigned int getFrameCount() const = 0;
+
+	void setCamera(Camera *_cam) { m_virtualCamera = _cam; }
+
+protected:
+	Camera *m_virtualCamera;
 };

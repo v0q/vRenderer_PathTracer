@@ -8,6 +8,7 @@
 #include <QOpenGLWindow>
 #include <QTime>
 
+#include "Camera.h"
 #include "WindowParams.h"
 
 class vRenderer;
@@ -93,6 +94,10 @@ private:
 		bool m_renderTexture;
 
     std::unique_ptr<vRenderer> m_renderer;
+		Camera *m_virtualCamera;
+
+		float m_yaw;
+		float m_pitch;
 
 		//----------------------------------------------------------------------------------------------------------------------
 		/// @brief class for text rendering

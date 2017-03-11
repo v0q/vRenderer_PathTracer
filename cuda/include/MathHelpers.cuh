@@ -67,6 +67,12 @@ inline __device__ float4 operator*(const float &_a, const float4 &_b)
 	return make_float4(_a*_b.x, _a*_b.y, _a*_b.z, _b.w);
 }
 
+inline __device__ void operator/=(float2 &_a, const float2 &_b)
+{
+	_a.x /= _b.x;
+	_a.y /= _b.y;
+}
+
 inline __device__ float dot(const float4 &_a, const float4 &_b)
 {
 	return _a.x*_b.x + _a.y*_b.y + _a.z*_b.z;

@@ -29,9 +29,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 
 	std::vector<ngl::Vec3> vertices;
 	std::vector<vHTriangle> triangles;
-  float scale = 300.f;
-  float offset = 50.f;
-//	float offset = 0.f;
+	float scale = 5.f;
 
 	std::cout << scene->mNumMeshes << "\n";
 
@@ -52,16 +50,17 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
-      vertices[j] = ngl::Vec3(vert.x + offset, vert.y + offset/4.f, vert.z + offset);
+			vertices[j] = ngl::Vec3(vert.x, vert.y, vert.z);
 			center += vertices[j];
 		}
 
-//		center /= numVerts;
+		center /= numVerts;
 
-//		for(unsigned int j = 0; j < numVerts; ++j)
-//		{
-//			vertices[j] -= center;
-//		}
+		for(unsigned int j = 0; j < numVerts; ++j)
+		{
+			vertices[j] -= center;
+			vertices[j].m_z -= 250.f;
+		}
 
 		for(unsigned int j = 0; j < numFaces; ++j)
 		{

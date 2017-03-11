@@ -20,12 +20,14 @@ SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/NGLScene.cpp \
           $$PWD/src/NGLSceneMouseControls.cpp \
           $$PWD/src/MeshLoader.cpp \
+          $$PWD/src/Camera.cpp \
           $$PWD/src/SBVH.cpp \
           $$PWD/src/BVHNodes.cpp
 # same for the .h files
 HEADERS+= $$PWD/include/NGLScene.h \
           $$PWD/include/WindowParams.h \
           $$PWD/include/MeshLoader.h \
+          $$PWD/include/Camera.h \
           $$PWD/include/AABB.h \
           $$PWD/include/SBVH.h \
           $$PWD/include/BVHNodes.h \
@@ -34,7 +36,7 @@ HEADERS+= $$PWD/include/NGLScene.h \
           $$PWD/include/vRenderer.h
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include
-LIBS += -lassimp -lOpenColorIO -lIlmImf -lIex
+LIBS += -lassimp -lOpenColorIO -lIlmImf -lIex -lHalf
 # where our exe is going to live (root of project)
 DESTDIR=./
 # add the glsl shader files
@@ -71,7 +73,8 @@ else{ # note brace must be here
 }
 
 QMAKE_CXXFLAGS += -v -O3
-macx: CONFIG += vrenderer_cl
+#macx: CONFIG += vrenderer_cl
 linux: CONFIG += vrenderer_cuda
+#CONFIG += vrenderer_cl
 
 include($$PWD/vRenderer.pri)

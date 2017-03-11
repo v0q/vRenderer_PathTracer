@@ -124,14 +124,14 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 	m_queue = cl::CommandQueue(m_context, m_device);
 	m_colorArray = cl::Buffer(m_context, CL_MEM_WRITE_ONLY, m_width*m_height*sizeof(cl_float3));
 
-  m_camera.x = 50.f;
-  m_camera.y = 52.f;
+	m_camera.x = 0.f;
+	m_camera.y = 0.f;
   m_camera.z = 295.6f;
 	m_camera.w = 0.f;
 
   m_camdir.x = 0.f;
-	m_camdir.y = -0.0425734f;
-	m_camdir.z = -0.999093f;
+	m_camdir.y = 0.0f;
+	m_camdir.z = -1.0f;
 	m_camdir.w = 0.f;
 
   m_initialised = true;

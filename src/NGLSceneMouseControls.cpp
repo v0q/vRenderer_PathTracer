@@ -24,14 +24,8 @@ void NGLScene::mouseMoveEvent( QMouseEvent* _event )
     m_win.origX = _event->x();
     m_win.origY = _event->y();
 
-		ngl::Mat4 rot;
-		rot.rotateX(m_win.spinXFace/25.f);
-		rot.rotateY(m_win.spinYFace/25.f);
-
-    ngl::Vec4 cam = rot*ngl::Vec4(50.f, 52.f, 295.6f, 0.f);
-    cam.m_w = 0.f;
-
-    m_renderer->updateCamera(cam.openGL());
+		m_virtualCamera->pitch(diffy * 0.00174532925);
+		m_virtualCamera->yaw(-diffx * 0.00174532925);
 
 		update();
   }
@@ -45,11 +39,7 @@ void NGLScene::mouseMoveEvent( QMouseEvent* _event )
     m_modelPos.m_x += INCREMENT * diffX;
     m_modelPos.m_y -= INCREMENT * diffY;
 
-    ngl::Vec4 dir = ngl::Vec4(m_modelPos.m_x/5., m_modelPos.m_y/5., 0.0f, 0.0f) + ngl::Vec4(0.f, -0.0425734f, -0.999093f, 0.f);
-    dir.m_w = 0.f;
-    dir = dir.normalize();
-
-    m_renderer->updateCamera(nullptr, dir.openGL());
+		m_virtualCamera->moveForward(diffY);
 
     update();
   }
