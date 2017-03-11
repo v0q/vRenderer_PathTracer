@@ -5,6 +5,9 @@
 #include <vector>
 #include <assert.h>
 #include <chrono>
+#include <OpenEXR/ImfRgba.h>
+#include <OpenEXR/ImfRgbaFile.h>
+#include <OpenEXR/ImathBox.h>
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "NGLScene.h"
@@ -144,10 +147,35 @@ void NGLScene::initializeGL()
 	m_text->setScreenSize(width(), height());
 
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/lowpolytree.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
-	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res4.ply"));
+//  m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
+//  m_renderer->initMesh(vMeshLoader::loadMesh("models/lowpolytree.obj"));
+//  m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
+  m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.ply"));
+
+  Imf::Rgba *pixelBuffer;
+  try
+  {
+    Imf::RgbaInputFile in("hdr/test.exr");
+    Imath::Box2i win = in.dataWindow();
+
+    Imath::V2i dim(win.max.x - win.min.x + 1,
+                   win.max.y - win.min.y + 1);
+
+    pixelBuffer = new Imf::Rgba[dim.x *dim.y];
+
+    int dx = win.min.x;
+    int dy = win.min.y;
+
+    in.setFrameBuffer(pixelBuffer - dx - dy * dim.x, 1, dim.x);
+    in.readPixels(win.min.y, win.max.y);
+
+    m_renderer->initHDR(pixelBuffer, dim.x, dim.y);
+  }
+  catch (Iex::BaseExc &e)
+  {
+    std::cerr << e.what() << "\n";
+    exit(0);
+  }
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)

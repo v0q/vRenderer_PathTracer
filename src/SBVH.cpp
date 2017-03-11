@@ -64,10 +64,10 @@ BVHNode *SBVH::buildNode(const NodeSpec &_nodeSpec)
 		return createLeaf(_nodeSpec);
 	}
 
-	int firstTriRefIndex = m_triangleRefStack.size() - _nodeSpec.m_numTris;
+  unsigned int firstTriRefIndex = m_triangleRefStack.size() - _nodeSpec.m_numTris;
 	float surfaceArea = _nodeSpec.m_bb.surfaceArea();
 	float leafCost = surfaceArea * kTriangleCost * _nodeSpec.m_numTris;
-	float nodeCost = surfaceArea * kNodeCost * 2;
+  float nodeCost = surfaceArea * kNodeCost * 2;
 
 #ifdef BVH_DEBUG
 	#ifdef BVH_DEBUG_SPLIT

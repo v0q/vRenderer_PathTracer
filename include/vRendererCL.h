@@ -20,6 +20,7 @@ public:
   void cleanUp() override;
   void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) override;
   void initMesh(const vMeshData &_meshData) override;
+  void initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h) override;
   unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
   float intAsFloat(const int &_v);
@@ -37,10 +38,13 @@ private:
 	cl_float4 m_camdir;
 
   // Mesh buffers
-  cl::Image1D m_vertices;
-  cl::Image1D m_normals;
-  cl::Image1D m_bvhNodes;
-  cl::Image1D m_triIdxList;
+  cl::Buffer m_vertices;
+  cl::Buffer m_normals;
+  cl::Buffer m_bvhNodes;
+  cl::Buffer m_triIdxList;
+
+  // HDR map
+  cl::Image2D m_hdr;
 
   unsigned int m_width;
   unsigned int m_height;

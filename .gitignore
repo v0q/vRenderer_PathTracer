@@ -1,9 +1,12 @@
 # Executables/Misc
-
 vRenderer
 *.ppm
 .DS_Store
 errorlog.txt
+
+# Models and HDRI maps
+models/*
+hdr/*
 
 # C++ objects and libs
 

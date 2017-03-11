@@ -8,24 +8,11 @@ __constant unsigned int samps = 2;
 __constant float invSamps = 1.f/2;
 
 __constant Sphere spheres[] = {
-//	{ 1e5f, { 1e5f + 1.0f, 40.8f, 81.6f, 0.0f },			{ 0.075f, 0.f, 0.f, 0.0f }, { 0.75f, 0.0f, 0.0f, 0.0f } }, //Left
-//	{ 1e5f, { -1e5f + 99.0f, 40.8f, 81.6f, 0.0f },		{ 0.f, 0.075f, 0.f, 0.0f }, { 0.0f, 0.75f, 0.0f, 0.0f } }, //Right
-//	{ 1e5f, { 50.0f, 40.8f, 1e5f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Back
-//	{ 1e5f, { 50.0f, 40.8f, -1e5f + 600.0f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.00f, 1.00f, 1.00f, 0.0f } }, //Frnt
-	{ 1e5f, { 50.0f, 1e5f - 40.f, 81.6f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
-//	{ 1e5f, { 50.0f, -1e5f + 81.6f, 81.6f, 0.0f },		{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Top
+//	{ 1e5f, { 50.0f, 1e5f - 40.f, 81.6f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
 //	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
 //	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
-	{ 150.0f, { 50.0f, 300.6f - .77f, 81.6f, 0.0f },	/*{ 2.0f, 1.8f, 1.6f, 0.0f }*/{ 2.8f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
-//	{ 1e5f,		{ 1e5f + 1.0f, 40.8f, 81.6f, 0.f },			{ 0.0f, 0.0f, 0.0f, 0.f },	{ 0.75f, 0.0f, 0.0f, 0.f } }, //Left
-//	{ 1e5f,		{ -1e5f + 99.0f, 40.8f, 81.6f, 0.f },		{ 0.0f, 0.0f, 0.0f, 0.f },	{ 0.0f, 0.75f, 0.0f, 0.f } }, //Right
-//	{ 1e5f,		{ 50.0f, 40.8f, 1e5f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Back
-//	{ 1e5f,		{ 50.0f, 40.8f, -1e5f + 600.0f, 0.f },	{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.00f, 1.00f, 1.00f, 0.f } }, //Frnt
-//	{ 1e5f,		{ 50.0f, 1e5f, 81.6f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Botm
-//	{ 1e5f,		{ 50.0f, -1e5f + 81.6f, 81.6f, 0.f },		{ 0.0f, 0.0f, 0.0f, 0.f },	{ .75f, .75f, .75f, 0.f } }, //Top
-////		{ 16.5f,	{ 27.0f, 16.5f, 47.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 1
-////		{ 16.5f,	{ 73.0f, 16.5f, 78.0f, 0.f },						{ 0.0f, 0.0f, 0.0f, 0.f },	{ 1.0f, 1.0f, 1.0f, 0.f } }, // small sphere 2
-//	{ 600.0f, { 50.0f, 681.6f - .77f, 81.6f, 0.f },		{ 2.0f, 1.8f, 1.6f, 0.f },	{ 0.0f, 0.0f, 0.0f, 0.f } }  // Light
+  { 1e5f,   { 0.f, 0.f, 0.f, 0.0f },    { 0.8f, 0.8, 0.8, 0.0f }, { 0.f, 0.f, 0.f, 0.f } }, //Botm
+//  { 150.0f, { 50.0f, 300.6f - .77f, 81.6f, 0.0f },  { 2.8f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
 };
 
 Ray createRay(float4 _o, float4 _d)
@@ -36,7 +23,7 @@ Ray createRay(float4 _o, float4 _d)
 	return ray;
 }
 
-bool intersectScene(const Ray *_ray, __read_only image1d_t _vertices, __read_only image1d_t _normals, __read_only image1d_t _bvhNodes, vHitData *_hitData)
+bool intersectScene(const Ray *_ray, __global const float4 *_vertices, __global const float4 *_normals, __global const float4 *_bvhNodes, vHitData *_hitData)
 {
 	/* initialise t to a very large number,
 	so t will be guaranteed to be smaller
@@ -55,9 +42,23 @@ bool intersectScene(const Ray *_ray, __read_only image1d_t _vertices, __read_onl
 		if(dist != 0.0f && dist < t) {
 			t = dist;
 			_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-			_hitData->m_normal = normalize(_hitData->m_hitPoint - sphere.m_pos);
+      _hitData->m_normal = normalize(sphere.m_pos - _hitData->m_hitPoint);
 			_hitData->m_color = sphere.m_col;
-			_hitData->m_emission = sphere.m_emission;
+      _hitData->m_emission = sphere.m_emission;
+
+//      float longlatX = atan2(_ray->m_dir.x, _ray->m_dir.z); // Y is up, swap x for y and z for x
+//      longlatX = longlatX < 0.f ? longlatX + 2*PI : longlatX;  // wrap around full circle if negative
+//      float longlatY = acos(_ray->m_dir.y); // add RotateMap at some point, see Fragmentarium
+
+//      // map theta and phi to u and v texturecoordinates in [0,1] x [0,1] range
+//      float offsetY = 0.5f;
+//      float u = longlatX / 2*PI; // +offsetY;
+//      float v = longlatY / PI;
+      float u = atan2(_hitData->m_normal.x, _hitData->m_normal.z) / (2*PI) + 0.5;
+      float v = _hitData->m_normal.y * 0.5 + 0.5;
+
+      _hitData->m_uv = (float2)(u, v);
+      _hitData->m_type = 0;
 		}
   }
 
@@ -73,22 +74,14 @@ bool intersectScene(const Ray *_ray, __read_only image1d_t _vertices, __read_onl
 	leafAddr = 0;   // No postponed leaf.
 	nodeAddr = startNode;   // Start from the root.
 
-
-	float3 invDir = (float3)(1.0f / (fabs(_ray->m_dir.x) > epsilon ? _ray->m_dir.x : epsilon),
-													 1.0f / (fabs(_ray->m_dir.y) > epsilon ? _ray->m_dir.y : epsilon),
-													 1.0f / (fabs(_ray->m_dir.z) > epsilon ? _ray->m_dir.z : epsilon));
-	float3 od = (float3)(_ray->m_origin.x * invDir.x,
-											 _ray->m_origin.y * invDir.y,
-											 _ray->m_origin.z * invDir.z);
-
 	while(nodeAddr != EntrypointSentinel)
 	{
 		while((unsigned int)nodeAddr < (unsigned int)EntrypointSentinel)
-		{
-			const float4 n0xy = read_imagef(_bvhNodes, (int)(nodeAddr + 0)); // node 0 bounds xy
-			const float4 n1xy = read_imagef(_bvhNodes, (int)(nodeAddr + 1)); // node 1 bounds xy
-			const float4 nz = read_imagef(_bvhNodes, (int)(nodeAddr + 2)); // node 0 & 1 bounds z
-			float4 tmp = read_imagef(_bvhNodes, (int)(nodeAddr + 3)); // Child indices in x & y
+    {
+      const float4 n0xy = _bvhNodes[nodeAddr + 0]; // node 0 bounds xy
+      const float4 n1xy = _bvhNodes[nodeAddr + 1]; // node 1 bounds xy
+      const float4 nz = _bvhNodes[nodeAddr + 2]; // node 0 & 1 bounds z
+      float4 tmp = _bvhNodes[nodeAddr + 3]; // Child indices in x & y
 
 			int2 indices = (int2)(floatAsInt(tmp.x), floatAsInt(tmp.y));
 
@@ -106,7 +99,7 @@ bool intersectScene(const Ray *_ray, __read_only image1d_t _vertices, __read_onl
 
 			if(!traverseChild0 && !traverseChild1)
 			{
-				nodeAddr = *(int*)stackPtr;
+        nodeAddr = *(int*)stackPtr;
 				stackPtr -= 4;
 			}
 			else
@@ -139,22 +132,23 @@ bool intersectScene(const Ray *_ray, __read_only image1d_t _vertices, __read_onl
 		while(leafAddr < 0)
 		{
 			for(int triAddr = ~leafAddr;; triAddr += 3)
-			{
-				float4 vert0 = read_imagef(_vertices, (int)(triAddr));
+      {
+        float4 vert0 = _vertices[triAddr];
 				// Did we reach the terminating point of the triangle(s) in the leaf
 				if(floatAsInt(vert0.x) == 0x80000000)
-					break;
-				float4 vert1 = read_imagef(_vertices, (int)(triAddr + 1));
-				float4 vert2 = read_imagef(_vertices, (int)(triAddr + 2));
+          break;
+        float4 vert1 = _vertices[triAddr + 1];
+        float4 vert2 = _vertices[triAddr + 2];
 
 				float dist = intersectTriangle(vert0, vert1, vert2, _ray);
 				if(dist != 0.0f && dist < t)
 				{
 					t = dist;
 					_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-					_hitData->m_normal = read_imagef(_normals, triAddr);
-					_hitData->m_color = (float4)(1.f, 0.647058824f, 0.0f, 0.0f);
+          _hitData->m_normal = _normals[triAddr];
+          _hitData->m_color = (float4)(1.0f, 1.0f, 1.0f, 0.0f);
 					_hitData->m_emission = (float4)(0.f, 0.0f, 0.0f, 0.0f);
+          _hitData->m_type = 1;
 				}
 			}
 
@@ -189,7 +183,7 @@ static float get_random(unsigned int *_seed0, unsigned int *_seed1)
 }
 
 //float4 trace(const Ray* _camray, __read_only image1d_t _vertices, __read_only image1d_t _normals, __read_only image1d_t _bvhNodes, __read_only image1d_t _triIdxList, unsigned int *_seed0, unsigned int *_seed1)
-float4 trace(const Ray* _camray, __read_only image1d_t _vertices, __read_only image1d_t _normals, __read_only image1d_t _bvhNodes, unsigned int *_seed0, unsigned int *_seed1)
+float4 trace(const Ray* _camray, __global const float4 *_vertices, __global const float4 *_normals, __global const float4 *_bvhNodes, __read_only image2d_t _hdr, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
@@ -227,10 +221,19 @@ float4 trace(const Ray* _camray, __read_only image1d_t _vertices, __read_only im
     ray.m_dir = newdir;
 
     /* add the colour and light contributions to the accumulated colour */
-    accum_color += mask * hitData.m_emission;
+    if(hitData.m_type == 0)
+    {
+      int2 uv = (int2)(get_image_width(_hdr)*hitData.m_uv.x, get_image_height(_hdr)*hitData.m_uv.y);
+      accum_color += (mask * 2.0f * read_imagef(_hdr, uv));
+      return accum_color;
+    }
+    else
+    {
+      accum_color += mask * hitData.m_emission;
+      mask *= hitData.m_color;
+    }
 
     /* the mask colour picks up surface colours at each bounce */
-    mask *= hitData.m_color;
 
     /* perform cosine-weighted importance sampling for diffuse surfaces*/
     mask *= dot(newdir, normal_facing);
@@ -241,8 +244,8 @@ float4 trace(const Ray* _camray, __read_only image1d_t _vertices, __read_only im
 }
 
 
-__kernel void render(__write_only image2d_t _texture, __read_only image1d_t _vertices, __read_only image1d_t _normals, __read_only image1d_t _bvhNodes, __read_only image1d_t _triIdxList,
-                     __global float4 *_colors, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__kernel void render(__write_only image2d_t _texture, __global const float4 *_vertices, __global const float4 *_normals, __global const float4 *_bvhNodes, __global const unsigned int *_triIdxList,
+                     __global float4 *_colors, __read_only image2d_t _hdr, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	const unsigned int x = get_global_id(0);
 	const unsigned int y = get_global_id(1);
@@ -276,7 +279,7 @@ __kernel void render(__write_only image2d_t _texture, __read_only image1d_t _ver
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam = createRay(camera.m_origin + d * 40, normalize(d));
 
-			_colors[ind] += trace(&newcam, _vertices, _normals, _bvhNodes, &seed0, &seed1) * invSamps;
+      _colors[ind] += trace(&newcam, _vertices, _normals, _bvhNodes, _hdr, &seed0, &seed1) * invSamps;
 		}
 		float coef = 1.f/_frame;
 
