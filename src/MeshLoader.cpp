@@ -7,14 +7,6 @@
 
 #include "MeshLoader.h"
 
-vMeshLoader::vMeshLoader(const std::string &_mesh)
-{
-}
-
-vMeshLoader::~vMeshLoader()
-{
-}
-
 vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 {
   Assimp::Importer importer;
@@ -27,22 +19,21 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		exit(EXIT_FAILURE);
   }
 
+  QString meshName;
 	std::vector<ngl::Vec3> vertices;
 	std::vector<vHTriangle> triangles;
 	float scale = 5.f;
 
-	std::cout << scene->mNumMeshes << "\n";
-
   for(unsigned int i = 0; i < scene->mNumMeshes; ++i)
   {
     aiMesh* mesh = scene->mMeshes[i];
+    meshName = mesh->mName.C_Str();
+    std::cout << "Mesh: " << meshName.toStdString() << "\n";
     unsigned int numFaces = mesh->mNumFaces;
 		unsigned int numVerts = mesh->mNumVertices;
 
 		// Mesh center
-		ngl::Vec3 center(0.f, 0.f, 0.f);
-
-		std::cout << "Num verts: " << numVerts << "\n";
+    ngl::Vec3 center(0.f, 0.f, 0.f);
 
 		triangles.resize(numFaces);
 		vertices.resize(numVerts);
@@ -100,5 +91,6 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 	SBVH bb(&triangles[0], &vertices[0], triangles.size());
 //	exit(0);
 
-	return vMeshData(triangles, vertices, bb);
+  std::cout << meshName.toStdString() << "\n";
+  return vMeshData(triangles, vertices, bb, meshName);
 }

@@ -17,6 +17,7 @@ MOC_DIR=moc
 CONFIG-=app_bundle
 # Auto include all .cpp files in the project src directory (can specifiy individually if required)
 SOURCES+= $$PWD/src/main.cpp \
+          $$PWD/src/mainwindow.cpp \
           $$PWD/src/NGLScene.cpp \
           $$PWD/src/NGLSceneMouseControls.cpp \
           $$PWD/src/MeshLoader.cpp \
@@ -24,7 +25,8 @@ SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/SBVH.cpp \
           $$PWD/src/BVHNodes.cpp
 # same for the .h files
-HEADERS+= $$PWD/include/NGLScene.h \
+HEADERS+= $$PWD/include/mainwindow.h \
+          $$PWD/include/NGLScene.h \
           $$PWD/include/WindowParams.h \
           $$PWD/include/MeshLoader.h \
           $$PWD/include/Camera.h \
@@ -34,6 +36,8 @@ HEADERS+= $$PWD/include/NGLScene.h \
           $$PWD/include/Utilities.h \
           $$PWD/include/vDataTypes.h \
           $$PWD/include/vRenderer.h
+
+FORMS += $$PWD/ui/mainwindow.ui
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include
 LIBS += -lassimp -lOpenColorIO -lIlmImf -lIex -lHalf
@@ -73,7 +77,7 @@ else{ # note brace must be here
 }
 
 QMAKE_CXXFLAGS += -v -O3
-#macx: CONFIG += vrenderer_cl
+macx: CONFIG += vrenderer_cl
 linux: CONFIG += vrenderer_cuda
 #CONFIG += vrenderer_cl
 

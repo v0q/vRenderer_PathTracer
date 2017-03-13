@@ -5,7 +5,7 @@
 #include <ngl/Vec3.h>
 #include <ngl/Text.h>
 
-#include <QOpenGLWindow>
+#include <QOpenGLWidget>
 #include <QTime>
 
 #include "Camera.h"
@@ -26,14 +26,15 @@ class vRenderer;
 /// put in this file
 //----------------------------------------------------------------------------------------------------------------------
 
-class NGLScene : public QOpenGLWindow
+class NGLScene : public QOpenGLWidget
 {
+  Q_OBJECT
   public:
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief ctor for our NGL drawing class
     /// @param [in] parent the parent window to the class
     //----------------------------------------------------------------------------------------------------------------------
-    NGLScene();
+    NGLScene(QWidget *_parent = nullptr);
     //----------------------------------------------------------------------------------------------------------------------
 		/// @brief dtor must close down ngl and release OpenGL resources
     //----------------------------------------------------------------------------------------------------------------------
@@ -54,11 +55,6 @@ private:
     //----------------------------------------------------------------------------------------------------------------------
     void resizeGL(int _w, int _h);
 
-    //----------------------------------------------------------------------------------------------------------------------
-    /// @brief Qt Event called when a key is pressed
-    /// @param [in] _event the Qt event to query for size etc
-    //----------------------------------------------------------------------------------------------------------------------
-    void keyPressEvent(QKeyEvent *_event);
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief this method is called every time a mouse is moved
     /// @param _event the Qt Event structure
@@ -119,6 +115,12 @@ private:
 		/// @brief timer for re-draw
 		//----------------------------------------------------------------------------------------------------------------------
 		QTime m_timer;
+
+public slots:
+    void loadMesh();
+
+signals:
+    void meshLoaded(const QString &);
 };
 
 #endif

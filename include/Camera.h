@@ -15,6 +15,9 @@ public:
 
 	ngl::Vec3 getOrig() const;
 	ngl::Vec3 getDir() const;
+  ngl::Vec3 getUp() const;
+  ngl::Vec3 getRight() const;
+  float getFovScale() const;
 
 	void consume();
 	bool isDirty() const;
@@ -32,7 +35,6 @@ private:
 
 	float m_fov;
 	float m_pitch;
-	float m_yaw;
-	float m_forwardLoc;
+  float m_yaw;
 	bool m_isDirty;
 };

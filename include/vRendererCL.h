@@ -10,6 +10,15 @@
 
 class vRendererCL : public vRenderer
 {
+private:
+  struct vCamera {
+    cl_float4 m_origin;
+    cl_float4 m_dir;
+    cl_float4 m_upV;
+    cl_float4 m_rightV;
+    float m_fovScale;
+  };
+
 public:
   vRendererCL();
   ~vRendererCL();
@@ -18,9 +27,10 @@ public:
   void registerTextureBuffer(GLuint &_texture) override;
   void render() override;
   void cleanUp() override;
-  void updateCamera(const float *_cam = nullptr, const float *_dir = nullptr) override;
+  void updateCamera() override;
   void initMesh(const vMeshData &_meshData) override;
   void initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h) override;
+  void clearBuffer() override;
   unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
   float intAsFloat(const int &_v);
@@ -34,8 +44,7 @@ private:
   cl::CommandQueue m_queue;
 	std::vector<cl::Memory> m_GLBuffers;
 
-	cl_float4 m_camera;
-	cl_float4 m_camdir;
+  vCamera m_camera;
 
   // Mesh buffers
   cl::Buffer m_vertices;
@@ -49,9 +58,6 @@ private:
   unsigned int m_width;
   unsigned int m_height;
   unsigned int m_frame;
-  unsigned int m_triCount;
-  unsigned int m_bvhBoxCount;
-  unsigned int m_triIdxCount;
 
   bool m_initialised;
 };

@@ -1,25 +1,33 @@
 #include <cmath>
 #include "Camera.h"
 
+constexpr float kDegInRad = M_PI/180.f;
+
 Camera::Camera() :
 	m_loc(ngl::Vec3(0.f, 0.f, 0.f)),
 	m_upV(ngl::Vec3(0.f, 1.f, 0.f)),
 	m_lookAt(ngl::Vec3(0.f, 0.f, -1.f)),
-	m_fov(75.f),
+  m_fov(75.f),
 	m_pitch(0.f),
 	m_yaw(0.f),
 	m_isDirty(false)
 {
 	m_forwardV = m_loc - m_lookAt;
-	m_forwardV.normalize();
-
-	m_rightV.cross(m_upV, m_forwardV);
+  m_forwardV.normalize();
 
 	setCameraMatrix();
 }
 
 void Camera::setCameraMatrix()
 {
+  // To get the right vector, cross an "arbitrary" vector that's different in only y
+  // to the forward vector with the forward vector
+  m_rightV.cross(m_forwardV + ngl::Vec3(0.f, 1.f, 0.f), m_forwardV);
+  m_rightV.normalize();
+
+  // No need to normalize as we're crossing two normalized vectors
+  m_upV.cross(m_forwardV, m_rightV);
+
 	m_cam.m_00 = m_rightV.m_x;
 	m_cam.m_01 = m_upV.m_x;
 	m_cam.m_02 = m_forwardV.m_x;
@@ -45,7 +53,8 @@ void Camera::moveForward(const float &_x)
 
 void Camera::pitch(const float &_angle)
 {
-	m_pitch += _angle;
+  m_pitch += _angle;
+  m_pitch = std::fabsf(m_pitch) > M_PI_2 ? (m_pitch < 0 ? -M_PI_2 : M_PI_2) : m_pitch;
 	m_isDirty = true;
 }
 
@@ -59,10 +68,11 @@ void Camera::consume()
 {
 	float sy = std::sin(m_yaw);
 	float cy = std::cos(m_yaw);
-	float sp = std::sin(m_pitch);
+  float sp = std::sin(m_pitch);
 	float cp = std::cos(m_pitch);
 
 	m_forwardV = ngl::Vec3(sy*cp, sp, cy*cp);
+  m_forwardV.normalize();
 	setCameraMatrix();
 
 	m_isDirty = false;
@@ -75,10 +85,26 @@ bool Camera::isDirty() const
 
 ngl::Vec3 Camera::getOrig() const
 {
-	return ngl::Vec3(m_cam.m_03, m_cam.m_13, m_cam.m_23);
+  return m_loc;
 }
 
 ngl::Vec3 Camera::getDir() const
 {
-	return ngl::Vec3(-m_cam.m_02, -m_cam.m_12, -m_cam.m_22);
+  return -m_forwardV;
+}
+
+ngl::Vec3 Camera::getUp() const
+{
+  return m_upV;
+}
+
+ngl::Vec3 Camera::getRight() const
+{
+  return m_rightV;
+}
+
+float Camera::getFovScale() const
+{
+  float fovRad = m_fov * kDegInRad;
+  return std::tanf(fovRad/2.f);
 }

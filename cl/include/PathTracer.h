@@ -12,6 +12,14 @@ typedef struct Sphere {
 	float4 m_col;
 } Sphere;
 
+typedef struct vCamera {
+  float4 m_origin;
+  float4 m_dir;
+  float4 m_upV;
+  float4 m_rightV;
+  float m_fovScale;
+} vCamera;
+
 typedef struct vHitData {
 	float4 m_hitPoint;
 	float4 m_normal;

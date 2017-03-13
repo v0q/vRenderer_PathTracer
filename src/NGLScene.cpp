@@ -1,5 +1,5 @@
 #include <QMouseEvent>
-#include <QGuiApplication>
+#include <QFileDialog>
 #include <ngl/ShaderLib.h>
 #include <iostream>
 #include <vector>
@@ -22,13 +22,13 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
-NGLScene::NGLScene() :
+NGLScene::NGLScene(QWidget *_parent) :
+  QOpenGLWidget(_parent),
 	m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f)),
 	m_yaw(0.f),
 	m_pitch(0.f)
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
-	setTitle("vRenderer");
 	m_renderTexture = false;
 	m_fpsTimer = startTimer(0);
 	m_fps = 0;
@@ -48,7 +48,7 @@ NGLScene::~NGLScene()
 void NGLScene::resizeGL(int _w , int _h)
 {
   m_win.width  = static_cast<int>( _w * devicePixelRatio() );
-	m_win.height = static_cast<int>( _h * devicePixelRatio() );
+  m_win.height = static_cast<int>( _h * devicePixelRatio() );
 }
 
 
@@ -155,12 +155,14 @@ void NGLScene::initializeGL()
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
 //  m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
-	m_renderer->initMesh(vMeshLoader::loadMesh("models/happy_buddha.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/happy_buddha.obj"));
+//  m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
 
   Imf::Rgba *pixelBuffer;
   try
   {
-		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
+//		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
+    Imf::RgbaInputFile in("hdr/fair.exr");
     Imath::Box2i win = in.dataWindow();
 
     Imath::V2i dim(win.max.x - win.min.x + 1,
@@ -199,7 +201,6 @@ void NGLScene::timerEvent(QTimerEvent *_event)
 
 void NGLScene::paintGL()
 {
-
 	static float t = 0;
 	t += 0.1f;
   // clear the screen and depth buffer
@@ -259,26 +260,12 @@ void NGLScene::paintGL()
 	++m_frames;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-
-void NGLScene::keyPressEvent(QKeyEvent *_event)
+void NGLScene::loadMesh()
 {
-  // this method is called every time the main window recives a key event.
-  // we then switch on the key value and set the camera in the GLWindow
-  switch (_event->key())
-  {
-  // escape key to quite
-  case Qt::Key_Escape : QGuiApplication::exit(EXIT_SUCCESS); break;
-  case Qt::Key_Space :
-      m_win.spinXFace=0;
-      m_win.spinYFace=0;
-      m_modelPos.set(ngl::Vec3::zero());
+  QString location = QFileDialog::getOpenFileName(this, tr("Load mesh"), NULL, tr("3d models (*.obj *.ply)"));
+  vMeshData mesh = vMeshLoader::loadMesh(location.toStdString());
+  m_renderer->initMesh(mesh);
+  m_renderer->clearBuffer();
 
-  break;
-	case Qt::Key_R: m_renderTexture = true; break;
-  default : break;
-  }
-  // finally update the GLWindow and re-draw
-
-		update();
+  emit meshLoaded(mesh.m_name);
 }

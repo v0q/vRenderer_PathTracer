@@ -24,7 +24,6 @@
 
 vRendererCL::vRendererCL() :
   m_frame(1),
-  m_triCount(0),
   m_initialised(false)
 {
   std::cout << "OpenCL vRenderer ctor called\n";
@@ -124,15 +123,16 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 	m_queue = cl::CommandQueue(m_context, m_device);
 	m_colorArray = cl::Buffer(m_context, CL_MEM_WRITE_ONLY, m_width*m_height*sizeof(cl_float3));
 
-	m_camera.x = 0.f;
-	m_camera.y = 0.f;
-  m_camera.z = 295.6f;
-	m_camera.w = 0.f;
-
-  m_camdir.x = 0.f;
-	m_camdir.y = 0.0f;
-	m_camdir.z = -1.0f;
-	m_camdir.w = 0.f;
+  cl_int err;
+  size_t nullLength = 0;
+  m_vertices = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, nullLength, nullptr, &err);
+  std::cout << "err " << err << "\n";
+  m_normals = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, nullLength, nullptr, &err);
+  std::cout << "err " << err << "\n";
+  m_bvhNodes = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, nullLength, nullptr, &err);
+  std::cout << "err " << err << "\n";
+  m_triIdxList = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, nullLength, nullptr, &err);
+  std::cout << "err " << err << "\n";
 
   m_initialised = true;
 }
@@ -150,8 +150,55 @@ void vRendererCL::registerTextureBuffer(GLuint &_texture)
 	m_GLBuffers.push_back(m_glTexture);
 }
 
+void vRendererCL::cleanUp()
+{
+  if(m_initialised)
+  {
+    m_GLBuffers.clear();
+  }
+}
+
+void vRendererCL::updateCamera()
+{
+  m_virtualCamera->consume();
+
+  m_camera.m_origin.x = m_virtualCamera->getOrig().m_x;
+  m_camera.m_origin.y = m_virtualCamera->getOrig().m_y;
+  m_camera.m_origin.z = m_virtualCamera->getOrig().m_z;
+  m_camera.m_origin.w = 0.f;
+
+  m_camera.m_dir.x = m_virtualCamera->getDir().m_x;
+  m_camera.m_dir.y = m_virtualCamera->getDir().m_y;
+  m_camera.m_dir.z = m_virtualCamera->getDir().m_z;
+  m_camera.m_dir.w = 0.f;
+
+  m_camera.m_upV.x = m_virtualCamera->getUp().m_x;
+  m_camera.m_upV.y = m_virtualCamera->getUp().m_y;
+  m_camera.m_upV.z = m_virtualCamera->getUp().m_z;
+  m_camera.m_upV.w = 0.f;
+
+  m_camera.m_rightV.x = m_virtualCamera->getRight().m_x;
+  m_camera.m_rightV.y = m_virtualCamera->getRight().m_y;
+  m_camera.m_rightV.z = m_virtualCamera->getRight().m_z;
+  m_camera.m_rightV.w = 0.f;
+
+  m_camera.m_fovScale = m_virtualCamera->getFovScale();
+
+  m_frame = 1;
+}
+
+void vRendererCL::clearBuffer()
+{
+  m_frame = 1;
+}
+
 void vRendererCL::render()
 {
+  if(m_virtualCamera->isDirty())
+  {
+    updateCamera();
+  }
+
 	cl::Event event;
 	cl::NDRange globalRange = cl::NDRange(m_width, m_height);
 	cl::NDRange localRange = cl::NDRange(16, 16);
@@ -178,11 +225,10 @@ void vRendererCL::render()
   m_kernel.setArg(5, m_colorArray);
   m_kernel.setArg(6, m_hdr);
   m_kernel.setArg(7, m_camera);
-  m_kernel.setArg(8, m_camdir);
-  m_kernel.setArg(9, m_width);
-  m_kernel.setArg(10, m_height);
-  m_kernel.setArg(11, m_frame++);
-  m_kernel.setArg(12, static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count()));
+  m_kernel.setArg(8, m_width);
+  m_kernel.setArg(9, m_height);
+  m_kernel.setArg(10, m_frame++);
+  m_kernel.setArg(11, static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count()));
 
   if((err = m_queue.enqueueNDRangeKernel(m_kernel, cl::NullRange, globalRange, localRange, nullptr, &event)) != CL_SUCCESS)
   {
@@ -201,34 +247,6 @@ void vRendererCL::render()
 	event.wait();
 	t0 = t1;
 //	exit(0);
-}
-
-void vRendererCL::cleanUp()
-{
-  if(m_initialised)
-  {
-    m_GLBuffers.clear();
-  }
-}
-
-void vRendererCL::updateCamera(const float *_cam, const float *_dir)
-{
-  if(_cam != nullptr)
-  {
-    m_camera.x = _cam[0];
-    m_camera.y = _cam[1];
-    m_camera.z = _cam[2];
-		m_camera.w = 0.f;
-  }
-  if(_dir != nullptr)
-  {
-    m_camdir.x = _dir[0];
-    m_camdir.y = _dir[1];
-    m_camdir.z = _dir[2];
-		m_camdir.w = 0.f;
-  }
-
-  m_frame = 1;
 }
 
 void vRendererCL::initMesh(const vMeshData &_meshData)
@@ -333,10 +351,8 @@ void vRendererCL::initMesh(const vMeshData &_meshData)
     bvhData[idx + 3].w = 0.f;
   }
 
-	// Copy buffers to GPU
-	std::cout << verts.size() << "\n";
+  // Copy buffers to GPU
   m_vertices = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, verts.size()*sizeof(cl_float4), &verts[0], &err);
-//  m_vertices = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, verts.size(), &verts[0], &err);
 
   if(err != CL_SUCCESS)
   {
@@ -345,7 +361,6 @@ void vRendererCL::initMesh(const vMeshData &_meshData)
   }
 
   m_normals = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, normals.size()*sizeof(cl_float4), &normals[0], &err);
-//  m_normals = cl::Image1D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, normals.size(), &normals[0], &err);
 
   if(err != CL_SUCCESS)
   {
@@ -354,7 +369,6 @@ void vRendererCL::initMesh(const vMeshData &_meshData)
   }
 
   m_bvhNodes = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, bvhData.size()*sizeof(cl_float4), &bvhData[0], &err);
-//  m_bvhNodes = cl::Image1D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, bvhData.size(), &bvhData[0], &err);
 
   if(err != CL_SUCCESS)
   {
@@ -363,7 +377,6 @@ void vRendererCL::initMesh(const vMeshData &_meshData)
   }
 
   m_triIdxList = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, triIndices.size()*sizeof(unsigned int), &triIndices[0], &err);
-//  m_triIdxList = cl::Image1D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format2, triIndices.size(), &triIndices[0], &err);
 
   if(err != CL_SUCCESS)
   {
@@ -385,8 +398,6 @@ void vRendererCL::initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w,
     std::cerr << "Failed to load HDR map to GPU " << err << "\n";
     exit(EXIT_FAILURE);
   }
-
-  std::cout << "Image dimensions: " << _w << " " << _h << "\n";
 }
 
 float vRendererCL::intAsFloat(const int &_v)

@@ -182,7 +182,6 @@ static float get_random(unsigned int *_seed0, unsigned int *_seed1)
 	return (res.f - 2.0f) / 2.0f;
 }
 
-//float4 trace(const Ray* _camray, __read_only image1d_t _vertices, __read_only image1d_t _normals, __read_only image1d_t _bvhNodes, __read_only image1d_t _triIdxList, unsigned int *_seed0, unsigned int *_seed1)
 float4 trace(const Ray* _camray, __global const float4 *_vertices, __global const float4 *_normals, __global const float4 *_bvhNodes, __read_only image2d_t _hdr, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
@@ -251,8 +250,10 @@ float4 trace(const Ray* _camray, __global const float4 *_vertices, __global cons
 }
 
 
+//__kernel void render(__write_only image2d_t _texture, __global const float4 *_vertices, __global const float4 *_normals, __global const float4 *_bvhNodes, __global const unsigned int *_triIdxList,
+//                     __global float4 *_colors, __read_only image2d_t _hdr, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 __kernel void render(__write_only image2d_t _texture, __global const float4 *_vertices, __global const float4 *_normals, __global const float4 *_bvhNodes, __global const unsigned int *_triIdxList,
-                     __global float4 *_colors, __read_only image2d_t _hdr, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+                     __global float4 *_colors, __read_only image2d_t _hdr, vCamera _cam, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	const unsigned int x = get_global_id(0);
 	const unsigned int y = get_global_id(1);
@@ -266,13 +267,14 @@ __kernel void render(__write_only image2d_t _texture, __global const float4 *_ve
 			_colors[ind] = (float4)(0.f, 0.f, 0.f, 0.f);
 		}
 
-		Ray camera = createRay(_cam, _dir);
+    vCamera camera;
+    camera.m_origin = _cam.m_origin;
+    camera.m_dir = _cam.m_dir;
+    camera.m_upV = _cam.m_upV;
+    camera.m_rightV = _cam.m_rightV;
 
-		float4 cx = (float4)(_w * .5135 / _h, 0.0f, 0.0f, 0.f); // ray direction offset in x direction
-		float4 cy = normalize(cross(cx, camera.m_dir)); // ray direction offset in y direction (.5135 is field of view angle)
-		cy.x *= .5135f;
-		cy.y *= .5135f;
-		cy.z *= .5135f;
+    float4 cx = _cam.m_fovScale * _w / _h * camera.m_rightV; // ray direction offset in x direction
+    float4 cy = _cam.m_fovScale * camera.m_upV; // ray direction offset in y direction (.5135 is field of view angle)
 
 		for(unsigned int s = 0; s < samps; s++)
 		{
@@ -284,7 +286,7 @@ __kernel void render(__write_only image2d_t _texture, __global const float4 *_ve
 																				 cy.y*((.25 + y) / _h - .5),
 																				 cy.z*((.25 + y) / _h - .5), 0.f);
 			// create primary ray, add incoming radiance to pixelcolor
-			Ray newcam = createRay(camera.m_origin + d * 40, normalize(d));
+      Ray newcam = createRay(camera.m_origin, normalize(d));
 
       _colors[ind] += trace(&newcam, _vertices, _normals, _bvhNodes, _hdr, &seed0, &seed1) * invSamps;
 		}
