@@ -2,8 +2,8 @@
 
 #include "SBVH.h"
 
-#define BVH_DEBUG
-#define BVH_DEBUG_SPATIAL_SPLITS
+//#define BVH_DEBUG
+//#define BVH_DEBUG_SPATIAL_SPLITS
 //#define BVH_DEBUG_LEAFS
 //#define BVH_DEBUG_SPLIT
 //#define BVH_DEBUG_SORT
@@ -183,7 +183,7 @@ SBVH::ObjectSplit SBVH::objectSplit(const NodeSpec &_nodeSpec, const unsigned in
 			 * move triangle i from S2 to S1
 			 */
 			leftBound.extendBB(m_triangleRefStack[_firstTriRefIndex + i].m_bb);
-			m_leftBounds[_firstTriRefIndex + i] = leftBound;
+			m_leftBounds[i] = leftBound;
 		}
 
 		// Sweep from right
@@ -194,14 +194,14 @@ SBVH::ObjectSplit SBVH::objectSplit(const NodeSpec &_nodeSpec, const unsigned in
 			// Evaluate Equation 2
 			// T = 2TAABB + A(S1)/A(S) *	N(S1)Ttri + A(S2)/A(S) * N(S2)Ttri
 			// f(b) = LSA(b) · L(b) + RSA(b)·(n -L(b) - SA · n
-			float cost = _nodeCost + m_leftBounds[_firstTriRefIndex + (i - 1)].surfaceArea() * kTriangleCost * i + rightBound.surfaceArea() * (_nodeSpec.m_numTris - (i - 1));
+			float cost = _nodeCost + m_leftBounds[i - 1].surfaceArea() * kTriangleCost * i + rightBound.surfaceArea() * (_nodeSpec.m_numTris - (i - 1));
 			// move Triangle i from S1 to S2 is done by storing all of the left bounds to a vector
 			if(cost < candidate.m_cost)
 			{
 				candidate.m_cost = cost;
 				candidate.m_leftTris = i;
 				candidate.m_splitAxis = axis;
-				candidate.m_leftSplit = m_leftBounds[_firstTriRefIndex + (i - 1)];
+				candidate.m_leftSplit = m_leftBounds[i - 1];
 				candidate.m_rightSplit = rightBound;
 			}
 		}

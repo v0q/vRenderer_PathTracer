@@ -156,13 +156,15 @@ void NGLScene::initializeGL()
 //  m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/happy_buddha.obj"));
-//  m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
+	m_renderer->initMesh(vMeshLoader::loadMesh("models/matt.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
 
   Imf::Rgba *pixelBuffer;
   try
-  {
-//		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
-    Imf::RgbaInputFile in("hdr/fair.exr");
+	{
+//		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
+		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
+//    Imf::RgbaInputFile in("hdr/fair.exr");
     Imath::Box2i win = in.dataWindow();
 
     Imath::V2i dim(win.max.x - win.min.x + 1,
@@ -250,8 +252,18 @@ void NGLScene::paintGL()
 	}
 
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
-	m_text->setColour(1, 1, 1);
+	// Render "shadow" first for better visibility against bright backgrounds
+	m_text->setColour(0, 0, 0);
 	QString text = QString("%1 fps").arg(m_fps);
+	m_text->renderText(11, 21, text);
+	text = QString("Render time/frame: %1ms").arg(duration);
+	m_text->renderText(11, 41, text);
+	text = QString("%1 samples per pixel").arg(m_renderer->getFrameCount() * 2);
+	m_text->renderText(11, 61, text);
+
+	// Then render the normal text on top of it
+	m_text->setColour(1, 1, 1);
+	text = QString("%1 fps").arg(m_fps);
 	m_text->renderText(10, 20, text);
 	text = QString("Render time/frame: %1ms").arg(duration);
 	m_text->renderText(10, 40, text);
@@ -263,9 +275,17 @@ void NGLScene::paintGL()
 void NGLScene::loadMesh()
 {
   QString location = QFileDialog::getOpenFileName(this, tr("Load mesh"), NULL, tr("3d models (*.obj *.ply)"));
-  vMeshData mesh = vMeshLoader::loadMesh(location.toStdString());
-  m_renderer->initMesh(mesh);
-  m_renderer->clearBuffer();
+	if(!location.isEmpty())
+	{
+		vMeshData mesh = vMeshLoader::loadMesh(location.toStdString());
+		m_renderer->initMesh(mesh);
+		m_renderer->clearBuffer();
 
-  emit meshLoaded(mesh.m_name);
+		emit meshLoaded(mesh.m_name);
+	}
+}
+
+void NGLScene::changeFov(const int &_newFov)
+{
+	m_virtualCamera->changeFov(static_cast<float>(_newFov));
 }

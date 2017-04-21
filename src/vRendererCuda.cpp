@@ -29,17 +29,17 @@ void vRendererCuda::init(const unsigned int &_w, const unsigned int &_h)
 
   unsigned int sz = m_width*m_height;
 	validateCuda(cudaMalloc(&m_colorArray, sizeof(float4)*sz), "Malloc pixel buffer");
-	validateCuda(cudaMalloc(&m_camera, sizeof(float4)), "Malloc camera origin buffer");
-	validateCuda(cudaMalloc(&m_camdir, sizeof(float4)), "Malloc camera direction buffer");
+//	validateCuda(cudaMalloc(&m_camera, sizeof(vCamera)), "Malloc camera origin buffer");
 
-//	float4 cam = make_float4(0.f, 0.f, 295.6f, 0.0f);
-	float4 cam = make_float4(0.f, 0.f, 0.f, 0.0f);
-	float4 camdir = make_float4(0.0f, 0.f, -1.f, 0.0f);
+	validateCuda(cudaMalloc(&m_vertices, 1), "Init vertex device pointer");
+	validateCuda(cudaMalloc(&m_normals, 1), "Init normals device pointer");
+	validateCuda(cudaMalloc(&m_bvhData, 1), "Init BVH node device pointer");
+	validateCuda(cudaMalloc(&m_triIdxList, 1), "Init triangle index device pointer");
 
-	validateCuda(cudaMemcpy(m_camera, &cam, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera origin buffer");
-	validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera direction buffer");
+//	validateCuda(cudaMemcpy(m_camera, &cam, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera origin buffer");
+//	validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera direction buffer");
 	cu_fillFloat4(m_colorArray, make_float4(0.0f, 0.0f, 0.0f, 0.0f), sz);
-	cudaDeviceSynchronize();
+	validateCuda(cudaDeviceSynchronize(), "Init");
 
 //	cudaMemcpyToSymbol(kNumPlaneSetNormals, &BVH::m_numPlaneSetNormals, 1);
 
@@ -56,12 +56,39 @@ void vRendererCuda::registerTextureBuffer(GLuint &_texture)
 void vRendererCuda::updateCamera()
 {
 	m_virtualCamera->consume();
-	validateCuda(cudaMemcpy(m_camera, &m_virtualCamera->getOrig().m_openGL[0], sizeof(float4), cudaMemcpyHostToDevice), "Update camera origin buffer");
-	validateCuda(cudaMemcpy(m_camdir, &m_virtualCamera->getDir().m_openGL[0], sizeof(float4), cudaMemcpyHostToDevice), "Update camera direction buffer");
+
+	m_camera.m_origin.x = m_virtualCamera->getOrig().m_x;
+	m_camera.m_origin.y = m_virtualCamera->getOrig().m_y;
+	m_camera.m_origin.z = m_virtualCamera->getOrig().m_z;
+	m_camera.m_origin.w = 0.f;
+
+	m_camera.m_dir.x = m_virtualCamera->getDir().m_x;
+	m_camera.m_dir.y = m_virtualCamera->getDir().m_y;
+	m_camera.m_dir.z = m_virtualCamera->getDir().m_z;
+	m_camera.m_dir.w = 0.f;
+
+	m_camera.m_upV.x = m_virtualCamera->getUp().m_x;
+	m_camera.m_upV.y = m_virtualCamera->getUp().m_y;
+	m_camera.m_upV.z = m_virtualCamera->getUp().m_z;
+	m_camera.m_upV.w = 0.f;
+
+	m_camera.m_rightV.x = m_virtualCamera->getRight().m_x;
+	m_camera.m_rightV.y = m_virtualCamera->getRight().m_y;
+	m_camera.m_rightV.z = m_virtualCamera->getRight().m_z;
+	m_camera.m_rightV.w = 0.f;
+
+	m_camera.m_fovScale = m_virtualCamera->getFovScale();
 
 	m_frame = 1;
 	cu_fillFloat4(m_colorArray, make_float4(0.0f, 0.0f, 0.0f, 0.0f), m_width*m_height);
-	cudaDeviceSynchronize();
+	validateCuda(cudaDeviceSynchronize(), "Update camera");
+}
+
+void vRendererCuda::clearBuffer()
+{
+	m_frame = 1;
+	cu_fillFloat4(m_colorArray, make_float4(0.0f, 0.0f, 0.0f, 0.0f), m_width*m_height);
+	validateCuda(cudaDeviceSynchronize(), "Clear buffer");
 }
 
 void vRendererCuda::render()
@@ -92,11 +119,11 @@ void vRendererCuda::render()
 										 m_triIdxCount,
 										 m_colorArray,
 										 m_camera,
-										 m_camdir,
 										 m_width,
 										 m_height,
 										 m_frame++,
 										 std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
+	validateCuda(cudaDeviceSynchronize(), "Render");
 	validateCuda(cudaDestroySurfaceObject(writeSurface), "Clean up the surface");
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer), "Free the mapped GL texture buffer");
 	validateCuda(cudaStreamSynchronize(0), "Synchronize");
@@ -118,9 +145,7 @@ void vRendererCuda::cleanUp()
 			validateCuda(cudaFree(m_hdr), "Clean up HDR buffer");
 
 		validateCuda(cudaFree(m_colorArray), "Clean up color buffer");
-		validateCuda(cudaFree(m_camera), "Clean up camera buffer");
-		validateCuda(cudaFree(m_camdir), "Clean up camera direction buffer");
-    cudaGraphicsUnregisterResource(m_cudaGLTextureBuffer);
+		validateCuda(cudaGraphicsUnregisterResource(m_cudaGLTextureBuffer), "Unregister GL Texture");
   }
 }
 
@@ -210,7 +235,6 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	m_vertCount = verts.size();
 	m_bvhNodeCount = bvhData.size();
 	m_triIdxCount = triIndices.size();
-//	exit(0);
 }
 
 void vRendererCuda::initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h)
@@ -233,6 +257,12 @@ void vRendererCuda::validateCuda(cudaError_t _err, const std::string &_msg)
   if(_err != cudaSuccess)
   {
 		std::cerr << "Failed to perform a cuda operation: " << _msg << "\n";
+		std::cerr << "Err: " << cudaGetErrorString(_err) << "\n";
+
+		FILE *log = fopen("errorlog.txt", "w");
+		fprintf(log, "%s\n", cudaGetErrorString(_err));
+
+		std::cerr << "Check errorlog.txt for more details\n";
     exit(0);
   }
 }

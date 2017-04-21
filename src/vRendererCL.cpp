@@ -9,7 +9,6 @@
 #include <vector>
 #include <chrono>
 
-
 #ifdef __APPLE__
   #include <GL/glew.h>
   #include <OpenCL/cl_gl_ext.h>
@@ -114,7 +113,7 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 		FILE *log = fopen("errorlog.txt", "w");
 		fprintf(log, "%s\n", buildlog.c_str());
 
-		std::cerr << "Build log saved to errorlog.txt:\n";
+		std::cerr << "Build log saved to errorlog.txt\n";
 		exit(EXIT_FAILURE);
 	}
 

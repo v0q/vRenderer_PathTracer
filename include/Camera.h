@@ -12,6 +12,7 @@ public:
 	void pitch(const float &_angle);
 	void yaw(const float &_angle);
 	void moveForward(const float &_amt);
+	void changeFov(const float &_newFov);
 
 	ngl::Vec3 getOrig() const;
 	ngl::Vec3 getDir() const;

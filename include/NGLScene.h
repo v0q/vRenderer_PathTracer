@@ -1,5 +1,6 @@
 #ifndef NGLSCENE_H_
 #define NGLSCENE_H_
+
 #include <iostream>
 #include <memory>
 #include <ngl/Vec3.h>
@@ -118,6 +119,7 @@ private:
 
 public slots:
     void loadMesh();
+		void changeFov(const int &_newFov);
 
 signals:
     void meshLoaded(const QString &);

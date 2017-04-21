@@ -17,6 +17,7 @@ public:
 	void updateCamera() override;
 	void initMesh(const vMeshData &_meshData) override;
 	void initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h);
+	void clearBuffer() override;
   unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
 	void validateCuda(cudaError_t _err, const std::string &_msg = "");
@@ -25,8 +26,7 @@ private:
 	cudaArray *m_cudaImgArray;
 
 	// Cuda buffers
-	float4 *m_camera;
-	float4 *m_camdir;
+	vCamera m_camera;
 	float4 *m_colorArray;
 
 	// Mesh buffers

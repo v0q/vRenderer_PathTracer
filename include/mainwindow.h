@@ -22,13 +22,14 @@ private:
   void keyPressEvent(QKeyEvent *_event) override;
 
   Ui::MainWindow *m_ui;
-  NGLScene *m_scene;
+	NGLScene *m_scene;
 
   QStandardItemModel m_model;
 
 public slots:
   void showHideHDRMenu();
   void updateSceneTree(const QString &);
+	void updateUIFOV(const int &_newFov);
 };
 
 #endif // MAINWINDOW_H

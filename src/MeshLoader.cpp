@@ -67,7 +67,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 
 			if(mesh->mNormals != NULL)
 			{
-				triangles[j].m_normal = ngl::Vec3(mesh->mNormals[face.mIndices[0]].x, mesh->mNormals[face.mIndices[0]].y, mesh->mNormals[face.mIndices[0]].z);
+				triangles[j].m_normal = ngl::Vec3(mesh->mNormals[face.mIndices[1]].x, mesh->mNormals[face.mIndices[1]].y, mesh->mNormals[face.mIndices[1]].z);
 			}
 			else
 			{
@@ -77,11 +77,15 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 				// choose longest alternative normal for maximum precision
 				ngl::Vec3 n1 = e2.cross(e3);
 				if(n1.length() > triangles[j].m_normal.length())
+				{
 					triangles[j].m_normal = n1; // higher precision when triangle has sharp angles
+				}
 
 				ngl::Vec3 n2 = e3.cross(e1);
 				if(n2.length() > triangles[j].m_normal.length())
+				{
 					triangles[j].m_normal = n2;
+				}
 
 				triangles[j].m_normal.normalize();
 			}

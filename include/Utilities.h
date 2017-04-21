@@ -43,7 +43,7 @@ namespace vUtilities
 		io_v.m_z = vUtilities::clamp(io_v.m_z, _low.m_z, _high.m_z);
 	}
 
-	template <class T> inline void swap(T &_a, T &_b)
+	template<typename T> inline void swap(T &_a, T &_b)
 	{
 		T tmp = _a;
 		_a = _b;

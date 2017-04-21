@@ -45,22 +45,28 @@ void Camera::setCameraMatrix()
 	m_cam.m_23 = m_loc.m_z;
 }
 
-void Camera::moveForward(const float &_x)
-{
-	m_loc += m_forwardV * _x;
-	m_isDirty = true;
-}
-
 void Camera::pitch(const float &_angle)
 {
   m_pitch += _angle;
-  m_pitch = std::fabsf(m_pitch) > M_PI_2 ? (m_pitch < 0 ? -M_PI_2 : M_PI_2) : m_pitch;
+	m_pitch = std::fabs(m_pitch) > M_PI_2 ? (m_pitch < 0 ? -M_PI_2 : M_PI_2) : m_pitch;
 	m_isDirty = true;
 }
 
 void Camera::yaw(const float &_angle)
 {
 	m_yaw += _angle;
+	m_isDirty = true;
+}
+
+void Camera::moveForward(const float &_x)
+{
+	m_loc += m_forwardV * _x;
+	m_isDirty = true;
+}
+
+void Camera::changeFov(const float &_newFov)
+{
+	m_fov = _newFov;
 	m_isDirty = true;
 }
 
@@ -106,5 +112,5 @@ ngl::Vec3 Camera::getRight() const
 float Camera::getFovScale() const
 {
   float fovRad = m_fov * kDegInRad;
-  return std::tanf(fovRad/2.f);
+	return std::tan(fovRad/2.f);
 }

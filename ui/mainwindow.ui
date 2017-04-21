@@ -90,7 +90,7 @@ color: rgb(0, 0, 0);</string>
       </layout>
      </item>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QVBoxLayout" name="m_testSpace">
        <item>
         <widget class="QPushButton" name="m_hdrBtn">
          <property name="text">
@@ -175,6 +175,67 @@ font: 13pt &quot;Helvetica Neue&quot;;</string>
     </property>
     <layout class="QVBoxLayout" name="m_rightBar">
      <item>
+      <layout class="QVBoxLayout" name="m_cameraLayout">
+       <item>
+        <widget class="QLabel" name="m_cameraLabel">
+         <property name="styleSheet">
+          <string notr="true">font: 13pt &quot;Helvetica Neue&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Camera</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="m_fovLabel">
+           <property name="text">
+            <string>FOV</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLCDNumber" name="m_fovNumber">
+           <property name="value" stdset="0">
+            <double>75.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QSlider" name="m_fovSlider">
+         <property name="minimum">
+          <number>45</number>
+         </property>
+         <property name="maximum">
+          <number>130</number>
+         </property>
+         <property name="sliderPosition">
+          <number>75</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -237,7 +298,7 @@ font: 13pt &quot;Helvetica Neue&quot;;</string>
      <x>0</x>
      <y>0</y>
      <width>1120</width>
-     <height>22</height>
+     <height>19</height>
     </rect>
    </property>
   </widget>

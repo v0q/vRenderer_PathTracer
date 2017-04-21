@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <cuda_fp16.h>
 #include <cuda_runtime.h>
+#include <curand.h>
+#include <curand_kernel.h>
 #include <thrust/random.h>
 #include <thrust/random/uniform_real_distribution.h>
 #include <thrust/device_vector.h>
@@ -8,14 +9,11 @@
 #include "PathTracer.cuh"
 #include "RayIntersection.cuh"
 #include "MathHelpers.cuh"
+#include "Utilities.cuh"
 
-#define BVH_MAX_STACK_SIZE 32
-
-__constant__ __device__ uint bvhBoxes = 0;
-__constant__ __device__ uint kSamps = 2;
 __constant__ __device__ float kInvGamma = 1.f/2.2f;
 __constant__ __device__ float kInvSamps = 1.f/2.f;
-__constant__ __device__ float kFov = 75.f * 3.1415 / 180.f;
+__constant__ __device__ unsigned int kSamps = 2;
 __constant__ __device__ unsigned int kHDRwidth = 0;
 __constant__ __device__ unsigned int kHDRheight = 0;
 
@@ -43,9 +41,9 @@ typedef struct Sphere {
 } Sphere;
 
 __constant__ Sphere spheres[] = {			//Scene: radius, position, emission, color, material
-	{ 1e5f, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
-//	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
-//	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
+//	{ 1e5f, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
+	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
+	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } } // small sphere 2
 //	{ 150.0f, { 50.0f, 300.6f - .77f, 81.6f, 0.0f },	/*{ 2.0f, 1.8f, 1.6f, 0.0f }*/{ 2.8f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
 };
 
@@ -86,7 +84,7 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 	int traversalStack[64];
 	traversalStack[0] = EntrypointSentinel;
 
-	char* stackPtr;                       // Current position in traversal stack.
+	char* stackPtr;											// Current position in traversal stack.
 	int leafAddr;                       // First postponed leaf, non-negative if none.
 	int nodeAddr = EntrypointSentinel;  // Non-negative: current internal node, negative: second postponed leaf.
 	stackPtr = (char*)&traversalStack[0];
@@ -105,10 +103,6 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 	{
 		while((unsigned int)nodeAddr < (unsigned int)EntrypointSentinel)
 		{
-//			const float4 n0xy = tex1Dfetch(t_bvhData, nodeAddr + 0); // node 0 bounds xy
-//			const float4 n1xy = tex1Dfetch(t_bvhData, nodeAddr + 1); // node 1 bounds xy
-//			const float4 nz = tex1Dfetch(t_bvhData, nodeAddr + 2); // node 0 & 1 bounds z
-//			float4 tmp = tex1Dfetch(t_bvhData, nodeAddr + 3); // Child indices in x & y
 			const float4 n0xy = _bvhData[nodeAddr + 0]; // node 0 bounds xy
 			const float4 n1xy = _bvhData[nodeAddr + 1]; // node 1 bounds xy
 			const float4 nz = _bvhData[nodeAddr + 2]; // node 0 & 1 bounds z
@@ -186,14 +180,11 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 		{
 			for(int triAddr = ~leafAddr;; triAddr += 3)
 			{
-//				float4 vert0 = tex1Dfetch(t_vertices, triAddr);
 				float4 vert0 = _vertices[triAddr];
 				// Did we reach the terminating point of the triangle(s) in the leaf
 				if(__float_as_int(vert0.x) == 0x80000000)
 					break;
 
-//				float4 vert1 = tex1Dfetch(t_vertices, triAddr + 1);
-//				float4 vert2 = tex1Dfetch(t_vertices, triAddr + 2);
 				float4 vert1 = _vertices[triAddr + 1];
 				float4 vert2 = _vertices[triAddr + 2];
 
@@ -202,8 +193,8 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 				{
 					t = dist;
 					_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-//					_hitData->m_normal = tex1Dfetch(t_normals, triAddr);
 					_hitData->m_normal = _normals[triAddr];
+//					_hitData->m_normal = normalize(cross(vert1, vert2));
 					_hitData->m_color = make_float4(1.f, 1.f, 1.f, 0.0f);
 					_hitData->m_emission = make_float4(0.f, 0.0f, 0.0f, 0.0f);
 				}
@@ -228,15 +219,16 @@ __device__ static unsigned int hash(unsigned int *seed0, unsigned int *seed1)
 	return *seed0**seed1;
 }
 
-//__device__ float4 trace(const Ray *_camray, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, uint4 *_bvhChildrenOrTriangles, unsigned int *_seed0, unsigned int *_seed1)
-__device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals, float4 *_bvhData, float4 *_hdr, unsigned int *_seed0, unsigned int *_seed1)
+//__device__ float4 trace(const Ray *_camray, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, unsigned int4 *_bvhChildrenOrTriangles, unsigned int *_seed0, unsigned int *_seed1)
+__device__ float4 trace(curandState* randstate, const Ray *_camray, float4 *_vertices, float4 *_normals, float4 *_bvhData, float4 *_hdr)
+//__device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals, float4 *_bvhData, float4 *_hdr, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
 	float4 accum_color = make_float4(0.0f, 0.0f, 0.0f, 0.f);
 	float4 mask = make_float4(1.0f, 1.0f, 1.0f, 0.f);
 
-	for(unsigned int bounces = 0; bounces < 5; bounces++)
+	for(unsigned int bounces = 0; bounces < 4; bounces++)
 	{
 		vHitData hitData;
 
@@ -258,15 +250,18 @@ __device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals,
 			return accum_color;
 		}
 
-		unsigned int seed = hash(_seed0, _seed1);
-		thrust::default_random_engine rng(seed);
-		thrust::random::uniform_real_distribution<float> uniformDist(0, 1);
+//		unsigned int seed = hash(_seed0, _seed1);
+
+//		thrust::default_random_engine rng(seed);
+//		thrust::uniform_real_distribution<float> uniformDist(0, 1);
 
 		/* compute the surface normal and flip it if necessary to face the incoming ray */
 		float4 normal_facing = dot(hitData.m_normal, ray.m_dir) < 0.0f ? hitData.m_normal : hitData.m_normal * (-1.0f);
 		/* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
-		float rand1 = 2.0f * PI * uniformDist(rng);
-		float rand2 = uniformDist(rng);
+//		float rand1 = 2.0f * PI * uniformDist(rng); //curand_uniform(randstate);
+//		float rand2 = uniformDist(rng); //curand_uniform(randstate);
+		float rand1 = 2.0f * PI * curand_uniform(randstate);
+		float rand2 = curand_uniform(randstate);
 		float rand2s = sqrt(rand2);
 
 		/* create a local orthogonal coordinate frame centered at the hitpoint */
@@ -296,9 +291,9 @@ __device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals,
 	return accum_color;
 }
 
-//__global__ void render(cudaSurfaceObject_t _tex, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, uint4 *_bvhChildrenOrTriangles,
+//__global__ void render(cudaSurfaceObject_t _tex, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, unsigned int4 *_bvhChildrenOrTriangles,
 //											 float4 *_colors, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
-__global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_hdr, float4 *_vertices, float4 *_normals, float4 *_bvhData, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_hdr, float4 *_vertices, float4 *_normals, float4 *_bvhData, vCamera _cam, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -306,31 +301,32 @@ __global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_hdr, 
 	if(x < _w && y < _h) {
 
 		unsigned int ind = x + y*_w;
-    unsigned int s1 = x * _frame;
+		unsigned int s1 = x * _frame;
 		unsigned int s2 = y * _time;
+
+		curandState randState;
+		curand_init(hash(&s1, &s2) + threadIdx.x, 0, 0, &randState);
 
     if(_frame == 1) {
 			_colors[ind] = make_float4(0.f, 0.f, 0.f, 0.f);
     }
 
-		Ray camera(*_cam, *_dir);
+		vCamera camera;
+		camera.m_origin = _cam.m_origin;
+		camera.m_dir = _cam.m_dir;
+		camera.m_upV = _cam.m_upV;
+		camera.m_rightV = _cam.m_rightV;
 
-//		float scale = tan(kFov * 0.5);
-//		float imageAspectRatio = _w / (float)_h;
-//		float dx = (2 * (x + 0.5) / (float)_w - 1) * imageAspectRatio * scale;
-//		float dy = (1 - 2 * (y + 0.5) / (float)_h) * scale;
-
-		float4 cx = make_float4(_w * .5135 / _h, 0.0f, 0.0f, 0.0f); // ray direction offset in x direction
-		float4 cy = normalize(cross(cx, camera.m_dir)) * .5135; // ray direction offset in y direction (.5135 is field of view angle)
+		float4 cx = _cam.m_fovScale * _w / _h * camera.m_rightV; // ray direction offset in x direction
+		float4 cy = _cam.m_fovScale * camera.m_upV; // ray direction offset in y direction (.5135 is field of view angle)
 
 		for(unsigned int s = 0; s < kSamps; s++) {  // samples per pixel
 			// compute primary ray direction
-//			float4 d = camera.m_dir + make_float4(dx, dy, -1, 0);
 			float4 d = camera.m_dir + cx*((.25 + x) / _w - .5) + cy*((.25 + y) / _h - .5);
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam(camera.m_origin, normalize(d));
-//			_colors[ind] += trace(&newcam, _triangleData, _triIdxList, _bvhLimits, _bvhChildrenOrTriangles, &s1, &s2) * (kInvSamps);
-			_colors[ind] += trace(&newcam, _vertices, _normals, _bvhData, _hdr, &s1, &s2) * (kInvSamps);
+			_colors[ind] += trace(&randState, &newcam, _vertices, _normals, _bvhData, _hdr) * kInvSamps;
+//			_colors[ind] += trace(&newcam, _vertices, _normals, _bvhData, _hdr, &s1, &s2) * kInvSamps;
 		}
 
 		float coef = 1.f/_frame;
@@ -343,38 +339,17 @@ __global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_hdr, 
 	}
 }
 
-__global__ void hdrDim()
-{
-	printf("%d %d\n", kHDRwidth, kHDRheight);
-}
-
-// 1. Using union
-__device__ int floatAsInt( float fval )
-{
-		union FloatInt {
-				float f;
-				int   i;
-		};
-
-		FloatInt fi;
-		fi.f = fval;
-		return fi.i;
-}
-
 void cu_runRenderKernel(// Buffers
 												cudaSurfaceObject_t _texture, float4 *_hdr, float4 *_vertices, float4 *_normals, float4 *_bvhData, unsigned int *_triIdxList,
 												// Buffer sizes for texture initialisation
 												unsigned int _vertCount, unsigned int _bvhNodeCount, unsigned int _triIdxCount,
-												float4 *_colorArr, float4 *_cam, float4 *_dir,
-												unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+												float4 *_colorArr, vCamera _cam, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	dim3 dimBlock(16, 16);
 	dim3 dimGrid((_w / dimBlock.x),
 							 (_h / dimBlock.y));
 
-//	render<<<dimGrid, dimBlock>>>(_texture, _triangleData, _triIdxList, _bvhLimits, _bvhChildrenOrTriangles, _colorArr, _cam, _dir, _w, _h, _frame, _time);
-	render<<<dimGrid, dimBlock>>>(_texture, _colorArr, _hdr, _vertices, _normals, _bvhData, _cam, _dir, _w, _h, _frame, _time);
-//	hdrDim<<<1, 1>>>();
+	render<<<dimGrid, dimBlock>>>(_texture, _colorArr, _hdr, _vertices, _normals, _bvhData, _cam, _w, _h, _frame, _time);
 }
 
 void cu_setHDRDim(const unsigned int &_w, const unsigned int &_h)
