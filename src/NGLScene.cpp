@@ -65,7 +65,7 @@ void NGLScene::initializeGL()
   m_renderer.reset(new vRendererCL);
 #endif
 
-  m_renderer->init((unsigned int)width(), (unsigned int)height());
+	m_renderer->init((unsigned int)width(), (unsigned int)height());
 	m_renderer->setCamera(m_virtualCamera);
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -142,9 +142,22 @@ void NGLScene::initializeGL()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// Create texture data (4-component unsigned byte)
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glGenTextures(1, &m_depthTexture);
+	glBindTexture(GL_TEXTURE_2D, m_depthTexture);
+
+	// set basic parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// Create texture data (4-component unsigned byte)
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
   m_renderer->registerTextureBuffer(m_texture);
+	m_renderer->registerDepthBuffer(m_depthTexture);
 
   // Unbind the texture
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -154,9 +167,9 @@ void NGLScene::initializeGL()
 
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
 //  m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
+	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/happy_buddha.obj"));
-	m_renderer->initMesh(vMeshLoader::loadMesh("models/matt.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/matt.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
 
   Imf::Rgba *pixelBuffer;
@@ -232,8 +245,11 @@ void NGLScene::paintGL()
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_texture);
-
 	shader->setRegisteredUniform1i("u_ptResult", 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_depthTexture);
+	shader->setRegisteredUniform1i("u_ptDepth", 1);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 

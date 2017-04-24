@@ -49,8 +49,13 @@ void vRendererCuda::init(const unsigned int &_w, const unsigned int &_h)
 void vRendererCuda::registerTextureBuffer(GLuint &_texture)
 {
   assert(m_initialised);
-
 	validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLTextureBuffer, _texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
+}
+
+void vRendererCuda::registerDepthBuffer(GLuint &_depthTexture)
+{
+	assert(m_initialised);
+	validateCuda(cudaGraphicsGLRegisterImage(&m_cudaGLDepthBuffer, _depthTexture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
 }
 
 void vRendererCuda::updateCamera()
@@ -103,12 +108,24 @@ void vRendererCuda::render()
 	validateCuda(cudaGraphicsMapResources(1, &m_cudaGLTextureBuffer), "Map GL texture buffer");
 	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaImgArray, m_cudaGLTextureBuffer, 0, 0), "Attach the mapped texture buffer to a cuda resource");
 
+	validateCuda(cudaGraphicsMapResources(1, &m_cudaGLDepthBuffer), "Map GL depth buffer");
+	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaDepthArray, m_cudaGLDepthBuffer, 0, 0), "Attach the mapped texture buffer to a cuda resource");
+
   cudaResourceDesc wdsc;
   wdsc.resType = cudaResourceTypeArray;
   wdsc.res.array.array = m_cudaImgArray;
-  cudaSurfaceObject_t writeSurface;
-	validateCuda(cudaCreateSurfaceObject(&writeSurface, &wdsc), "Create a writeable cuda surface");
-	cu_runRenderKernel(writeSurface,
+
+	cudaSurfaceObject_t textureSurface;
+	validateCuda(cudaCreateSurfaceObject(&textureSurface, &wdsc), "Create a writeable cuda surface");
+
+	cudaResourceDesc wdscd;
+	wdscd.resType = cudaResourceTypeArray;
+	wdscd.res.array.array = m_cudaDepthArray;
+
+	cudaSurfaceObject_t depthSurface;
+	validateCuda(cudaCreateSurfaceObject(&depthSurface, &wdscd), "Create a writeable cuda surface");
+	cu_runRenderKernel(textureSurface,
+										 depthSurface,
 										 m_hdr,
 										 m_vertices,
 										 m_normals,
@@ -123,9 +140,12 @@ void vRendererCuda::render()
 										 m_height,
 										 m_frame++,
 										 std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
-	validateCuda(cudaDeviceSynchronize(), "Render");
-	validateCuda(cudaDestroySurfaceObject(writeSurface), "Clean up the surface");
+	validateCuda(cudaDestroySurfaceObject(textureSurface), "Clean up the surface");
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer), "Free the mapped GL texture buffer");
+
+	validateCuda(cudaDestroySurfaceObject(depthSurface), "Clean up the surface");
+	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLDepthBuffer), "Free the mapped GL depth buffer");
+
 	validateCuda(cudaStreamSynchronize(0), "Synchronize");
 }
 

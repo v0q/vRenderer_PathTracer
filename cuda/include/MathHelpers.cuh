@@ -89,6 +89,11 @@ inline __device__ float4 normalize(const float4 &_a)
 	return _a * invLen;
 }
 
+inline __device__ float clamp(const int &_val, const int &_low, const int &_hi)
+{
+	return max(_low, min(_hi, _val));
+}
+
 inline __device__ float clamp(const float &_val, const float &_low, const float &_hi)
 {
 	return max(_low, min(_hi, _val));

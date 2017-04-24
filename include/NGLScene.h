@@ -87,7 +87,7 @@ private:
     ngl::Vec3 m_modelPos;
 
     /// VerterArrayObject and VertexBufferObject for our screen quad
-    GLuint m_vao, m_vbo, m_texture;
+		GLuint m_vao, m_vbo, m_texture, m_depthTexture;
 		bool m_renderTexture;
 
     std::unique_ptr<vRenderer> m_renderer;

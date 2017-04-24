@@ -12,6 +12,7 @@ public:
 
   void init(const unsigned int &_w, const unsigned int &_h) override;
   void registerTextureBuffer(GLuint &_texture) override;
+	void registerDepthBuffer(GLuint &_depthTexture) override;
   void render() override;
   void cleanUp() override;
 	void updateCamera() override;
@@ -23,7 +24,9 @@ private:
 	void validateCuda(cudaError_t _err, const std::string &_msg = "");
 
   cudaGraphicsResource_t m_cudaGLTextureBuffer;
+	cudaGraphicsResource_t m_cudaGLDepthBuffer;
 	cudaArray *m_cudaImgArray;
+	cudaArray *m_cudaDepthArray;
 
 	// Cuda buffers
 	vCamera m_camera;

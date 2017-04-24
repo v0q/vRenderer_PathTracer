@@ -22,7 +22,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
   QString meshName;
 	std::vector<ngl::Vec3> vertices;
 	std::vector<vHTriangle> triangles;
-	float scale = 5.f;
+	float scale = 1.f;
 
   for(unsigned int i = 0; i < scene->mNumMeshes; ++i)
   {
@@ -50,7 +50,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
 			vertices[j] -= center;
-			vertices[j].m_z -= 250.f;
+//			vertices[j].m_z -= 250.f;
 		}
 
 		for(unsigned int j = 0; j < numFaces; ++j)

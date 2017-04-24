@@ -42,8 +42,8 @@ typedef struct Sphere {
 
 __constant__ Sphere spheres[] = {			//Scene: radius, position, emission, color, material
 //	{ 1e5f, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
-	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
-	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } } // small sphere 2
+	{ 5.5f, { 25.f, 0.f, 0.f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
+	{ 5.5f, { -25.f, 0.f, 0.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } } // small sphere 2
 //	{ 150.0f, { 50.0f, 300.6f - .77f, 81.6f, 0.0f },	/*{ 2.0f, 1.8f, 1.6f, 0.0f }*/{ 2.8f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
 };
 
@@ -65,19 +65,20 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 	float t = inf;
 
 //	/* check if the ray intersects each sphere in the scene */
-//	for(int i = 0; i < n; i++)  {
-//		/* float hitdistance = intersectSphere(&spheres[i], ray); */
-//		Sphere sphere = spheres[i]; /* create local copy of sphere */
-//		float dist = sphere.intersect(_ray);
-//		/* keep track of the closest intersection and hitobject found so far */
-//		if(dist != 0.0f && dist < t) {
-//			t = dist;
-//			_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-//			_hitData->m_normal = normalize(_hitData->m_hitPoint - sphere.m_pos);
-//			_hitData->m_color = sphere.m_col;
-//			_hitData->m_emission = sphere.m_emission;
-//		}
-//	}
+	for(int i = 0; i < n; i++)  {
+		/* float hitdistance = intersectSphere(&spheres[i], ray); */
+		Sphere sphere = spheres[i]; /* create local copy of sphere */
+		float dist = sphere.intersect(_ray);
+		/* keep track of the closest intersection and hitobject found so far */
+		if(dist != 0.0f && dist < t) {
+			t = dist;
+			_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+			_hitData->m_normal = normalize(_hitData->m_hitPoint - sphere.m_pos);
+			_hitData->m_color = sphere.m_col;
+			_hitData->m_emission = sphere.m_emission;
+			_hitData->m_hitType = 0;
+		}
+	}
 
 	const int EntrypointSentinel = 0x76543210;
 	int startNode = 0;
@@ -110,12 +111,12 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 
 			int2 indices = make_int2(__float_as_int(tmp.x), __float_as_int(tmp.y));
 
-			if(indices.y == 0x80000000) {
-				nodeAddr = *(int*)stackPtr;
-				leafAddr = indices.x;
-				stackPtr -= 4;
-				break;
-			}
+//			if(indices.y == 0x80000000) {
+//				nodeAddr = *(int*)stackPtr;
+//				leafAddr = indices.x;
+//				stackPtr -= 4;
+//				break;
+//			}
 
 			const float c0lox = n0xy.x * invDir.x - od.x;
 			const float c0hix = n0xy.y * invDir.x - od.x;
@@ -189,14 +190,16 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 				float4 vert2 = _vertices[triAddr + 2];
 
 				float dist = intersectTriangle(vert0, vert1, vert2, _ray);
-				if(dist != 0.0f && dist < t)
+				if(dist > 0.000003f && dist < t)
 				{
 					t = dist;
 					_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-					_hitData->m_normal = _normals[triAddr];
-//					_hitData->m_normal = normalize(cross(vert1, vert2));
+//					_hitData->m_normal = _normals[triAddr];
+					_hitData->m_normal = normalize(cross(vert0 - vert1, vert0 - vert2));
+//					_hitData->m_normal = normalize(vert1);
 					_hitData->m_color = make_float4(1.f, 1.f, 1.f, 0.0f);
 					_hitData->m_emission = make_float4(0.f, 0.0f, 0.0f, 0.0f);
+					_hitData->m_hitType = 1;
 				}
 			}
 			leafAddr = nodeAddr;
@@ -220,19 +223,19 @@ __device__ static unsigned int hash(unsigned int *seed0, unsigned int *seed1)
 }
 
 //__device__ float4 trace(const Ray *_camray, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, unsigned int4 *_bvhChildrenOrTriangles, unsigned int *_seed0, unsigned int *_seed1)
-__device__ float4 trace(curandState* randstate, const Ray *_camray, float4 *_vertices, float4 *_normals, float4 *_bvhData, float4 *_hdr)
-//__device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals, float4 *_bvhData, float4 *_hdr, unsigned int *_seed0, unsigned int *_seed1)
+//__device__ float4 trace(curandState* randstate, const Ray *_camray, float4 *_vertices, float4 *_normals, float4 *_bvhData, float4 *_hdr)
+__device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals, float4 *_bvhData, float4 *_hdr, unsigned int *_seed0, unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
 	float4 accum_color = make_float4(0.0f, 0.0f, 0.0f, 0.f);
 	float4 mask = make_float4(1.0f, 1.0f, 1.0f, 0.f);
+	float depth = 1.f;
 
 	for(unsigned int bounces = 0; bounces < 4; bounces++)
 	{
 		vHitData hitData;
 
-//		if(!intersectScene(&ray, _triangleData, _triIdxList, _bvhLimits, _bvhChildrenOrTriangles, &hitData)) {
 		if(!intersectScene(&ray, _vertices, _normals, _bvhData, &hitData))
 		{
 			// Sample the HDR map, based on:
@@ -244,56 +247,70 @@ __device__ float4 trace(curandState* randstate, const Ray *_camray, float4 *_ver
 
 			int x = longlat.x * kHDRwidth;
 			int y = longlat.y * kHDRheight;
-			int addr = x + y*kHDRwidth;
+			int addr = clamp(x + y*kHDRwidth, 0, kHDRwidth*kHDRheight - 1);
 
 			accum_color += (mask * 2.0f * _hdr[addr]);
+			accum_color.w = depth;
 			return accum_color;
 		}
 
-//		unsigned int seed = hash(_seed0, _seed1);
-
-//		thrust::default_random_engine rng(seed);
-//		thrust::uniform_real_distribution<float> uniformDist(0, 1);
-
-		/* compute the surface normal and flip it if necessary to face the incoming ray */
-		float4 normal_facing = dot(hitData.m_normal, ray.m_dir) < 0.0f ? hitData.m_normal : hitData.m_normal * (-1.0f);
-		/* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
-//		float rand1 = 2.0f * PI * uniformDist(rng); //curand_uniform(randstate);
-//		float rand2 = uniformDist(rng); //curand_uniform(randstate);
-		float rand1 = 2.0f * PI * curand_uniform(randstate);
-		float rand2 = curand_uniform(randstate);
-		float rand2s = sqrt(rand2);
-
-		/* create a local orthogonal coordinate frame centered at the hitpoint */
-		float4 w = normal_facing;
-		float4 axis = fabs(w.x) > 0.1f ? make_float4(0.0f, 1.0f, 0.0f, 0.f) : make_float4(1.0f, 0.0f, 0.0f, 0.f);
-		float4 u = normalize(cross(axis, w));
-		float4 v = cross(w, u);
-
-		/* use the coordinte frame and random numbers to compute the next ray direction */
-		float4 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
-
-		/* add a very small offset to the hitpoint to prevent self intersection */
-		ray.m_origin = hitData.m_hitPoint + normal_facing * 0.05f;
-		ray.m_dir = newdir;
+		if(bounces == 0)
+		{
+			float4 l = ray.m_origin - hitData.m_hitPoint;
+			depth = sqrtf(dot(l, l)) / 150.f;
+		}
 
 		/* add the colour and light contributions to the accumulated colour */
 		accum_color += mask * hitData.m_emission;
 
-		/* the mask colour picks up surface colours at each bounce */
-		mask *= hitData.m_color;
+		/* compute the surface normal and flip it if necessary to face the incoming ray */
+		float4 normal = dot(hitData.m_normal, ray.m_dir) < 0.0f ? hitData.m_normal : hitData.m_normal * (-1.0f);
+		/* add a very small offset to the hitpoint to prevent self intersection */
+		ray.m_origin = hitData.m_hitPoint + normal * 0.05f;
 
-		/* perform cosine-weighted importance sampling for diffuse surfaces*/
-		mask *= dot(newdir, normal_facing);
-		mask *= 2;
+		if(hitData.m_hitType == 0)
+		{
+			ray.m_dir = ray.m_dir - normal * 2.f * dot(normal, ray.m_dir);
+		}
+		else if(hitData.m_hitType == 1)
+		{
+			unsigned int seed = hash(_seed0, _seed1);
+			thrust::default_random_engine rng(seed);
+			thrust::uniform_real_distribution<float> uniformDist(0, 1);
+
+			/* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
+			float rand1 = 2.0f * PI * uniformDist(rng);
+			float rand2 = uniformDist(rng);
+	//		float rand1 = 2.0f * PI * curand_uniform(randstate);
+	//		float rand2 = curand_uniform(randstate);
+			float rand2s = sqrt(rand2);
+
+			/* create a local orthogonal coordinate frame centered at the hitpoint */
+			float4 w = normal;
+			float4 axis = fabs(w.x) > 0.1f ? make_float4(0.0f, 1.0f, 0.0f, 0.f) : make_float4(1.0f, 0.0f, 0.0f, 0.f);
+			float4 u = normalize(cross(axis, w));
+			float4 v = cross(w, u);
+
+			/* use the coordinate frame and random numbers to compute the next ray direction */
+			float4 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
+			ray.m_dir = newdir;
+
+			/* the mask colour picks up surface colours at each bounce */
+			mask *= hitData.m_color;
+
+			/* perform cosine-weighted importance sampling for diffuse surfaces*/
+			mask *= dot(newdir, normal);
+			mask *= 2;
+		}
 	}
 
+	accum_color.w = depth;
 	return accum_color;
 }
 
 //__global__ void render(cudaSurfaceObject_t _tex, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, unsigned int4 *_bvhChildrenOrTriangles,
 //											 float4 *_colors, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
-__global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_hdr, float4 *_vertices, float4 *_normals, float4 *_bvhData, vCamera _cam, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__global__ void render(cudaSurfaceObject_t _tex, cudaSurfaceObject_t _depth, float4 *_colors, float4 *_hdr, float4 *_vertices, float4 *_normals, float4 *_bvhData, vCamera _cam, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
 {
 	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -307,9 +324,9 @@ __global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_hdr, 
 		curandState randState;
 		curand_init(hash(&s1, &s2) + threadIdx.x, 0, 0, &randState);
 
-    if(_frame == 1) {
+		if(_frame == 1) {
 			_colors[ind] = make_float4(0.f, 0.f, 0.f, 0.f);
-    }
+		}
 
 		vCamera camera;
 		camera.m_origin = _cam.m_origin;
@@ -325,8 +342,11 @@ __global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_hdr, 
 			float4 d = camera.m_dir + cx*((.25 + x) / _w - .5) + cy*((.25 + y) / _h - .5);
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam(camera.m_origin, normalize(d));
-			_colors[ind] += trace(&randState, &newcam, _vertices, _normals, _bvhData, _hdr) * kInvSamps;
-//			_colors[ind] += trace(&newcam, _vertices, _normals, _bvhData, _hdr, &s1, &s2) * kInvSamps;
+//			_colors[ind] += trace(&randState, &newcam, _vertices, _normals, _bvhData, _hdr) * kInvSamps;
+			float4 result = trace(&newcam, _vertices, _normals, _bvhData, _hdr, &s1, &s2);
+			unsigned char depth = (unsigned char)((1.f - result.w) * 255);
+			surf2Dwrite(make_uchar4(depth, depth, depth, 0xff), _depth, x*sizeof(uchar4), y);
+			_colors[ind] += result * kInvSamps;
 		}
 
 		float coef = 1.f/_frame;
@@ -340,7 +360,7 @@ __global__ void render(cudaSurfaceObject_t _tex, float4 *_colors, float4 *_hdr, 
 }
 
 void cu_runRenderKernel(// Buffers
-												cudaSurfaceObject_t _texture, float4 *_hdr, float4 *_vertices, float4 *_normals, float4 *_bvhData, unsigned int *_triIdxList,
+												cudaSurfaceObject_t _texture, cudaSurfaceObject_t _depth, float4 *_hdr, float4 *_vertices, float4 *_normals, float4 *_bvhData, unsigned int *_triIdxList,
 												// Buffer sizes for texture initialisation
 												unsigned int _vertCount, unsigned int _bvhNodeCount, unsigned int _triIdxCount,
 												float4 *_colorArr, vCamera _cam, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
@@ -349,7 +369,7 @@ void cu_runRenderKernel(// Buffers
 	dim3 dimGrid((_w / dimBlock.x),
 							 (_h / dimBlock.y));
 
-	render<<<dimGrid, dimBlock>>>(_texture, _colorArr, _hdr, _vertices, _normals, _bvhData, _cam, _w, _h, _frame, _time);
+	render<<<dimGrid, dimBlock>>>(_texture, _depth, _colorArr, _hdr, _vertices, _normals, _bvhData, _cam, _w, _h, _frame, _time);
 }
 
 void cu_setHDRDim(const unsigned int &_w, const unsigned int &_h)

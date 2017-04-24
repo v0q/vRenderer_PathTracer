@@ -2,6 +2,7 @@
 
 #include <cfloat>
 #include <ngl/Vec3.h>
+#include <iostream>
 
 #include "Utilities.h"
 

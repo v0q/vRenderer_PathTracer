@@ -8,8 +8,8 @@
 //#define BVH_DEBUG_SPLIT
 //#define BVH_DEBUG_SORT
 
-constexpr float kObjectSplitAlpha = 0.0003f;
-constexpr unsigned int kQuickSortStackSize = 32;
+constexpr float kObjectSplitAlpha = 0.3f;
+constexpr unsigned int kQuickSortStackSize = 64;
 constexpr unsigned int kQuickSortMinSize = 16;
 
 SBVH::SBVH(vHTriangle *_triangles, ngl::Vec3 *_verts, unsigned int _numTris) :
@@ -64,10 +64,10 @@ BVHNode *SBVH::buildNode(const NodeSpec &_nodeSpec)
 		return createLeaf(_nodeSpec);
 	}
 
-  unsigned int firstTriRefIndex = m_triangleRefStack.size() - _nodeSpec.m_numTris;
+	unsigned int firstTriRefIndex = m_triangleRefStack.size() - _nodeSpec.m_numTris;
 	float surfaceArea = _nodeSpec.m_bb.surfaceArea();
 	float leafCost = surfaceArea * kTriangleCost * _nodeSpec.m_numTris;
-  float nodeCost = surfaceArea * kNodeCost * 2;
+	float nodeCost = surfaceArea * kNodeCost * 2;
 
 #ifdef BVH_DEBUG
 	#ifdef BVH_DEBUG_SPLIT
