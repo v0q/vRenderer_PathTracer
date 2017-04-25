@@ -28,18 +28,19 @@ MainWindow::MainWindow() :
 
 MainWindow::~MainWindow()
 {
-//  delete m_scene;
+	delete m_scene;
   delete m_ui;
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *_event)
 {
-  switch (_event->key())
-  {
-    case Qt::Key_Escape : QApplication::exit(EXIT_SUCCESS); break;
+	switch (_event->key())
+	{
+		case Qt::Key_Escape : QApplication::exit(EXIT_SUCCESS); break;
+		case Qt::Key_Return : m_scene->changeRenderChannel(); std::cout << "Triggered\n"; break;
 
-    default: break;
-  }
+		default: break;
+	}
 }
 
 void MainWindow::updateSceneTree(const QString &_mesh)

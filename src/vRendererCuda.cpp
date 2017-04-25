@@ -272,6 +272,19 @@ void vRendererCuda::initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_
 	delete [] dataAsFloats;
 }
 
+void vRendererCuda::loadTexture(const unsigned char *_texture, const unsigned int &_w, const unsigned int &_h)
+{
+	float4 *dataAsFloats = new float4[_w*_h];
+
+	for(unsigned int i = 0; i < _w*_h; i += 4)
+	{
+		dataAsFloats[i] = make_float4((float)(_texture[i + 2]/255.f), (float)(_texture[i + 1]/255.f), (float)(_texture[i + 1]/255.f), (float)(_texture[i + 3]/255.f));
+	}
+
+	cu_loadDiffuse(dataAsFloats, _w, _h);
+	delete [] dataAsFloats;
+}
+
 void vRendererCuda::validateCuda(cudaError_t _err, const std::string &_msg)
 {
   if(_err != cudaSuccess)

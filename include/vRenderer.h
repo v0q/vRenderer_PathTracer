@@ -22,6 +22,7 @@ public:
 	virtual void updateCamera() = 0;
 	virtual void initMesh(const vMeshData &_sbvhData) = 0;
   virtual void initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h) = 0;
+	virtual void loadTexture(const unsigned char *_texture, const unsigned int &_w, const unsigned int &_h) = 0;
   virtual void clearBuffer() = 0;
   virtual unsigned int getFrameCount() const = 0;
 

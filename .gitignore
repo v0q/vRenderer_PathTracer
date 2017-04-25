@@ -7,6 +7,7 @@ errorlog.txt
 # Models and HDRI maps
 models/*
 hdr/*
+textures/*
 
 # C++ objects and libs
 

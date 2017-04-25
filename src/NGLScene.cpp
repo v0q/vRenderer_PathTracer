@@ -5,10 +5,12 @@
 #include <vector>
 #include <assert.h>
 #include <chrono>
+#include <memory>
 #include <OpenEXR/ImfRgba.h>
 #include <OpenEXR/ImfRgbaFile.h>
 #include <OpenEXR/ImathBox.h>
-#include <OpenColorIO/OpenColorIO.h>
+
+//#include <OpenColorIO/OpenColorIO.h>
 
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
@@ -20,11 +22,12 @@
 	#include "vRendererCL.h"
 #endif
 
-namespace OCIO = OCIO_NAMESPACE;
+//namespace OCIO = OCIO_NAMESPACE;
 
 NGLScene::NGLScene(QWidget *_parent) :
   QOpenGLWidget(_parent),
 	m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f)),
+	m_renderChannel(0),
 	m_yaw(0.f),
 	m_pitch(0.f)
 {
@@ -167,17 +170,17 @@ void NGLScene::initializeGL()
 
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
 //  m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
-	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/happy_buddha.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/matt.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/bunny.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_mask.obj"));
+	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_head.obj"));
 
   Imf::Rgba *pixelBuffer;
   try
 	{
-//		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
-		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
-//    Imf::RgbaInputFile in("hdr/fair.exr");
+		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
+//		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
     Imath::Box2i win = in.dataWindow();
 
     Imath::V2i dim(win.max.x - win.min.x + 1,
@@ -198,6 +201,19 @@ void NGLScene::initializeGL()
     std::cerr << e.what() << "\n";
     exit(0);
   }
+
+	QImage diffuse;
+//	diffuse.load(QString("textures/Adam_mask_intact_a.tif"));
+	diffuse.load(QString("textures/Adam_Head_a.tif"));
+	if(diffuse.isNull())
+	{
+		std::cerr << "Could not load the diffuse texture\n";
+		exit(0);
+	}
+	else
+	{
+		m_renderer->loadTexture(diffuse.constBits(), diffuse.width(), diffuse.height());
+	}
 }
 
 void NGLScene::timerEvent(QTimerEvent *_event)
@@ -250,6 +266,7 @@ void NGLScene::paintGL()
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m_depthTexture);
 	shader->setRegisteredUniform1i("u_ptDepth", 1);
+	shader->setRegisteredUniform1i("u_channel", m_renderChannel);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 

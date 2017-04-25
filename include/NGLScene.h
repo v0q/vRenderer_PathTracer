@@ -50,6 +50,8 @@ class NGLScene : public QOpenGLWidget
     //----------------------------------------------------------------------------------------------------------------------
     void paintGL();
 
+		void changeRenderChannel() { m_renderChannel = (m_renderChannel + 1)%2; std::cout << m_renderChannel << "\n"; }
+
 private:
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief this is called everytime we resize the window
@@ -72,7 +74,7 @@ private:
     /// inherited from QObject and overridden here.
     /// @param _event the Qt Event structure
     //----------------------------------------------------------------------------------------------------------------------
-    void mouseReleaseEvent ( QMouseEvent *_event );
+		void mouseReleaseEvent ( QMouseEvent *_event );
 
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief this method is called everytime the mouse wheel is moved
@@ -93,6 +95,7 @@ private:
     std::unique_ptr<vRenderer> m_renderer;
 		Camera *m_virtualCamera;
 
+		int m_renderChannel;
 		float m_yaw;
 		float m_pitch;
 

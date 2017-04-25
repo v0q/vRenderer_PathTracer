@@ -21,14 +21,18 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 
   QString meshName;
 	std::vector<ngl::Vec3> vertices;
+	std::vector<float> uvs;
 	std::vector<vHTriangle> triangles;
 	float scale = 1.f;
 
-  for(unsigned int i = 0; i < scene->mNumMeshes; ++i)
-  {
+	for(unsigned int i = 0; i < scene->mNumMeshes; ++i)
+	{
+		if(scene->mNumMeshes != 1)
+			i = scene->mNumMeshes - 1;
+		std::cout << i << "\n";
     aiMesh* mesh = scene->mMeshes[i];
     meshName = mesh->mName.C_Str();
-    std::cout << "Mesh: " << meshName.toStdString() << "\n";
+		std::cout << "Mesh: " << meshName.toStdString() << "\n";
     unsigned int numFaces = mesh->mNumFaces;
 		unsigned int numVerts = mesh->mNumVertices;
 
@@ -43,6 +47,11 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
 			vertices[j] = ngl::Vec3(vert.x, vert.y, vert.z);
 			center += vertices[j];
+
+//			std::cout << mesh->mTextureCoords[j]->x << ", " << mesh->mTextureCoords[j]->y << "\n";
+
+//			uvs.push_back(mesh->mTextureCoords[j]->x);
+//			uvs.push_back(mesh->mTextureCoords[j]->y);
 		}
 
 		center /= numVerts;

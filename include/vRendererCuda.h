@@ -18,6 +18,7 @@ public:
 	void updateCamera() override;
 	void initMesh(const vMeshData &_meshData) override;
 	void initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h);
+	void loadTexture(const unsigned char *_texture, const unsigned int &_w, const unsigned int &_h) override;
 	void clearBuffer() override;
   unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
@@ -39,6 +40,9 @@ private:
 	unsigned int *m_triIdxList;
 
 	float4 *m_hdr;
+	float4 *m_diffuse;
+	float4 *m_normal;
+	float4 *m_specular;
 
   unsigned int m_width;
   unsigned int m_height;

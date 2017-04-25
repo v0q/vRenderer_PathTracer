@@ -40,7 +40,7 @@ HEADERS+= $$PWD/include/mainwindow.h \
 FORMS += $$PWD/ui/mainwindow.ui
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include
-LIBS += -lassimp -lOpenColorIO -lIlmImf -lIex -lHalf
+LIBS += -lassimp -lIlmImf -lIex -lHalf #-lOpenColorIO
 # where our exe is going to live (root of project)
 DESTDIR=./
 # add the glsl shader files

@@ -19,7 +19,7 @@ public:
   ~MainWindow();
 
 private:
-  void keyPressEvent(QKeyEvent *_event) override;
+	void keyPressEvent(QKeyEvent *_event) override;
 
   Ui::MainWindow *m_ui;
 	NGLScene *m_scene;
