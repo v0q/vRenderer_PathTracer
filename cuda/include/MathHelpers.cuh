@@ -2,6 +2,7 @@
 
 #include <cuda_runtime.h>
 
+// Float 4
 inline __device__ float4 operator+(const float4 &_a, const float4 &_b)
 {
 	return make_float4(_a.x + _b.x, _a.y + _b.y, _a.z + _b.z, _a.w + _b.w);
@@ -33,7 +34,6 @@ inline __device__ void operator*=(float4 &_a, const float &_b)
 	_a.x *= _b;
 	_a.y *= _b;
 	_a.z *= _b;
-	_a.w *= _b;
 }
 
 inline __device__ void operator/=(float4 &_a, const float &_b)
@@ -41,7 +41,6 @@ inline __device__ void operator/=(float4 &_a, const float &_b)
 	_a.x /= _b;
 	_a.y /= _b;
 	_a.z /= _b;
-	_a.w /= _b;
 }
 
 inline __device__ float4 operator/(const float &_a, float4 &_b)
@@ -66,6 +65,66 @@ inline __device__ float4 operator*(const float &_a, const float4 &_b)
 {
 	return make_float4(_a*_b.x, _a*_b.y, _a*_b.z, _b.w);
 }
+
+
+
+
+// Float2
+inline __device__ float2 operator+(const float2 &_a, const float2 &_b)
+{
+	return make_float2(_a.x + _b.x, _a.y + _b.y);
+}
+
+inline __device__ float2 operator-(const float2 &_a, const float2 &_b)
+{
+	return make_float2(_a.x - _b.x, _a.y - _b.y);
+}
+
+inline __device__ void operator+=(float2 &_a, const float2 &_b)
+{
+	_a.x += _b.x;
+	_a.y += _b.y;
+}
+
+inline __device__ void operator*=(float2 &_a, const float2 &_b)
+{
+	_a.x *= _b.x;
+	_a.y *= _b.y;
+}
+
+inline __device__ void operator*=(float2 &_a, const float &_b)
+{
+	_a.x *= _b;
+	_a.y *= _b;
+}
+
+inline __device__ void operator/=(float2 &_a, const float &_b)
+{
+	_a.x /= _b;
+	_a.y /= _b;
+}
+
+inline __device__ float2 operator/(const float &_a, float2 &_b)
+{
+	return make_float2(_a / _b.x,
+										 _a / _b.y);
+}
+
+inline __device__ float2 operator*(const float2 &_a, const float2 &_b)
+{
+	return make_float2(_a.x*_b.x, _a.y*_b.y);
+}
+
+inline __device__ float2 operator*(const float2 &_a, const float &_b)
+{
+	return make_float2(_a.x*_b, _a.y*_b);
+}
+
+inline __device__ float2 operator*(const float &_a, const float2 &_b)
+{
+	return make_float2(_a*_b.x, _a*_b.y);
+}
+
 
 inline __device__ void operator/=(float2 &_a, const float2 &_b)
 {
@@ -115,6 +174,14 @@ inline __device__ float distanceSquared(const float4 &_v)
 inline __device__ float distance(const float4 &_v)
 {
 	return sqrtf(dot(_v, _v));
+}
+
+inline __device__ float4 powf(const float4 &_a, const float &_pow)
+{
+	return make_float4(powf(_a.x, _pow),
+										 powf(_a.y, _pow),
+										 powf(_a.z, _pow),
+										 powf(_a.w, _pow));
 }
 
 ///

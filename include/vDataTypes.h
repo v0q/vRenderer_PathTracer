@@ -7,6 +7,9 @@
 
 typedef struct vHVert {
 	ngl::Vec3 m_vert;
+	// Texture coordinates
+	float m_u;
+	float m_v;
 } vHVert;
 
 typedef struct vHTriangle {

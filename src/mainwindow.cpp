@@ -16,6 +16,9 @@ MainWindow::MainWindow() :
 
 	m_ui->m_renderWidgetLayout->addWidget(m_scene, 0, 0, 1, 1);
 	connect(m_ui->m_loadMeshBtn, SIGNAL(released()), m_scene, SLOT(loadMesh()));
+	connect(m_ui->m_loadDiffuseTextureBtn, SIGNAL(released()), m_scene, SLOT(loadDiffuse()));
+	connect(m_ui->m_loadNormalTextureBtn, SIGNAL(released()), m_scene, SLOT(loadNormal()));
+	connect(m_ui->m_loadSpecularTextureBtn, SIGNAL(released()), m_scene, SLOT(loadSpecular()));
 	connect(m_ui->m_fovSlider, SIGNAL(valueChanged(int)), m_scene, SLOT(changeFov(int)));
 	connect(m_ui->m_fovSlider, SIGNAL(valueChanged(int)), this, SLOT(updateUIFOV(int)));
 	connect(m_scene, SIGNAL(meshLoaded(const QString &)), this, SLOT(updateSceneTree(const QString &)));
@@ -23,7 +26,7 @@ MainWindow::MainWindow() :
 	m_model.setHorizontalHeaderItem(0, new QStandardItem("Root"));
 	m_ui->m_sceneTreeView->setModel(&m_model);
 
-	connect(m_ui->m_hdrBtn, SIGNAL(pressed()), this, SLOT(showHideHDRMenu()));
+//	connect(m_ui->m_hdrBtn, SIGNAL(pressed()), this, SLOT(showHideHDRMenu()));
 }
 
 MainWindow::~MainWindow()
@@ -57,6 +60,6 @@ void MainWindow::updateUIFOV(const int &_newFov)
 void MainWindow::showHideHDRMenu()
 {
 //  QSize geom = m_ui->m_hdrLayout->sizeHint();
-	m_ui->m_hdrLayout->sizeHint().setHeight(0);
+//	m_ui->m_hdrLayout->sizeHint().setHeight(0);
 	std::cout << "Triggered\n";
 }

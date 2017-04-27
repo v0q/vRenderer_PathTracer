@@ -10,12 +10,15 @@
 #include <OpenEXR/ImfRgbaFile.h>
 #include <OpenEXR/ImathBox.h>
 
+#include <OpenImageIO/imageio.h>
 //#include <OpenColorIO/OpenColorIO.h>
 
 #include "NGLScene.h"
 #include <ngl/NGLInit.h>
 
 #include "MeshLoader.h"
+#include "hdrloader.h"
+
 #ifdef __VRENDERER_CUDA__
 	#include "vRendererCuda.h"
 #elif __VRENDERER_OPENCL__
@@ -176,43 +179,41 @@ void NGLScene::initializeGL()
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_mask.obj"));
 	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_head.obj"));
 
-  Imf::Rgba *pixelBuffer;
-  try
+
+
+//	HDRLoaderResult result;
+//	if(!HDRLoader::load("hdr/Arches_E_PineTree_3k.hdr", result))
+//	{
+//		std::cerr << "Failed to load the HDR. Exiting...\n";
+//		exit(0);
+//	}
+
+//	m_renderer->initHDR(result.cols, result.width, result.height);
+
+	Imf::Rgba *pixelBuffer;
+	try
 	{
-		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
-//		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
-    Imath::Box2i win = in.dataWindow();
+//		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
+		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
+		Imath::Box2i win = in.dataWindow();
 
-    Imath::V2i dim(win.max.x - win.min.x + 1,
-                   win.max.y - win.min.y + 1);
+		Imath::V2i dim(win.max.x - win.min.x + 1,
+									 win.max.y - win.min.y + 1);
 
-    pixelBuffer = new Imf::Rgba[dim.x *dim.y];
+		pixelBuffer = new Imf::Rgba[dim.x *dim.y];
 
-    int dx = win.min.x;
-    int dy = win.min.y;
+		int dx = win.min.x;
+		int dy = win.min.y;
 
-    in.setFrameBuffer(pixelBuffer - dx - dy * dim.x, 1, dim.x);
-    in.readPixels(win.min.y, win.max.y);
+		in.setFrameBuffer(pixelBuffer - dx - dy * dim.x, 1, dim.x);
+		in.readPixels(win.min.y, win.max.y);
 
-    m_renderer->initHDR(pixelBuffer, dim.x, dim.y);
-  }
-  catch (Iex::BaseExc &e)
-  {
-    std::cerr << e.what() << "\n";
-    exit(0);
-  }
-
-	QImage diffuse;
-//	diffuse.load(QString("textures/Adam_mask_intact_a.tif"));
-	diffuse.load(QString("textures/Adam_Head_a.tif"));
-	if(diffuse.isNull())
-	{
-		std::cerr << "Could not load the diffuse texture\n";
-		exit(0);
+		m_renderer->initHDR(pixelBuffer, dim.x, dim.y);
 	}
-	else
+	catch (Iex::BaseExc &e)
 	{
-		m_renderer->loadTexture(diffuse.constBits(), diffuse.width(), diffuse.height());
+		std::cerr << e.what() << "\n";
+		exit(0);
 	}
 }
 
@@ -315,6 +316,27 @@ void NGLScene::loadMesh()
 		m_renderer->clearBuffer();
 
 		emit meshLoaded(mesh.m_name);
+	}
+}
+
+void NGLScene::loadTexture(const unsigned int &_type)
+{
+	QString location = QFileDialog::getOpenFileName(this, tr("Load texture"), NULL, tr("Image files (*.jpg *.jpeg *.tif *.tiff *.png)"));
+	if(!location.isEmpty())
+	{
+		QImage texture(location);
+		if(texture.isNull())
+		{
+			std::cerr << "Could not load the texture\n";
+		}
+		else
+		{
+			m_renderer->loadTexture(texture.constBits(), texture.width(), texture.height(), _type);
+		}
+
+		m_renderer->clearBuffer();
+
+		emit textureLoaded(location);
 	}
 }
 

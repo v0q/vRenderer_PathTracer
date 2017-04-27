@@ -10,11 +10,11 @@
 typedef struct vMeshData
 {
 	std::vector<vHTriangle> m_triangles;
-	std::vector<ngl::Vec3> m_vertices;
+	std::vector<vHVert> m_vertices;
 	SBVH m_bvh;
   QString m_name;
 
-  vMeshData(const std::vector<vHTriangle> &_tris, const std::vector<ngl::Vec3> &_verts, const SBVH &_bvh, const QString &_name) :
+	vMeshData(const std::vector<vHTriangle> &_tris, const std::vector<vHVert> &_verts, const SBVH &_bvh, const QString &_name) :
 		m_triangles(_tris),
 		m_vertices(_verts),
     m_bvh(_bvh),

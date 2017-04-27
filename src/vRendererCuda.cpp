@@ -130,10 +130,7 @@ void vRendererCuda::render()
 										 m_vertices,
 										 m_normals,
 										 m_bvhData,
-										 m_triIdxList,
-										 m_vertCount,
-										 m_bvhNodeCount,
-										 m_triIdxCount,
+										 m_uvs,
 										 m_colorArray,
 										 m_camera,
 										 m_width,
@@ -166,6 +163,8 @@ void vRendererCuda::cleanUp()
 
 		validateCuda(cudaFree(m_colorArray), "Clean up color buffer");
 		validateCuda(cudaGraphicsUnregisterResource(m_cudaGLTextureBuffer), "Unregister GL Texture");
+
+		cu_cleanUp();
   }
 }
 
@@ -178,6 +177,7 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	std::vector<float4> bvhData;
 	std::vector<float4> verts;
 	std::vector<float4> normals;
+	std::vector<float2> uvs;
 	std::vector<unsigned int> triIndices;
 
 	bvhData.resize(4);
@@ -216,18 +216,23 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 				for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
 				{
 					unsigned int triInd = _meshData.m_bvh.getTriIndex(j);
+					const vHTriangle tri = _meshData.m_triangles[triInd];
 					for(unsigned int k = 0; k < 3; ++k)
 					{
-						const ngl::Vec3 &vert = _meshData.m_vertices[_meshData.m_triangles[triInd].m_indices[k]];
+						const ngl::Vec3 &vert = _meshData.m_vertices[tri.m_indices[k]].m_vert;
 						const ngl::Vec3 &norm = _meshData.m_triangles[triInd].m_normal;
+
+						uvs.push_back(make_float2(_meshData.m_vertices[tri.m_indices[k]].m_u, _meshData.m_vertices[tri.m_indices[k]].m_v));
+
 						verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
 						normals.push_back(make_float4(norm.m_x, norm.m_y, norm.m_z, 0.f));
 					}
 					triIndices.push_back(triInd);
 				}
-				// Terminate triangles
+				// Terminate triangles, doing this for normals and uvs as well to keep the indices matching
 				verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
 				normals.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
+				uvs.push_back(make_float2(intAsFloat(0x80000000), 0));
 			}
 
 		// Node bounding box
@@ -243,6 +248,9 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	validateCuda(cudaMalloc(&m_vertices, verts.size()*sizeof(float4)), "Malloc vertex device pointer");
 	validateCuda(cudaMemcpy(m_vertices, &verts[0], verts.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy vertex data to gpu");
 
+	validateCuda(cudaMalloc(&m_uvs, uvs.size()*sizeof(float2)), "Malloc uv device pointer");
+	validateCuda(cudaMemcpy(m_uvs, &uvs[0], uvs.size()*sizeof(float2), cudaMemcpyHostToDevice), "Copy uv data to gpu");
+
 	validateCuda(cudaMalloc(&m_normals, normals.size()*sizeof(float4)), "Malloc normals device pointer");
 	validateCuda(cudaMemcpy(m_normals, &normals[0], normals.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy normal data to gpu");
 
@@ -257,12 +265,15 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	m_triIdxCount = triIndices.size();
 }
 
-void vRendererCuda::initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h)
+void vRendererCuda::initHDR(const Imf::Rgba *_colours, const unsigned int &_w, const unsigned int &_h)
 {
 	float4 *dataAsFloats = new float4[_w*_h];
 
+	unsigned int j = 0;
 	for(unsigned int i = 0; i < _w*_h; ++i)
-		dataAsFloats[i] = make_float4(_pixelBuffer[i].r, _pixelBuffer[i].g, _pixelBuffer[i].b, _pixelBuffer[i].a);
+	{
+		dataAsFloats[j++] = make_float4(_colours[i].r, _colours[i].g, _colours[i].b, _colours[i].a);
+	}
 
 	validateCuda(cudaMalloc(&m_hdr, _w*_h*sizeof(float4)), "Malloc HDR map device pointer");
 	validateCuda(cudaMemcpy(m_hdr, dataAsFloats, _w*_h*sizeof(float4), cudaMemcpyHostToDevice), "Copy HDR map to gpu");
@@ -272,16 +283,48 @@ void vRendererCuda::initHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_
 	delete [] dataAsFloats;
 }
 
-void vRendererCuda::loadTexture(const unsigned char *_texture, const unsigned int &_w, const unsigned int &_h)
+void vRendererCuda::loadTexture(const unsigned char *_texture, const unsigned int &_w, const unsigned int &_h, const unsigned int &_type)
 {
 	float4 *dataAsFloats = new float4[_w*_h];
 
-	for(unsigned int i = 0; i < _w*_h; i += 4)
+	unsigned int j = 0;
+	for(unsigned int i = 0; i < _w*_h*4; i += 4)
 	{
-		dataAsFloats[i] = make_float4((float)(_texture[i + 2]/255.f), (float)(_texture[i + 1]/255.f), (float)(_texture[i + 1]/255.f), (float)(_texture[i + 3]/255.f));
+		dataAsFloats[j++] = make_float4((int)(_texture[i + 2])/255.f, (int)(_texture[i + 1])/255.f, (int)(_texture[i])/255.f, (int)(_texture[i + 3])/255.f);
 	}
 
-	cu_loadDiffuse(dataAsFloats, _w, _h);
+	switch(_type)
+	{
+		case DIFFUSE:
+		{
+			if(!m_diffuse)
+			{
+				validateCuda(cudaMalloc(&m_diffuse, _w*_h*sizeof(float4)));
+			}
+			cudaMemcpy(m_diffuse, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice);
+			cu_bindTexture(m_diffuse, _w, _h, static_cast<vTextureType>(_type));
+		} break;
+		case NORMAL:
+		{
+			if(!m_normal)
+			{
+				validateCuda(cudaMalloc(&m_normal, _w*_h*sizeof(float4)));
+			}
+			cudaMemcpy(m_normal, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice);
+			cu_bindTexture(m_normal, _w, _h, static_cast<vTextureType>(_type));
+		} break;
+		case SPECULAR:
+		{
+			if(!m_specular)
+			{
+				validateCuda(cudaMalloc(&m_specular, _w*_h*sizeof(float4)));
+			}
+			cudaMemcpy(m_specular, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice);
+			cu_bindTexture(m_specular, _w, _h, static_cast<vTextureType>(_type));
+		} break;
+		default: break;
+	}
+
 	delete [] dataAsFloats;
 }
 

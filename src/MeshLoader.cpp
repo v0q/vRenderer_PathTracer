@@ -20,7 +20,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
   }
 
   QString meshName;
-	std::vector<ngl::Vec3> vertices;
+	std::vector<vHVert> vertices;
 	std::vector<float> uvs;
 	std::vector<vHTriangle> triangles;
 	float scale = 1.f;
@@ -45,20 +45,19 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
-			vertices[j] = ngl::Vec3(vert.x, vert.y, vert.z);
-			center += vertices[j];
+			vertices[j].m_vert = ngl::Vec3(vert.x, vert.y, vert.z);
+			vertices[j].m_u = mesh->mTextureCoords[0][j].x;
+			vertices[j].m_v = 1.f - mesh->mTextureCoords[0][j].y;
+			std::cout << j << ": " << mesh->mTangents[j].x << ", " << mesh->mTangents[j].y << ", " << mesh->mTangents[j].z << "\n";
 
-//			std::cout << mesh->mTextureCoords[j]->x << ", " << mesh->mTextureCoords[j]->y << "\n";
-
-//			uvs.push_back(mesh->mTextureCoords[j]->x);
-//			uvs.push_back(mesh->mTextureCoords[j]->y);
+			center += vertices[j].m_vert;
 		}
 
 		center /= numVerts;
 
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
-			vertices[j] -= center;
+			vertices[j].m_vert -= center;
 //			vertices[j].m_z -= 250.f;
 		}
 
@@ -70,9 +69,9 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 			triangles[j].m_indices[1] = face.mIndices[1];
 			triangles[j].m_indices[2] = face.mIndices[2];
 
-			ngl::Vec3 e1 = vertices[face.mIndices[1]] - vertices[face.mIndices[0]];
-			ngl::Vec3 e2 = vertices[face.mIndices[2]] - vertices[face.mIndices[1]];
-			ngl::Vec3 e3 = vertices[face.mIndices[0]] - vertices[face.mIndices[2]];
+			ngl::Vec3 e1 = vertices[face.mIndices[1]].m_vert - vertices[face.mIndices[0]].m_vert;
+			ngl::Vec3 e2 = vertices[face.mIndices[2]].m_vert - vertices[face.mIndices[1]].m_vert;
+			ngl::Vec3 e3 = vertices[face.mIndices[0]].m_vert - vertices[face.mIndices[2]].m_vert;
 
 			if(mesh->mNormals != NULL)
 			{
@@ -104,6 +103,5 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 	SBVH bb(&triangles[0], &vertices[0], triangles.size());
 //	exit(0);
 
-  std::cout << meshName.toStdString() << "\n";
   return vMeshData(triangles, vertices, bb, meshName);
 }
