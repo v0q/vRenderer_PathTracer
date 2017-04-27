@@ -88,6 +88,7 @@ private:
     /// position for our model
     ngl::Vec3 m_modelPos;
 
+		void loadTexture(const unsigned int &_type);
     /// VerterArrayObject and VertexBufferObject for our screen quad
 		GLuint m_vao, m_vbo, m_texture, m_depthTexture;
 		bool m_renderTexture;
@@ -121,11 +122,15 @@ private:
 		QTime m_timer;
 
 public slots:
-    void loadMesh();
+		void loadMesh();
+		void loadDiffuse() { loadTexture(0); }
+		void loadNormal() { loadTexture(1); }
+		void loadSpecular() { loadTexture(2); }
 		void changeFov(const int &_newFov);
 
 signals:
     void meshLoaded(const QString &);
+		void textureLoaded(const QString &);
 };
 
 #endif

@@ -74,7 +74,8 @@ color: rgb(0, 0, 0);</string>
           <bool>false</bool>
          </property>
          <property name="styleSheet">
-          <string notr="true">font: 700 13pt &quot;Helvetica Neue&quot;;</string>
+          <string notr="true">font: 700 13pt &quot;Helvetica Neue&quot;;
+border-color: rgb(0, 0, 0);</string>
          </property>
          <property name="locale">
           <locale language="English" country="UnitedKingdom"/>
@@ -92,36 +93,76 @@ color: rgb(0, 0, 0);</string>
      <item>
       <layout class="QVBoxLayout" name="m_testSpace">
        <item>
-        <widget class="QPushButton" name="m_hdrBtn">
+        <widget class="QPushButton" name="m_loadDiffuseTextureBtn">
          <property name="text">
-          <string>PushButton</string>
+          <string>Diffuse</string>
          </property>
         </widget>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="m_hdrLayout">
-         <item>
-          <widget class="QRadioButton" name="radioButton">
-           <property name="text">
-            <string>RadioButton</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_2">
-           <property name="text">
-            <string>PushButton</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioButton_2">
-           <property name="text">
-            <string>RadioButton</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QLabel" name="m_diffuseLabel">
+         <property name="styleSheet">
+          <string notr="true">font: 9pt &quot;Sans Serif&quot;;</string>
+         </property>
+         <property name="text">
+          <string>No diffuse texture loaded</string>
+         </property>
+         <property name="scaledContents">
+          <bool>false</bool>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="m_loadNormalTextureBtn">
+         <property name="text">
+          <string>Normal</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="m_normalLabel">
+         <property name="font">
+          <font>
+           <family>Sans Serif</family>
+           <pointsize>9</pointsize>
+           <weight>50</weight>
+           <italic>false</italic>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">font: 9pt &quot;Sans Serif&quot;;</string>
+         </property>
+         <property name="text">
+          <string>No normal texture loaded</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="m_loadSpecularTextureBtn">
+         <property name="text">
+          <string>Specular</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="m_specularLabel">
+         <property name="styleSheet">
+          <string notr="true">font: 9pt &quot;Sans Serif&quot;;</string>
+         </property>
+         <property name="text">
+          <string>No specular texture loaded</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer">

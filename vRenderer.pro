@@ -23,7 +23,8 @@ SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/MeshLoader.cpp \
           $$PWD/src/Camera.cpp \
           $$PWD/src/SBVH.cpp \
-          $$PWD/src/BVHNodes.cpp
+          $$PWD/src/BVHNodes.cpp \
+          $$PWD/src/hdrloader.cpp
 # same for the .h files
 HEADERS+= $$PWD/include/mainwindow.h \
           $$PWD/include/NGLScene.h \
@@ -35,12 +36,13 @@ HEADERS+= $$PWD/include/mainwindow.h \
           $$PWD/include/BVHNodes.h \
           $$PWD/include/Utilities.h \
           $$PWD/include/vDataTypes.h \
-          $$PWD/include/vRenderer.h
+          $$PWD/include/vRenderer.h \
+          $$PWD/include/hdrloader.h
 
 FORMS += $$PWD/ui/mainwindow.ui
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include
-LIBS += -lassimp -lIlmImf -lIex -lHalf #-lOpenColorIO
+LIBS += -lassimp -lIlmImf -lIex -lHalf#-lOpenImageIO -lOpenColorIO
 # where our exe is going to live (root of project)
 DESTDIR=./
 # add the glsl shader files

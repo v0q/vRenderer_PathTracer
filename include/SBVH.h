@@ -46,7 +46,7 @@ private:
 	};
 
 public:
-	SBVH(vHTriangle *_triangles, ngl::Vec3 *_verts, unsigned int _numTris);
+	SBVH(vHTriangle *_triangles, vHVert *_verts, unsigned int _numTris);
 	BVHNode *getRoot() const { return m_root; }
 	unsigned int getTriIndex(const unsigned int &_i) const { return m_triIndices[_i]; }
 
@@ -66,7 +66,7 @@ private:
 	BVHNode *m_root;
 
 	vHTriangle *m_triangles;
-	ngl::Vec3 *m_vertices;
+	vHVert *m_vertices;
 
 	std::vector<unsigned int> m_triIndices;
 	std::vector<TriangleRef> m_triangleRefStack;

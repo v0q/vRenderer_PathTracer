@@ -12,7 +12,7 @@ constexpr float kObjectSplitAlpha = 0.3f;
 constexpr unsigned int kQuickSortStackSize = 64;
 constexpr unsigned int kQuickSortMinSize = 16;
 
-SBVH::SBVH(vHTriangle *_triangles, ngl::Vec3 *_verts, unsigned int _numTris) :
+SBVH::SBVH(vHTriangle *_triangles, vHVert *_verts, unsigned int _numTris) :
 	m_triangles(_triangles),
 	m_vertices(_verts),
 	m_triangleCount(_numTris)
@@ -31,11 +31,12 @@ SBVH::SBVH(vHTriangle *_triangles, ngl::Vec3 *_verts, unsigned int _numTris) :
 		triRef.m_triIdx = i;
 		// Loop through the verts of the triangle
 		for(unsigned int j = 0; j < 3; ++j)
-			triRef.m_bb.extendBB(_verts[tri.m_indices[j]]);
+			triRef.m_bb.extendBB(_verts[tri.m_indices[j]].m_vert);
 
 		root.m_bb.extendBB(triRef.m_bb);
 		m_triangleRefStack.push_back(triRef);
 	}
+	root.m_bb.printBounds();
 
 	// Calculate the min overlap SA for object split to consider spatial split
 	m_overlapThreshold = root.m_bb.surfaceArea() * kObjectSplitAlpha;
@@ -406,8 +407,8 @@ void SBVH::splitReference(TriangleRef &o_leftSplitRef, TriangleRef &o_rightSplit
 	for(size_t k = 0; k < 3; ++k)
 	{
 		// Get two consecutive verts
-		ngl::Vec3 v1 = m_vertices[vertIdx[k]];
-		ngl::Vec3 v2 = m_vertices[vertIdx[(k + 1)%3]];
+		ngl::Vec3 v1 = m_vertices[vertIdx[k]].m_vert;
+		ngl::Vec3 v2 = m_vertices[vertIdx[(k + 1)%3]].m_vert;
 
 		// We're only interested in the value of the selected axis of the vertices
 		float v1pos = v1.m_openGL[_axis];
