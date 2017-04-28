@@ -129,6 +129,7 @@ void vRendererCuda::render()
 										 m_hdr,
 										 m_vertices,
 										 m_normals,
+										 m_tangents,
 										 m_bvhData,
 										 m_uvs,
 										 m_colorArray,
@@ -137,6 +138,7 @@ void vRendererCuda::render()
 										 m_height,
 										 m_frame++,
 										 std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
+
 	validateCuda(cudaDestroySurfaceObject(textureSurface), "Clean up the surface");
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer), "Free the mapped GL texture buffer");
 
@@ -152,6 +154,8 @@ void vRendererCuda::cleanUp()
 	{
 		if(m_vertices)
 			validateCuda(cudaFree(m_vertices), "Clean up triangle data buffer");
+		if(m_tangents)
+			validateCuda(cudaFree(m_tangents), "Clean up tangent buffer");
 		if(m_normals)
 			validateCuda(cudaFree(m_normals), "Clean up normals buffer");
 		if(m_triIdxList)
@@ -177,6 +181,7 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	std::vector<float4> bvhData;
 	std::vector<float4> verts;
 	std::vector<float4> normals;
+	std::vector<float4> tangents;
 	std::vector<float2> uvs;
 	std::vector<unsigned int> triIndices;
 
@@ -220,17 +225,20 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 					for(unsigned int k = 0; k < 3; ++k)
 					{
 						const ngl::Vec3 &vert = _meshData.m_vertices[tri.m_indices[k]].m_vert;
-						const ngl::Vec3 &norm = _meshData.m_triangles[triInd].m_normal;
+						const ngl::Vec3 &tangent = _meshData.m_vertices[tri.m_indices[k]].m_tangent;
+						const ngl::Vec3 &norm = _meshData.m_vertices[tri.m_indices[k]].m_normal;//_meshData.m_triangles[triInd].m_normal;
 
 						uvs.push_back(make_float2(_meshData.m_vertices[tri.m_indices[k]].m_u, _meshData.m_vertices[tri.m_indices[k]].m_v));
 
 						verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
+						tangents.push_back(make_float4(tangent.m_x, tangent.m_y, tangent.m_z, 0.f));
 						normals.push_back(make_float4(norm.m_x, norm.m_y, norm.m_z, 0.f));
 					}
 					triIndices.push_back(triInd);
 				}
 				// Terminate triangles, doing this for normals and uvs as well to keep the indices matching
 				verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
+				tangents.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
 				normals.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
 				uvs.push_back(make_float2(intAsFloat(0x80000000), 0));
 			}
@@ -247,6 +255,9 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 
 	validateCuda(cudaMalloc(&m_vertices, verts.size()*sizeof(float4)), "Malloc vertex device pointer");
 	validateCuda(cudaMemcpy(m_vertices, &verts[0], verts.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy vertex data to gpu");
+
+	validateCuda(cudaMalloc(&m_tangents, tangents.size()*sizeof(float4)), "Malloc tangent device pointer");
+	validateCuda(cudaMemcpy(m_tangents, &tangents[0], tangents.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy tangent data to gpu");
 
 	validateCuda(cudaMalloc(&m_uvs, uvs.size()*sizeof(float2)), "Malloc uv device pointer");
 	validateCuda(cudaMemcpy(m_uvs, &uvs[0], uvs.size()*sizeof(float2), cudaMemcpyHostToDevice), "Copy uv data to gpu");
@@ -265,14 +276,18 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	m_triIdxCount = triIndices.size();
 }
 
-void vRendererCuda::initHDR(const Imf::Rgba *_colours, const unsigned int &_w, const unsigned int &_h)
+void vRendererCuda::loadHDR(const Imf::Rgba *_colours, const unsigned int &_w, const unsigned int &_h)
 {
 	float4 *dataAsFloats = new float4[_w*_h];
 
-	unsigned int j = 0;
 	for(unsigned int i = 0; i < _w*_h; ++i)
 	{
-		dataAsFloats[j++] = make_float4(_colours[i].r, _colours[i].g, _colours[i].b, _colours[i].a);
+		dataAsFloats[i] = make_float4(_colours[i].r, _colours[i].g, _colours[i].b, _colours[i].a);
+	}
+
+	if(m_hdr)
+	{
+		validateCuda(cudaFree(m_hdr));
 	}
 
 	validateCuda(cudaMalloc(&m_hdr, _w*_h*sizeof(float4)), "Malloc HDR map device pointer");
@@ -297,29 +312,35 @@ void vRendererCuda::loadTexture(const unsigned char *_texture, const unsigned in
 	{
 		case DIFFUSE:
 		{
-			if(!m_diffuse)
+			if(m_diffuse)
 			{
-				validateCuda(cudaMalloc(&m_diffuse, _w*_h*sizeof(float4)));
+				validateCuda(cudaFree(m_diffuse), "Delete old diffuse memory");
 			}
-			cudaMemcpy(m_diffuse, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice);
+
+			validateCuda(cudaMalloc(&m_diffuse, _w*_h*sizeof(float4)), "Diffuse texture memory allocation");
+			validateCuda(cudaMemcpy(m_diffuse, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice), "Memcpy to diffuse texture");
 			cu_bindTexture(m_diffuse, _w, _h, static_cast<vTextureType>(_type));
 		} break;
 		case NORMAL:
 		{
-			if(!m_normal)
+			if(m_normal)
 			{
-				validateCuda(cudaMalloc(&m_normal, _w*_h*sizeof(float4)));
+				validateCuda(cudaFree(m_normal), "Delete old normal memory");
 			}
-			cudaMemcpy(m_normal, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice);
+
+			validateCuda(cudaMalloc(&m_normal, _w*_h*sizeof(float4)), "Normal texture memory allocation");
+			validateCuda(cudaMemcpy(m_normal, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice), "Memcpy to normal texture");
 			cu_bindTexture(m_normal, _w, _h, static_cast<vTextureType>(_type));
 		} break;
 		case SPECULAR:
 		{
-			if(!m_specular)
+			if(m_specular)
 			{
-				validateCuda(cudaMalloc(&m_specular, _w*_h*sizeof(float4)));
+				validateCuda(cudaFree(m_specular), "Delete old specular memory");
 			}
-			cudaMemcpy(m_specular, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice);
+
+			validateCuda(cudaMalloc(&m_specular, _w*_h*sizeof(float4)), "Specular texture memory allocation");
+			validateCuda(cudaMemcpy(m_specular, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice), "Memcpy to specular texture");
 			cu_bindTexture(m_specular, _w, _h, static_cast<vTextureType>(_type));
 		} break;
 		default: break;

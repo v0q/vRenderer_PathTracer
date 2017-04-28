@@ -21,7 +21,6 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 
   QString meshName;
 	std::vector<vHVert> vertices;
-	std::vector<float> uvs;
 	std::vector<vHTriangle> triangles;
 	float scale = 1.f;
 
@@ -45,10 +44,14 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
+			const aiVector3t<float> normal = mesh->mNormals[j];
+			const aiVector3t<float> tangent = mesh->mTangents[j];
 			vertices[j].m_vert = ngl::Vec3(vert.x, vert.y, vert.z);
+			vertices[j].m_tangent = ngl::Vec3(tangent.x, tangent.y, tangent.z);
 			vertices[j].m_u = mesh->mTextureCoords[0][j].x;
 			vertices[j].m_v = 1.f - mesh->mTextureCoords[0][j].y;
-			std::cout << j << ": " << mesh->mTangents[j].x << ", " << mesh->mTangents[j].y << ", " << mesh->mTangents[j].z << "\n";
+
+			vertices[j].m_normal = ngl::Vec3(normal.x, normal.y, normal.z);
 
 			center += vertices[j].m_vert;
 		}
@@ -68,40 +71,10 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 			triangles[j].m_indices[0] = face.mIndices[0];
 			triangles[j].m_indices[1] = face.mIndices[1];
 			triangles[j].m_indices[2] = face.mIndices[2];
-
-			ngl::Vec3 e1 = vertices[face.mIndices[1]].m_vert - vertices[face.mIndices[0]].m_vert;
-			ngl::Vec3 e2 = vertices[face.mIndices[2]].m_vert - vertices[face.mIndices[1]].m_vert;
-			ngl::Vec3 e3 = vertices[face.mIndices[0]].m_vert - vertices[face.mIndices[2]].m_vert;
-
-			if(mesh->mNormals != NULL)
-			{
-				triangles[j].m_normal = ngl::Vec3(mesh->mNormals[face.mIndices[1]].x, mesh->mNormals[face.mIndices[1]].y, mesh->mNormals[face.mIndices[1]].z);
-			}
-			else
-			{
-				// plane of triangle, cross product of edge vectors e1 and e2
-				triangles[j].m_normal = e1.cross(e2);
-
-				// choose longest alternative normal for maximum precision
-				ngl::Vec3 n1 = e2.cross(e3);
-				if(n1.length() > triangles[j].m_normal.length())
-				{
-					triangles[j].m_normal = n1; // higher precision when triangle has sharp angles
-				}
-
-				ngl::Vec3 n2 = e3.cross(e1);
-				if(n2.length() > triangles[j].m_normal.length())
-				{
-					triangles[j].m_normal = n2;
-				}
-
-				triangles[j].m_normal.normalize();
-			}
 		}
 	}
 
 	SBVH bb(&triangles[0], &vertices[0], triangles.size());
-//	exit(0);
 
   return vMeshData(triangles, vertices, bb, meshName);
 }

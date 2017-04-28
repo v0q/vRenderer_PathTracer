@@ -42,14 +42,16 @@ HEADERS+= $$PWD/include/mainwindow.h \
 FORMS += $$PWD/ui/mainwindow.ui
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include
-LIBS += -lassimp -lIlmImf -lIex -lHalf#-lOpenImageIO -lOpenColorIO
+LIBS += -lassimp -lIlmImf -lIex -lHalf #-L/public/devel/lib -lOpenImageIO -lOpenImageIO_Util -ltiff #-lOpenImageIO #-lOpenColorIO
 # where our exe is going to live (root of project)
 DESTDIR=./
 # add the glsl shader files
-OTHER_FILES += README.md \
-               shaders/screenQuad.vert \
-               shaders/screenQuad.frag \
-               models/*.obj
+OTHER_FILES += $$PWD/README.md \
+               $$PWD/shaders/screenQuad.vert \
+               $$PWD/shaders/screenQuad.frag \
+               $$PWD/shaders/screenQuadFXAA.h \
+               $$PWD/shaders/screenQuadFXAA.frag \
+               $$PWD/models/*.obj
 # were are going to default to a console app
 CONFIG += console
 # note each command you add needs a ; as it will be run as a single line

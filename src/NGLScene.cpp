@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <chrono>
 #include <memory>
+#include <fstream>
 #include <OpenEXR/ImfRgba.h>
 #include <OpenEXR/ImfRgbaFile.h>
 #include <OpenEXR/ImathBox.h>
@@ -31,6 +32,7 @@ NGLScene::NGLScene(QWidget *_parent) :
   QOpenGLWidget(_parent),
 	m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f)),
 	m_renderChannel(0),
+	m_fxaaEnabled(0),
 	m_yaw(0.f),
 	m_pitch(0.f)
 {
@@ -81,21 +83,43 @@ void NGLScene::initializeGL()
 
 	ngl::ShaderLib *shader = ngl::ShaderLib::instance();
 
-	shader->createShaderProgram("Screen Quad");
+	// Regular screen quad
+	{
+		shader->createShaderProgram("Screen Quad");
 
-	shader->attachShader("VertexShader", ngl::ShaderType::VERTEX);
-	shader->attachShader("FragmentShader", ngl::ShaderType::FRAGMENT);
+		shader->attachShader("VertexShader", ngl::ShaderType::VERTEX);
+		shader->attachShader("FragmentShader", ngl::ShaderType::FRAGMENT);
 
-	shader->loadShaderSource("VertexShader", "shaders/screenQuad.vert");
-	shader->loadShaderSource("FragmentShader", "shaders/screenQuad.frag");
+		shader->loadShaderSource("VertexShader", "shaders/screenQuad.vert");
+		shader->loadShaderSource("FragmentShader", "shaders/screenQuad.frag");
 
-	shader->compileShader("VertexShader");
-	shader->compileShader("FragmentShader");
+		shader->compileShader("VertexShader");
+		shader->compileShader("FragmentShader");
 
-	shader->attachShaderToProgram("Screen Quad", "VertexShader");
-	shader->attachShaderToProgram("Screen Quad", "FragmentShader");
+		shader->attachShaderToProgram("Screen Quad", "VertexShader");
+		shader->attachShaderToProgram("Screen Quad", "FragmentShader");
 
-	shader->linkProgramObject("Screen Quad");
+		shader->linkProgramObject("Screen Quad");
+	}
+
+	// FXAA
+	{
+		shader->createShaderProgram("FXAA");
+
+		shader->attachShader("VertexShaderFXAA", ngl::ShaderType::VERTEX);
+		shader->attachShader("FragmentShaderFXAA", ngl::ShaderType::FRAGMENT);
+
+		shader->loadShaderSource("VertexShaderFXAA", "shaders/screenQuad.vert");
+		shader->loadShaderSource("FragmentShaderFXAA", "shaders/screenQuadFXAA.frag");
+
+		shader->compileShader("VertexShaderFXAA");
+		shader->compileShader("FragmentShaderFXAA");
+
+		shader->attachShaderToProgram("FXAA", "VertexShaderFXAA");
+		shader->attachShaderToProgram("FXAA", "FragmentShaderFXAA");
+
+		shader->linkProgramObject("FXAA");
+	}
 
 	shader->use("Screen Quad");
 
@@ -144,8 +168,8 @@ void NGLScene::initializeGL()
 	// set basic parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	// Create texture data (4-component unsigned byte)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -156,8 +180,8 @@ void NGLScene::initializeGL()
 	// set basic parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	// Create texture data (4-component unsigned byte)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -176,8 +200,8 @@ void NGLScene::initializeGL()
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/happy_buddha.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/matt.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_mask.obj"));
-	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_head.obj"));
+	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_mask.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_head.obj"));
 
 
 
@@ -193,8 +217,8 @@ void NGLScene::initializeGL()
 	Imf::Rgba *pixelBuffer;
 	try
 	{
-//		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
-		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
+		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
+//		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
 		Imath::Box2i win = in.dataWindow();
 
 		Imath::V2i dim(win.max.x - win.min.x + 1,
@@ -208,7 +232,7 @@ void NGLScene::initializeGL()
 		in.setFrameBuffer(pixelBuffer - dx - dy * dim.x, 1, dim.x);
 		in.readPixels(win.min.y, win.max.y);
 
-		m_renderer->initHDR(pixelBuffer, dim.x, dim.y);
+		m_renderer->loadHDR(pixelBuffer, dim.x, dim.y);
 	}
 	catch (Iex::BaseExc &e)
 	{
@@ -246,7 +270,17 @@ void NGLScene::paintGL()
 	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 
 	ngl::ShaderLib *shader = ngl::ShaderLib::instance();
-	shader->use("Screen Quad");
+
+	switch(m_fxaaEnabled)
+	{
+		case 0:
+		default:
+			shader->use("Screen Quad");
+		break;
+		case 1:
+			shader->use("FXAA");
+		break;
+	}
 
 	glBindVertexArray(m_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
@@ -268,6 +302,9 @@ void NGLScene::paintGL()
 	glBindTexture(GL_TEXTURE_2D, m_depthTexture);
 	shader->setRegisteredUniform1i("u_ptDepth", 1);
 	shader->setRegisteredUniform1i("u_channel", m_renderChannel);
+
+	shader->setRegisteredUniform2f("u_screenDim", width(), height());
+	shader->setRegisteredUniform2f("u_invScreenDim", 1.f/width(), 1.f/height());
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -319,6 +356,38 @@ void NGLScene::loadMesh()
 	}
 }
 
+void NGLScene::loadHDR()
+{
+	QString location = QFileDialog::getOpenFileName(this, tr("Load texture"), NULL, tr("EXR-files (*.exr)"));
+	if(!location.isEmpty())
+	{
+		Imf::Rgba *pixelBuffer;
+		try
+		{
+			Imf::RgbaInputFile in(location.toStdString().c_str());
+			Imath::Box2i win = in.dataWindow();
+
+			Imath::V2i dim(win.max.x - win.min.x + 1,
+										 win.max.y - win.min.y + 1);
+
+			pixelBuffer = new Imf::Rgba[dim.x *dim.y];
+
+			int dx = win.min.x;
+			int dy = win.min.y;
+
+			in.setFrameBuffer(pixelBuffer - dx - dy * dim.x, 1, dim.x);
+			in.readPixels(win.min.y, win.max.y);
+
+			m_renderer->loadHDR(pixelBuffer, dim.x, dim.y);
+			m_renderer->clearBuffer();
+		}
+		catch (Iex::BaseExc &e)
+		{
+			std::cerr << e.what() << "\n";
+		}
+	}
+}
+
 void NGLScene::loadTexture(const unsigned int &_type)
 {
 	QString location = QFileDialog::getOpenFileName(this, tr("Load texture"), NULL, tr("Image files (*.jpg *.jpeg *.tif *.tiff *.png)"));
@@ -336,7 +405,7 @@ void NGLScene::loadTexture(const unsigned int &_type)
 
 		m_renderer->clearBuffer();
 
-		emit textureLoaded(location);
+		emit textureLoaded(location, _type);
 	}
 }
 
