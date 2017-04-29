@@ -7,6 +7,8 @@
 
 typedef struct vHVert {
 	ngl::Vec3 m_vert;
+	ngl::Vec3 m_normal;
+	ngl::Vec3 m_tangent;
 	// Texture coordinates
 	float m_u;
 	float m_v;
@@ -14,5 +16,4 @@ typedef struct vHVert {
 
 typedef struct vHTriangle {
 	unsigned int m_indices[3];
-	ngl::Vec3 m_normal;
 } vHTriangle;

@@ -2,6 +2,33 @@
 
 #include <cuda_runtime.h>
 
+typedef struct mat4
+{
+	__device__ mat4(const float4 _a = make_float4(1.f, 0.f, 0.f, 0.f),
+			 const float4 _b = make_float4(0.f, 1.f, 0.f, 0.f),
+			 const float4 _c = make_float4(0.f, 0.f, 1.f, 0.f),
+			 const float4 _d = make_float4(0.f, 0.f, 0.f, 1.f)) :
+		m_0(_a),
+		m_1(_b),
+		m_2(_c),
+		m_3(_d)
+	{}
+
+	float4 m_0;
+	float4 m_1;
+	float4 m_2;
+	float4 m_3;
+} mat4;
+
+// Mat4
+inline __device__ float4 operator*(const mat4 &_a, const float4 &_b)
+{
+	return make_float4(_a.m_0.x * _b.x + _a.m_1.x * _b.y + _a.m_2.x * _b.z + _a.m_3.x * _b.w,
+										 _a.m_0.y * _b.x + _a.m_1.y * _b.y + _a.m_2.y * _b.z + _a.m_3.y * _b.w,
+										 _a.m_0.z * _b.x + _a.m_1.z * _b.y + _a.m_2.z * _b.z + _a.m_3.z * _b.w,
+										 _a.m_0.w * _b.x + _a.m_1.w * _b.y + _a.m_2.w * _b.z + _a.m_3.w * _b.w);
+}
+
 // Float 4
 inline __device__ float4 operator+(const float4 &_a, const float4 &_b)
 {

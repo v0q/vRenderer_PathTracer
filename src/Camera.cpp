@@ -4,7 +4,7 @@
 constexpr float kDegInRad = M_PI/180.f;
 
 Camera::Camera() :
-	m_loc(ngl::Vec3(0.f, 0.f, 100.f)),
+	m_loc(ngl::Vec3(0.f, 0.f, 50.f)),
 	m_upV(ngl::Vec3(0.f, 1.f, 0.f)),
 	m_lookAt(ngl::Vec3(0.f, 0.f, -1.f)),
   m_fov(75.f),

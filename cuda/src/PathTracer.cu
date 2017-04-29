@@ -67,7 +67,13 @@ __device__ __inline__ void swap(int &_a, int &_b)
 	_b = tmp;
 }
 
-__device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4 *_normals, float4 *_bvhData, float2 *_uvs, vHitData *_hitData)
+__device__ inline bool intersectScene(const Ray *_ray,
+																			float4 *_vertices,
+																			float4 *_normals,
+																			float4 *_tangents,
+																			float4 *_bvhData,
+																			float2 *_uvs,
+																			vHitData *_hitData)
 {
 	/* initialise t to a very large number,
 	so t will be guaranteed to be smaller
@@ -90,6 +96,7 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 			_hitData->m_color = sphere.m_col;
 			_hitData->m_emission = sphere.m_emission;
 			_hitData->m_hitType = (int)sphere.m_refl;
+			_hitData->m_specularColor = make_float4(0.f, 0.f, 0.f, 0.f);
 		}
 	}
 
@@ -201,11 +208,8 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 				{
 					t = intersection.x;
 					_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-					// UVS: (1 - u - v) * t0 + u * t1 + v * t2
-//					_hitData->m_color = (1.f - intersection.y - intersection.z) * make_float4(_uvs[triAddr].x, _uvs[triAddr].y, 0.f, 0.f) +
-//															intersection.y * make_float4(_uvs[triAddr + 1].x, _uvs[triAddr + 1].y, 0.f, 0.f) +
-//															intersection.z * make_float4(_uvs[triAddr + 2].x, _uvs[triAddr + 2].y, 0.f, 0.f);
 
+					// UVS: (1 - u - v) * t0 + u * t1 + v * t2
 					float2 uv = (1.f - intersection.y - intersection.z) * _uvs[triAddr] +
 											intersection.y * _uvs[triAddr + 1] +
 											intersection.z * _uvs[triAddr + 2];
@@ -219,7 +223,7 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 					}
 					else
 					{
-						_hitData->m_color = make_float4(0.9f, 0.3f, 0.f, 0.0f);
+						_hitData->m_color = make_float4(1.f, 1.f, 1.f, 0.0f);
 					}
 
 					if(kHasNormalMap)
@@ -228,24 +232,44 @@ __device__ inline bool intersectScene(const Ray *_ray, float4 *_vertices, float4
 						int y = kNormalDim.y * uv.y;
 						int addr = clamp(x + y*kNormalDim.x, 0, kNormalDim.x*kNormalDim.y - 1);
 						// Normal map to normals
-						float4 normalCS = normalize(cross(vert0 - vert1, vert0 - vert2)) + _hitData->m_hitPoint;
-						float4 tangentCS = cross(make_float4(0.f, 1.f, 0.f, 0.f), normal) + _hitData->m_hitPoint;
-						float4 bitangentCS = cross(normal, tangent) + _hitData->m_hitPoint;
+						float4 normal = normalize((1.f - intersection.y - intersection.z) * _normals[triAddr] +
+																			intersection.y * _normals[triAddr + 1] +
+																			intersection.z * _normals[triAddr + 2]);
+						normal.w = 0.f;
+						float4 tangent = normalize((1.f - intersection.y - intersection.z) * _tangents[triAddr] +
+																			 intersection.y * _tangents[triAddr + 1] +
+																			 intersection.z * _tangents[triAddr + 2]);
+						tangent.w = 0.f;
 
-//						normal = normalize(fs_in.TBN * normal);
-						_hitData->m_normal = normalize(2.f * tex1Dfetch(t_normal, addr) - make_float4(1.f, 1.f, 1.f, 0.f));
+						float4 bitangent = cross(normal, tangent);
+
+						mat4 tbn = mat4(tangent, bitangent, normal);
+
+						float4 normalMap = normalize(2.f * tex1Dfetch(t_normal, addr) - make_float4(1.f, 1.f, 1.f, 0.f));
+						_hitData->m_normal = normalize(tbn * normalMap);
 					}
 					else
 					{
+						// Calculate face normal for flat shading
 						_hitData->m_normal = normalize(cross(vert0 - vert1, vert0 - vert2));
 					}
 
-//					_hitData->m_color = tex1Dfetch(t_diffuse, t0);
-//					_hitData->m_color = tex2D(t_diffuse, uniformDist(rng), uniformDist(rng));
+
+					if(kHasSpecularMap)
+					{
+						int x = kSpecularDim.x * uv.x;
+						int y = kSpecularDim.y * uv.y;
+						int addr = clamp(x + y*kSpecularDim.x, 0, kSpecularDim.x*kSpecularDim.y - 1);
+						// Normal map to normals
+						_hitData->m_specularColor = tex1Dfetch(t_specular, addr);
+					}
+					else
+					{
+						_hitData->m_specularColor = make_float4(0.f, 0.0f, 0.0f, 0.0f);
+					}
 
 					_hitData->m_emission = make_float4(0.f, 0.0f, 0.0f, 0.0f);
 					_hitData->m_hitType = 1;
-
 				}
 			}
 			leafAddr = nodeAddr;
@@ -268,9 +292,15 @@ __device__ static unsigned int hash(unsigned int *seed0, unsigned int *seed1)
 	return *seed0**seed1;
 }
 
-//__device__ float4 trace(const Ray *_camray, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, unsigned int4 *_bvhChildrenOrTriangles, unsigned int *_seed0, unsigned int *_seed1)
-//__device__ float4 trace(curandState* randstate, const Ray *_camray, float4 *_vertices, float4 *_normals, float4 *_bvhData, float4 *_hdr)
-__device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals, float4 *_bvhData, float2 *_uvs, float4 *_hdr, unsigned int *_seed0, unsigned int *_seed1)
+__device__ float4 trace(const Ray *_camray,
+												float4 *_vertices,
+												float4 *_normals,
+												float4 *_tangents,
+												float4 *_bvhData,
+												float2 *_uvs,
+												float4 *_hdr,
+												unsigned int *_seed0,
+												unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
@@ -282,7 +312,7 @@ __device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals,
 	{
 		vHitData hitData;
 
-		if(!intersectScene(&ray, _vertices, _normals, _bvhData, _uvs, &hitData))
+		if(!intersectScene(&ray, _vertices, _normals, _tangents, _bvhData, _uvs, &hitData))
 		{
 			// Sample the HDR map, based on:
 			// http://blog.hvidtfeldts.net/index.php/2012/10/image-based-lighting/
@@ -302,16 +332,17 @@ __device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals,
 
 		if(bounces == 0)
 		{
+			// Render depth
 			float4 l = ray.m_origin - hitData.m_hitPoint;
 			depth = sqrtf(dot(l, l)) / 150.f;
 		}
 
-		/* add the colour and light contributions to the accumulated colour */
+		// Add the colour and light contributions to the accumulated colour
 		accum_color += mask * hitData.m_emission;
 
-		/* compute the surface normal and flip it if necessary to face the incoming ray */
-		float4 normal = dot(hitData.m_normal, ray.m_dir) < 0.0f ? hitData.m_normal : hitData.m_normal * (-1.0f);
+		// Next ray's origin is at the hitpoint
 		ray.m_origin = hitData.m_hitPoint;
+		float4 normal = hitData.m_normal;
 
 		if(hitData.m_hitType == 0)
 		{
@@ -325,33 +356,9 @@ __device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals,
 			thrust::default_random_engine rng(seed);
 			thrust::uniform_real_distribution<float> uniformDist(0, 1);
 
-//			/* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
-//			float rand1 = 2.0f * PI * uniformDist(rng);
-//			float rand2 = uniformDist(rng);
-//	//		float rand1 = 2.0f * PI * curand_uniform(randstate);
-//	//		float rand2 = curand_uniform(randstate);
-//			float rand2s = sqrt(rand2);
-
-//			/* create a local orthogonal coordinate frame centered at the hitpoint */
-//			float4 w = normal;
-//			float4 axis = fabs(w.x) > 0.1f ? make_float4(0.0f, 1.0f, 0.0f, 0.f) : make_float4(1.0f, 0.0f, 0.0f, 0.f);
-//			float4 u = normalize(cross(axis, w));
-//			float4 v = cross(w, u);
-
-//			/* use the coordinate frame and random numbers to compute the next ray direction */
-//			float4 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
-//			ray.m_dir = newdir;
-
-//			/* the mask colour picks up surface colours at each bounce */
-//			mask *= hitData.m_color;
-
-//			/* perform cosine-weighted importance sampling for diffuse surfaces*/
-//			mask *= dot(newdir, normal);
-//			mask *= 2;
-
 			float rouletteRandomFloat = uniformDist(rng);
-			float threshold = 0.05f;
-			float4 specularColor = make_float4(1.f, 1.f, 1.f, 0.f);  // hard-coded
+			float threshold = hitData.m_specularColor.x;
+			float4 specularColor = hitData.m_specularColor;  // hard-coded
 			bool reflectFromSurface = (rouletteRandomFloat < threshold); //computeFresnel(make_Vec3f(n.x, n.y, n.z), incident, incidentIOR, transmittedIOR, reflectionDirection, transmissionDirection).reflectionCoefficient);
 
 			float4 newdir;
@@ -396,10 +403,20 @@ __device__ float4 trace(const Ray *_camray, float4 *_vertices, float4 *_normals,
 	return accum_color;
 }
 
-//__global__ void render(cudaSurfaceObject_t _tex, float4 *_triangleData, unsigned int *_triIdxList, float2 *_bvhLimits, unsigned int4 *_bvhChildrenOrTriangles,
-//											 float4 *_colors, float4 *_cam, float4 *_dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
-__global__ void render(cudaSurfaceObject_t o_tex, cudaSurfaceObject_t o_depth, float4 *io_colors, float4 *_hdr, float4 *_vertices, float4 *_normals, float4 *_bvhData, float2 *_uvs,
-											 vCamera _cam, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__global__ void render(cudaSurfaceObject_t o_tex,
+											 cudaSurfaceObject_t o_depth,
+											 float4 *io_colors,
+											 float4 *_hdr,
+											 float4 *_vertices,
+											 float4 *_normals,
+											 float4 *_tangents,
+											 float4 *_bvhData,
+											 float2 *_uvs,
+											 vCamera _cam,
+											 unsigned int _w,
+											 unsigned int _h,
+											 unsigned int _frame,
+											 unsigned int _time)
 {
 	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -432,9 +449,7 @@ __global__ void render(cudaSurfaceObject_t o_tex, cudaSurfaceObject_t o_depth, f
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam(camera.m_origin, normalize(d));
 
-//			_colors[ind] += trace(&randState, &newcam, _vertices, _normals, _bvhData, _hdr) * kInvSamps;
-
-			float4 result = trace(&newcam, _vertices, _normals, _bvhData, _uvs, _hdr, &s1, &s2);
+			float4 result = trace(&newcam, _vertices, _normals, _tangents, _bvhData, _uvs, _hdr, &s1, &s2);
 
 			unsigned char depth = (unsigned char)((1.f - result.w) * 255);
 			surf2Dwrite(make_uchar4(depth, depth, depth, 0xff), o_depth, x*sizeof(uchar4), y);
@@ -453,15 +468,26 @@ __global__ void render(cudaSurfaceObject_t o_tex, cudaSurfaceObject_t o_depth, f
 	}
 }
 
-void cu_runRenderKernel(// Buffers
-												cudaSurfaceObject_t o_texture, cudaSurfaceObject_t o_depth, float4 *_hdr, float4 *_vertices, float4 *_normals, float4 *_bvhData, float2 *_uvs,
-												float4 *io_colorArr, vCamera _cam, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+void cu_runRenderKernel(cudaSurfaceObject_t o_texture,
+												cudaSurfaceObject_t o_depth,
+												float4 *_hdr,
+												float4 *_vertices,
+												float4 *_normals,
+												float4 *_tangents,
+												float4 *_bvhData,
+												float2 *_uvs,
+												float4 *io_colorArr,
+												vCamera _cam,
+												unsigned int _w,
+												unsigned int _h,
+												unsigned int _frame,
+												unsigned int _time)
 {
 	dim3 dimBlock(16, 16);
 	dim3 dimGrid((_w / dimBlock.x),
 							 (_h / dimBlock.y));
 
-	render<<<dimGrid, dimBlock>>>(o_texture, o_depth, io_colorArr, _hdr, _vertices, _normals, _bvhData, _uvs, _cam, _w, _h, _frame, _time);
+	render<<<dimGrid, dimBlock>>>(o_texture, o_depth, io_colorArr, _hdr, _vertices, _normals, _tangents, _bvhData, _uvs, _cam, _w, _h, _frame, _time);
 }
 
 void cu_bindTexture(const float4 *_deviceTexture, const unsigned int _w, const unsigned int _h, const vTextureType &_type)
@@ -476,33 +502,48 @@ void cu_bindTexture(const float4 *_deviceTexture, const unsigned int _w, const u
 	{
 		case DIFFUSE:
 		{
-			cudaMemcpyToSymbol(kDiffuseDim, &dim, sizeof(uint2));
 			cudaMemcpyFromSymbol(&textureLoaded, kHasDiffuseMap, sizeof(bool));
-			if(!textureLoaded)
+			if(textureLoaded)
 			{
-				cudaBindTexture(NULL, &t_diffuse, _deviceTexture, &channelDesc, _w * _h * sizeof(float4));
+				cudaUnbindTexture(t_diffuse);
+			}
+			else
+			{
 				cudaMemcpyToSymbol(kHasDiffuseMap, &dummyBool, sizeof(bool));
 			}
+
+			cudaMemcpyToSymbol(kDiffuseDim, &dim, sizeof(uint2));
+			cudaBindTexture(NULL, &t_diffuse, _deviceTexture, &channelDesc, _w * _h * sizeof(float4));
 		} break;
 		case NORMAL:
 		{
-			cudaMemcpyToSymbol(kNormalDim, &dim, sizeof(uint2));
 			cudaMemcpyFromSymbol(&textureLoaded, kHasNormalMap, sizeof(bool));
-			if(!textureLoaded)
+			if(textureLoaded)
 			{
-				cudaBindTexture(NULL, &t_normal, _deviceTexture, &channelDesc, _w * _h * sizeof(float4));
+				cudaUnbindTexture(t_normal);
+			}
+			else
+			{
 				cudaMemcpyToSymbol(kHasNormalMap, &dummyBool, sizeof(bool));
 			}
+
+			cudaMemcpyToSymbol(kNormalDim, &dim, sizeof(uint2));
+			cudaBindTexture(NULL, &t_normal, _deviceTexture, &channelDesc, _w * _h * sizeof(float4));
 		} break;
 		case SPECULAR:
 		{
-			cudaMemcpyToSymbol(kSpecularDim, &dim, sizeof(uint2));
 			cudaMemcpyFromSymbol(&textureLoaded, kHasSpecularMap, sizeof(bool));
-			if(!textureLoaded)
+			if(textureLoaded)
 			{
-				cudaBindTexture(NULL, &t_specular, _deviceTexture, &channelDesc, _w * _h * sizeof(float4));
+				cudaUnbindTexture(t_specular);
+			}
+			else
+			{
 				cudaMemcpyToSymbol(kHasSpecularMap, &dummyBool, sizeof(bool));
 			}
+
+			cudaMemcpyToSymbol(kSpecularDim, &dim, sizeof(uint2));
+			cudaBindTexture(NULL, &t_specular, _deviceTexture, &channelDesc, _w * _h * sizeof(float4));
 		} break;
 		default: break;
 	}

@@ -5,6 +5,7 @@ uniform sampler2D u_ptDepth;
 uniform int u_channel;
 
 in vec2 o_FragCoord;
+
 out vec4 o_FragColor;
 
 void main()

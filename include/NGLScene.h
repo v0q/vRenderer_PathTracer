@@ -50,7 +50,8 @@ class NGLScene : public QOpenGLWidget
     //----------------------------------------------------------------------------------------------------------------------
     void paintGL();
 
-		void changeRenderChannel() { m_renderChannel = (m_renderChannel + 1)%2; std::cout << m_renderChannel << "\n"; }
+		void changeRenderChannel() { m_renderChannel ^= 1; }
+		void toggleFXAA() { m_fxaaEnabled ^= 1; }
 
 private:
     //----------------------------------------------------------------------------------------------------------------------
@@ -96,6 +97,7 @@ private:
     std::unique_ptr<vRenderer> m_renderer;
 		Camera *m_virtualCamera;
 
+		int m_fxaaEnabled;
 		int m_renderChannel;
 		float m_yaw;
 		float m_pitch;
@@ -123,6 +125,7 @@ private:
 
 public slots:
 		void loadMesh();
+		void loadHDR();
 		void loadDiffuse() { loadTexture(0); }
 		void loadNormal() { loadTexture(1); }
 		void loadSpecular() { loadTexture(2); }
@@ -130,7 +133,7 @@ public slots:
 
 signals:
     void meshLoaded(const QString &);
-		void textureLoaded(const QString &);
+		void textureLoaded(const QString &, const unsigned int &);
 };
 
 #endif
