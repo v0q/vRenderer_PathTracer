@@ -5,6 +5,12 @@
 __constant float PI = 3.14159265359f;
 __constant float epsilon = 0.0003f;
 
+// Prototypes
+float intersectSphere(const Sphere *_sphere, const Ray *_ray);
+float4 intersectTriangle(const float4 _v1, const float4 _v2, const float4 _v3, const Ray *_ray);
+inline bool intersectNearAndFar(const float2 _ray, const float2 _limits, float *_tNear, float *_tFar);
+bool intersectCFBVH(const Ray *_ray, const float3 _bottom, const float3 _top, float *_tNear, float *_tFar);
+
 float intersectSphere(const Sphere *_sphere, const Ray *_ray)
 {
   float4 rayToCenter = _sphere->m_pos - _ray->m_origin;

@@ -33,8 +33,7 @@ void vRendererCuda::init(const unsigned int &_w, const unsigned int &_h)
 
 	validateCuda(cudaMalloc(&m_vertices, 1), "Init vertex device pointer");
 	validateCuda(cudaMalloc(&m_normals, 1), "Init normals device pointer");
-	validateCuda(cudaMalloc(&m_bvhData, 1), "Init BVH node device pointer");
-	validateCuda(cudaMalloc(&m_triIdxList, 1), "Init triangle index device pointer");
+  validateCuda(cudaMalloc(&m_bvhData, 1), "Init BVH node device pointer");
 
 //	validateCuda(cudaMemcpy(m_camera, &cam, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera origin buffer");
 //	validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera direction buffer");
@@ -157,9 +156,7 @@ void vRendererCuda::cleanUp()
 		if(m_tangents)
 			validateCuda(cudaFree(m_tangents), "Clean up tangent buffer");
 		if(m_normals)
-			validateCuda(cudaFree(m_normals), "Clean up normals buffer");
-		if(m_triIdxList)
-			validateCuda(cudaFree(m_triIdxList), "Clean up triangle index buffer");
+      validateCuda(cudaFree(m_normals), "Clean up normals buffer");
 		if(m_bvhData)
 			validateCuda(cudaFree(m_bvhData), "Clean up BVH node buffer");
 		if(m_hdr)
@@ -182,8 +179,7 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	std::vector<float4> verts;
 	std::vector<float4> normals;
 	std::vector<float4> tangents;
-	std::vector<float2> uvs;
-	std::vector<unsigned int> triIndices;
+  std::vector<float2> uvs;
 
 	bvhData.resize(4);
 
@@ -233,8 +229,7 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 						verts.push_back(make_float4(vert.m_x, vert.m_y, vert.m_z, 0.f));
 						tangents.push_back(make_float4(tangent.m_x, tangent.m_y, tangent.m_z, 0.f));
 						normals.push_back(make_float4(norm.m_x, norm.m_y, norm.m_z, 0.f));
-					}
-					triIndices.push_back(triInd);
+          }
 				}
 				// Terminate triangles, doing this for normals and uvs as well to keep the indices matching
 				verts.push_back(make_float4(intAsFloat(0x80000000), 0, 0, 0));
@@ -266,14 +261,10 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	validateCuda(cudaMemcpy(m_normals, &normals[0], normals.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy normal data to gpu");
 
 	validateCuda(cudaMalloc(&m_bvhData, bvhData.size()*sizeof(float4)), "Malloc BVH node device pointer");
-	validateCuda(cudaMemcpy(m_bvhData, &bvhData[0], bvhData.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy bvh node data to gpu");
-
-	validateCuda(cudaMalloc(&m_triIdxList, triIndices.size()*sizeof(unsigned int)), "Malloc triangle index device pointer");
-	validateCuda(cudaMemcpy(m_triIdxList, &triIndices[0], triIndices.size()*sizeof(unsigned int), cudaMemcpyHostToDevice), "Copy triangle indices to gpu");
+  validateCuda(cudaMemcpy(m_bvhData, &bvhData[0], bvhData.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy bvh node data to gpu");
 
 	m_vertCount = verts.size();
-	m_bvhNodeCount = bvhData.size();
-	m_triIdxCount = triIndices.size();
+  m_bvhNodeCount = bvhData.size();
 }
 
 void vRendererCuda::loadHDR(const Imf::Rgba *_colours, const unsigned int &_w, const unsigned int &_h)

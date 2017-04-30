@@ -51,7 +51,7 @@ class NGLScene : public QOpenGLWidget
     void paintGL();
 
 		void changeRenderChannel() { m_renderChannel ^= 1; }
-		void toggleFXAA() { m_fxaaEnabled ^= 1; }
+    void toggleFXAA() { m_fxaaEnabled ^= 1; std::cout << "FXAA: " << m_fxaaEnabled << "\n"; }
 
 private:
     //----------------------------------------------------------------------------------------------------------------------

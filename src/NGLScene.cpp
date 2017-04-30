@@ -31,8 +31,8 @@
 NGLScene::NGLScene(QWidget *_parent) :
   QOpenGLWidget(_parent),
 	m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f)),
+  m_fxaaEnabled(0),
 	m_renderChannel(0),
-	m_fxaaEnabled(0),
 	m_yaw(0.f),
 	m_pitch(0.f)
 {
@@ -200,10 +200,9 @@ void NGLScene::initializeGL()
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/happy_buddha.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/matt.obj"));
-	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_mask.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_mask.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_head.obj"));
-
-
+  m_renderer->initMesh(vMeshLoader::loadMesh("models/sebastian_head.obj"));
 
 //	HDRLoaderResult result;
 //	if(!HDRLoader::load("hdr/Arches_E_PineTree_3k.hdr", result))
@@ -217,7 +216,8 @@ void NGLScene::initializeGL()
 	Imf::Rgba *pixelBuffer;
 	try
 	{
-		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
+//		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
+    Imf::RgbaInputFile in("hdr/Topanga_Forest_B_3k.exr");
 //		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
 		Imath::Box2i win = in.dataWindow();
 

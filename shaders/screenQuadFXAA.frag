@@ -2,7 +2,7 @@
 
 #define FXAA_PC 1
 #define FXAA_GLSL_130 1
-#define FXAA_QUALITY__PRESET 15
+#define FXAA_QUALITY__PRESET 39
 #define FXAA_GREEN_AS_LUMA 1
 #define N 0.5f
 #define FXAA_QUALITY__SUBPIX 0.75f
@@ -2099,16 +2099,16 @@ uniform vec2 u_invScreenDim;
 uniform int u_channel;
 
 in vec4 o_fxaaConsolePosPos;
-in vec2 o_fxaaPos;
 in vec2 o_FragCoord;
 
 out vec4 o_FragColor;
 
 void main()
 {
+  vec2 uv = o_FragCoord;
 	// Documentation for this can be found in screenQuadFXAA.h
 	o_FragColor = FxaaPixelShader(
-				o_fxaaPos,
+        o_FragCoord,
 				o_fxaaConsolePosPos,
 				u_ptResult,
 				u_ptResult,
@@ -2124,5 +2124,5 @@ void main()
 				FXAA_CONSOLE__EDGE_THRESHOLD,
 				FXAA_CONSOLE__EDGE_THRESHOLD_MIN,
 				vec4(0.f, 0.f, 0.f, 0.f)
-		);
+    );
 }

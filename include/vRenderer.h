@@ -16,7 +16,7 @@ public:
 
   virtual void init(const unsigned int &_w = 0, const unsigned int &_h = 0) = 0;
   virtual void registerTextureBuffer(GLuint &_texture) = 0;
-	virtual void registerDepthBuffer(GLuint &_depthTexture) = 0;
+  virtual void registerDepthBuffer(GLuint &_depthTexture) = 0;
   virtual void render() = 0;
   virtual void cleanUp() = 0;
 	virtual void updateCamera() = 0;

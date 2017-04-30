@@ -2,17 +2,13 @@
 #include "cl/include/RayIntersection.h"
 #include "cl/include/Utilities.h"
 
-#define BVH_MAX_STACK_SIZE 32
 __constant float invGamma = 1.f/2.2f;
+__constant float invSamps = 1.f/2.f;
 __constant unsigned int samps = 2;
-__constant float invSamps = 1.f/2;
 
 __constant Sphere spheres[] = {
-//	{ 1e5f, { 50.0f, 1e5f - 40.f, 81.6f, 0.0f },							{ 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
-//	{ 16.5f, { 27.0f, 16.5f, 47.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 1
-//	{ 16.5f, { 73.0f, 16.5f, 78.0f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f } }, // small sphere 2
-//  { 1e5f,   { 0.f, 0.f, 0.f, 0.0f },    { 0.8f, 0.8, 0.8, 0.0f }, { 0.f, 0.f, 0.f, 0.f } }, //Botm
-//  { 150.0f, { 50.0f, 300.6f - .77f, 81.6f, 0.0f },  { 2.8f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
+  { 3.5f, { 15.f, 0.f, 15.f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f }, SPEC }, // small sphere 1
+  { 3.5f, { 25.f, 0.f, 15.f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.4f, 0.4f, 0.4f, 0.0f }, DIFF } // small sphere 2
 };
 
 Ray createRay(float4 _o, float4 _d)
@@ -23,7 +19,49 @@ Ray createRay(float4 _o, float4 _d)
 	return ray;
 }
 
-bool intersectScene(const Ray *_ray, __global const float4 *_vertices, __global const float4 *_normals, __global const float4 *_bvhNodes, vHitData *_hitData)
+unsigned int floatAsInt(const float _a)
+{
+  union
+  {
+    float a;
+    unsigned int b;
+  } c;
+  c.a = _a;
+
+  return c.b;
+}
+
+static float get_random(unsigned int *_seed0, unsigned int *_seed1)
+{
+  /* hash the seeds using bitwise AND operations and bitshifts */
+  *_seed0 = 36969 * ((*_seed0) & 65535) + ((*_seed0) >> 16);
+  *_seed1 = 18000 * ((*_seed1) & 65535) + ((*_seed1) >> 16);
+
+  unsigned int ires = ((*_seed0) << 16) + (*_seed1);
+
+  /* use union struct to convert int to float */
+  union {
+    float f;
+    unsigned int ui;
+  } res;
+
+  res.ui = (ires & 0x007fffff) | 0x40000000;  /* bitwise AND, bitwise OR */
+  return (res.f - 2.0f) / 2.0f;
+}
+
+bool intersectScene(const Ray *_ray,
+                    __global const float4 *_vertices,
+                    __global const float4 *_normals,
+                    __global const float4 *_tangents,
+                    __global const float4 *_bvhNodes,
+                    __global const float2 *_uvs,
+                    __read_only image2d_t _diffuse,
+                    __read_only image2d_t _normal,
+                    __read_only image2d_t _specular,
+                    bool _hasDiffuseMap,
+                    bool _hasNormalMap,
+                    bool _hasSpecularMap,
+                    vHitData *_hitData)
 {
 	/* initialise t to a very large number,
 	so t will be guaranteed to be smaller
@@ -45,20 +83,8 @@ bool intersectScene(const Ray *_ray, __global const float4 *_vertices, __global 
       _hitData->m_normal = normalize(sphere.m_pos - _hitData->m_hitPoint);
 			_hitData->m_color = sphere.m_col;
       _hitData->m_emission = sphere.m_emission;
-
-//      float longlatX = atan2(_ray->m_dir.x, _ray->m_dir.z); // Y is up, swap x for y and z for x
-//      longlatX = longlatX < 0.f ? longlatX + 2*PI : longlatX;  // wrap around full circle if negative
-//      float longlatY = acos(_ray->m_dir.y); // add RotateMap at some point, see Fragmentarium
-
-//      // map theta and phi to u and v texturecoordinates in [0,1] x [0,1] range
-//      float offsetY = 0.5f;
-//      float u = longlatX / 2*PI; // +offsetY;
-//      float v = longlatY / PI;
-      float u = atan2(_hitData->m_normal.x, _hitData->m_normal.z) / (2*PI) + 0.5;
-      float v = _hitData->m_normal.y * 0.5 + 0.5;
-
-      _hitData->m_uv = (float2)(u, v);
-      _hitData->m_type = 0;
+      _hitData->m_hitType = (int)sphere.m_refl;
+      _hitData->m_specularColor = make_float4(0.f, 0.f, 0.f, 0.f);
 		}
   }
 
@@ -83,7 +109,7 @@ bool intersectScene(const Ray *_ray, __global const float4 *_vertices, __global 
       const float4 nz = _bvhNodes[nodeAddr + 2]; // node 0 & 1 bounds z
       float4 tmp = _bvhNodes[nodeAddr + 3]; // Child indices in x & y
 
-			int2 indices = (int2)(floatAsInt(tmp.x), floatAsInt(tmp.y));
+      uint2 indices = (uint2)(floatAsInt(tmp.x), floatAsInt(tmp.y));
 
 			if(indices.y == 0x80000000) {
 				nodeAddr = *(int*)stackPtr;
@@ -140,15 +166,73 @@ bool intersectScene(const Ray *_ray, __global const float4 *_vertices, __global 
         float4 vert1 = _vertices[triAddr + 1];
         float4 vert2 = _vertices[triAddr + 2];
 
-				float dist = intersectTriangle(vert0, vert1, vert2, _ray);
-				if(dist != 0.0f && dist < t)
+        float4 intersection = intersectTriangle(vert0, vert1, vert2, _ray);
+        if(intersection.x != 0.0f && intersection.x < t)
 				{
-					t = dist;
+          t = intersection.x;
 					_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
           _hitData->m_normal = _normals[triAddr];
-          _hitData->m_color = (float4)(1.0f, 1.0f, 1.0f, 0.0f);
+
+          float2 uv = (1.f - intersection.y - intersection.z) * _uvs[triAddr] +
+                      intersection.y * _uvs[triAddr + 1] +
+                      intersection.z * _uvs[triAddr + 2];
+
+          if(_hasDiffuseMap)
+          {
+            int x = get_image_width(_diffuse) * uv.x;
+            int y = get_image_height(_diffuse) * uv.y;
+            _hitData->m_color = read_imagef(_diffuse, (int2)(x, y));
+          }
+          else
+          {
+            _hitData->m_color = (float4)(1.0f, 1.0f, 1.0f, 0.0f);
+          }
+
+          if(_hasNormalMap)
+          {
+            int x = get_image_width(_normal) * uv.x;
+            int y = get_image_height(_normal) * uv.y;
+            // Normal map to normals
+            float4 normal = normalize((1.f - intersection.y - intersection.z) * _normals[triAddr] +
+                                      intersection.y * _normals[triAddr + 1] +
+                                      intersection.z * _normals[triAddr + 2]);
+            normal.w = 0.f;
+            float4 tangent = normalize((1.f - intersection.y - intersection.z) * _tangents[triAddr] +
+                                       intersection.y * _tangents[triAddr + 1] +
+                                       intersection.z * _tangents[triAddr + 2]);
+            tangent.w = 0.f;
+
+            float4 bitangent = cross(normal, tangent);
+
+            float4 normalMap = normalize(2.f * read_imagef(_normal, (int2)(x, y)) - (float4)(1.f, 1.f, 1.f, 0.f));
+
+            // Matrix multiplication TBN (tangent, bitangent, normal) * normal map
+            float4 worldSpaceNormal = (float4)(tangent.x * normalMap.x + bitangent.x * normalMap.y + normal.x * normalMap.z,
+                                             tangent.y * normalMap.x + bitangent.y * normalMap.y + normal.y * normalMap.z,
+                                             tangent.z * normalMap.x + bitangent.z * normalMap.y + normal.z * normalMap.z,
+                                             tangent.w * normalMap.x + bitangent.w * normalMap.y + normal.w * normalMap.z + 1.f * normalMap.w);
+            _hitData->m_normal = normalize(worldSpaceNormal);
+          }
+          else
+          {
+            // Calculate face normal for flat shading
+            _hitData->m_normal = normalize(cross(vert0 - vert1, vert0 - vert2));
+          }
+
+
+          if(_hasSpecularMap)
+          {
+            int x = get_image_width(_specular) * uv.x;
+            int y = get_image_height(_specular) * uv.y;
+            _hitData->m_specularColor = read_imagef(_specular, (int2)(x, y));
+          }
+          else
+          {
+            _hitData->m_specularColor = make_float4(0.f, 0.0f, 0.0f, 0.0f);
+          }
+
 					_hitData->m_emission = (float4)(0.f, 0.0f, 0.0f, 0.0f);
-          _hitData->m_type = 1;
+          _hitData->m_hitType = 1;
 				}
 			}
 
@@ -164,25 +248,21 @@ bool intersectScene(const Ray *_ray, __global const float4 *_vertices, __global 
 	return t < inf; /* true when ray interesects the scene */
 }
 
-static float get_random(unsigned int *_seed0, unsigned int *_seed1)
-{
-	/* hash the seeds using bitwise AND operations and bitshifts */
-	*_seed0 = 36969 * ((*_seed0) & 65535) + ((*_seed0) >> 16);
-	*_seed1 = 18000 * ((*_seed1) & 65535) + ((*_seed1) >> 16);
-
-	unsigned int ires = ((*_seed0) << 16) + (*_seed1);
-
-	/* use union struct to convert int to float */
-	union {
-		float f;
-		unsigned int ui;
-	} res;
-
-	res.ui = (ires & 0x007fffff) | 0x40000000;  /* bitwise AND, bitwise OR */
-	return (res.f - 2.0f) / 2.0f;
-}
-
-float4 trace(const Ray* _camray, __global const float4 *_vertices, __global const float4 *_normals, __global const float4 *_bvhNodes, __read_only image2d_t _hdr, unsigned int *_seed0, unsigned int *_seed1)
+float4 trace(const Ray* _camray,
+             __global const float4 *_vertices,
+             __global const float4 *_normals,
+             __global const float4 *_tangents,
+             __global const float4 *_bvhNodes,
+             __global const float2 *_uvs,
+             __read_only image2d_t _hdr,
+             __read_only image2d_t _diffuse,
+             __read_only image2d_t _normal,
+             __read_only image2d_t _specular,
+             bool _hasDiffuseMap,
+             bool _hasNormalMap,
+             bool _hasSpecularMap,
+             unsigned int *_seed0,
+             unsigned int *_seed1)
 {
 	Ray ray = *_camray;
 
@@ -194,7 +274,7 @@ float4 trace(const Ray* _camray, __global const float4 *_vertices, __global cons
 		vHitData hitData;
 
 		/* if ray misses scene, return background colour */
-		if(!intersectScene(&ray, _vertices, _normals, _bvhNodes, &hitData))
+    if(!intersectScene(&ray, _vertices, _normals, _tangents, _bvhNodes, _uvs, _diffuse, _normal, _specular, _hasDiffuseMap, _hasNormalMap, _hasSpecularMap, &hitData))
 		{
 			float2 longlat = (float2)(atan2(ray.m_dir.x, ray.m_dir.z), acos(ray.m_dir.y));
 			longlat.x = longlat.x < 0 ? longlat.x + 2.0 * PI : longlat.x;
@@ -204,56 +284,89 @@ float4 trace(const Ray* _camray, __global const float4 *_vertices, __global cons
 			int2 uv = (int2)(get_image_width(_hdr) * longlat.x, get_image_height(_hdr) * longlat.y);
 
 			accum_color += (mask * 2.0f * read_imagef(_hdr, uv));
-			return accum_color;
-//			return (float4)(0.f, 0.f, 0.f, 0.f);
-		}
+      return accum_color;
+    }
 
-		/* compute the surface normal and flip it if necessary to face the incoming ray */
-		float4 normal_facing = dot(hitData.m_normal, ray.m_dir) < 0.0f ? hitData.m_normal : hitData.m_normal * (-1.0f);
+    // Add the colour and light contributions to the accumulated colour
+    accum_color += mask * hitData.m_emission;
 
-    /* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
-    float rand1 = 2.0f * PI * get_random(_seed0, _seed1);
-    float rand2 = get_random(_seed0, _seed1);
-    float rand2s = sqrt(rand2);
+    // Next ray's origin is at the hitpoint
+    ray.m_origin = hitData.m_hitPoint;
+    float4 normal = hitData.m_normal;
 
-    /* create a local orthogonal coordinate frame centered at the hitpoint */
-    float4 w = normal_facing;
-    float4 axis = fabs(w.x) > 0.1f ? (float4)(0.0f, 1.0f, 0.0f, 0.f) : (float4)(1.0f, 0.0f, 0.0f, 0.f);
-    float4 u = normalize(cross(axis, w));
-    float4 v = cross(w, u);
+    if(hitData.m_hitType == 0)
+    {
+      ray.m_dir = ray.m_dir - normal * 2.f * dot(normal, ray.m_dir);
+      /* add a very small offset to the hitpoint to prevent self intersection */
+      ray.m_origin += normal * 0.05f;
+    }
+    else if(hitData.m_hitType == 1)
+    {
+      float rouletteRandomFloat = get_random(_seed0, _seed1);
+      float threshold = hitData.m_specularColor.x;
+      float4 specularColor = hitData.m_specularColor;  // hard-coded
+      bool reflectFromSurface = (rouletteRandomFloat < threshold); //computeFresnel(make_Vec3f(n.x, n.y, n.z), incident, incidentIOR, transmittedIOR, reflectionDirection, transmissionDirection).reflectionCoefficient);
 
-    /* use the coordinte frame and random numbers to compute the next ray direction */
-    float4 newdir = normalize(u * cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1.0f - rand2));
+      float4 newdir;
+      float4 w = normal;
+      float4 axis = fabs(w.x) > 0.1f ? (float4)(0.0f, 1.0f, 0.0f, 0.f) : (float4)(1.0f, 0.0f, 0.0f, 0.f);
 
-    /* add a very small offset to the hitpoint to prevent self intersection */
-    ray.m_origin = hitData.m_hitPoint + normal_facing * 0.05f;
-    ray.m_dir = newdir;
+      if (reflectFromSurface)
+      { // calculate perfectly specular reflection
 
-    /* add the colour and light contributions to the accumulated colour */
-//    if(hitData.m_type == 0)
-//    {
-//    }
-//    else
-//    {
-      accum_color += mask * hitData.m_emission;
-      mask *= hitData.m_color;
-//    }
+        // Ray reflected from the surface. Trace a ray in the reflection direction.
+        // TODO: Use Russian roulette instead of simple multipliers!
+        // (Selecting between diffuse sample and no sample (absorption) in this case.)
 
-    /* the mask colour picks up surface colours at each bounce */
+        mask *= specularColor;
+        newdir = normalize(ray.m_dir - normal * 2.f * dot(normal, ray.m_dir));
+      }
+      else
+      {  // calculate perfectly diffuse reflection
+        /* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
+        float rand1 = 2.0f * PI * get_random(_seed0, _seed1);
+        float rand2 = get_random(_seed0, _seed1);
+        float rand2s = sqrt(rand2);
 
-    /* perform cosine-weighted importance sampling for diffuse surfaces*/
-    mask *= dot(newdir, normal_facing);
-    mask *= 2;
+        /* create a local orthogonal coordinate frame centered at the hitpoint */
+        float4 u = normalize(cross(axis, w));
+        float4 v = cross(w, u);
+
+        // compute cosine weighted random ray direction on hemisphere
+        newdir = normalize(u*cos(rand1)*rand2s + v*sin(rand1)*rand2s + w*sqrt(1 - rand2));
+
+        // multiply mask with colour of object
+        mask *= hitData.m_color;
+      }
+
+      // offset origin next path segment to prevent self intersection
+      ray.m_origin += normal * 0.001f;  // // scene size dependent
+      ray.m_dir = newdir;
+    }
 	}
 
 	return accum_color;
 }
 
-
-//__kernel void render(__write_only image2d_t _texture, __global const float4 *_vertices, __global const float4 *_normals, __global const float4 *_bvhNodes, __global const unsigned int *_triIdxList,
-//                     __global float4 *_colors, __read_only image2d_t _hdr, float4 _cam, float4 _dir, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
-__kernel void render(__write_only image2d_t _texture, __global const float4 *_vertices, __global const float4 *_normals, __global const float4 *_bvhNodes, __global const unsigned int *_triIdxList,
-                     __global float4 *_colors, __read_only image2d_t _hdr, vCamera _cam, unsigned int _w, unsigned int _h, unsigned int _frame, unsigned int _time)
+__kernel void render(__write_only image2d_t _texture,
+                     __global const float4 *_vertices,
+                     __global const float4 *_normals,
+                     __global const float4 *_tangents,
+                     __global const float4 *_bvhNodes,
+                     __global const float2 *_uvs,
+                     __global float4 *_colors,
+                     __read_only image2d_t _hdr,
+                     __read_only image2d_t _diffuse,
+                     __read_only image2d_t _normal,
+                     __read_only image2d_t _specular,
+                     unsigned int _hasDiffuseMap,
+                     unsigned int _hasNormalMap,
+                     unsigned int _hasSpecularMap,
+                     vCamera _cam,
+                     unsigned int _w,
+                     unsigned int _h,
+                     unsigned int _frame,
+                     unsigned int _time)
 {
 	const unsigned int x = get_global_id(0);
 	const unsigned int y = get_global_id(1);
@@ -288,7 +401,7 @@ __kernel void render(__write_only image2d_t _texture, __global const float4 *_ve
 			// create primary ray, add incoming radiance to pixelcolor
       Ray newcam = createRay(camera.m_origin, normalize(d));
 
-      _colors[ind] += trace(&newcam, _vertices, _normals, _bvhNodes, _hdr, &seed0, &seed1) * invSamps;
+      _colors[ind] += trace(&newcam, _vertices, _normals, _tangents, _bvhNodes, _uvs, _hdr, _diffuse, _normal, _specular, _hasDiffuseMap, _hasNormalMap, _hasSpecularMap, &seed0, &seed1) * invSamps;
 		}
 		float coef = 1.f/_frame;
 

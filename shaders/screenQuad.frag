@@ -4,13 +4,16 @@ uniform sampler2D u_ptResult;
 uniform sampler2D u_ptDepth;
 uniform int u_channel;
 
+in vec4 o_fxaaConsolePosPos;
 in vec2 o_FragCoord;
 
 out vec4 o_FragColor;
 
 void main()
 {
-  vec4 colour;
+  // Dummy to disable compiler warnings as the same vertex shader
+  // is used for both, the regular and the FXAA shaders
+  vec4 colour = o_fxaaConsolePosPos;
   if(u_channel == 0)
   {
     colour = texture(u_ptResult, o_FragCoord);

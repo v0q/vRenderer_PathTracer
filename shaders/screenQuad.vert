@@ -8,15 +8,11 @@ in vec2 a_Position;
 in vec2 a_FragCoord;
 
 out vec4 o_fxaaConsolePosPos;
-out vec2 o_fxaaPos;
 out vec2 o_FragCoord;
 
 void main()
 {
   o_FragCoord = a_FragCoord;
-
-  // {xy} = center of pixel
-  o_fxaaPos = a_FragCoord;
 
   // {xy__} = upper left of pixel
   // {__zw} = lower right of pixel
