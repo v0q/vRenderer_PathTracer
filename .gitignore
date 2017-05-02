@@ -8,6 +8,7 @@ errorlog.txt
 models/*
 hdr/*
 textures/*
+brdf/*
 
 # C++ objects and libs
 

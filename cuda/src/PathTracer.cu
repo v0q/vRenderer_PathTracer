@@ -11,9 +11,21 @@
 #include "MathHelpers.cuh"
 #include "Utilities.cuh"
 
+#define BRDF_SAMPLING_RES_THETA_H       90
+#define BRDF_SAMPLING_RES_THETA_D       90
+#define BRDF_SAMPLING_RES_PHI_D         360
+
+#define RED_SCALE (1.0/1500.0)
+#define GREEN_SCALE (1.15/1500.0)
+#define BLUE_SCALE (1.66/1500.0)
+
 __constant__ __device__ bool kHasDiffuseMap = false;
 __constant__ __device__ bool kHasNormalMap = false;
 __constant__ __device__ bool kHasSpecularMap = false;
+__constant__ __device__ bool kHasBRDF = false;
+__constant__ __device__ bool kMeshInitialised = false;
+__constant__ __device__ bool kUseBRDFSphere = false;
+
 __constant__ __device__ uint2 kDiffuseDim;
 __constant__ __device__ uint2 kNormalDim;
 __constant__ __device__ uint2 kSpecularDim;
@@ -29,7 +41,9 @@ texture<float4, 1, cudaReadModeElementType> t_diffuse;
 texture<float4, 1, cudaReadModeElementType> t_normal;
 texture<float4, 1, cudaReadModeElementType> t_specular;
 
-enum Refl_t { SPEC, DIFF };
+texture<float, 1, cudaReadModeElementType> t_brdf;
+
+enum Refl_t { SPEC, DIFF, BRDF };
 
 typedef struct Sphere {
 	float m_r;       // radius
@@ -39,26 +53,66 @@ typedef struct Sphere {
 	Refl_t m_refl;
 
 	__device__ float intersect(const Ray *_r) const
-	{ // returns distance, 0 if nohit
-		float4 op = m_pos - _r->m_origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
+	{
+		float4 op = m_pos - _r->m_origin;
 		float t;
 		float eps = 1e-4;
 		float b = dot(op, _r->m_dir);
 		float det = b*b - dot(op, op) + m_r*m_r;
 		if(det < 0)
+		{
 			return 0;
+		}
 		else
+		{
 			det = sqrtf(det);
+		}
 		return (t = b-det) > eps ? t : ((t = b+det) > eps ? t : 0.0);
 	}
 } Sphere;
 
-__constant__ Sphere spheres[] = {			//Scene: radius, position, emission, color, material
-//	{ 1e5f, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { .75f, .75f, .75f, 0.0f } }, //Botm
-	{ 3.5f, { 15.f, 0.f, 15.f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f }, SPEC }, // small sphere 1
-	{ 3.5f, { 25.f, 0.f, 15.f, 0.0f },						{ 0.0f, 0.0f, 0.0f, 0.0f }, { 0.4f, 0.4f, 0.4f, 0.0f }, DIFF } // small sphere 2
-//	{ 150.0f, { 50.0f, 300.6f - .77f, 81.6f, 0.0f },	/*{ 2.0f, 1.8f, 1.6f, 0.0f }*/{ 2.8f, 1.8f, 1.6f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f } }  // Light
+__constant__ Sphere spheres[] =
+{
+	{ 3.5f, { 15.f, 0.f, 15.f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 0.0f }, SPEC }, // Small mirror sphere
+	{ 3.5f, { 25.f, 0.f, 15.f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.8f, 0.8f, 0.8f, 0.0f }, DIFF }, // Small gray sphere
 };
+
+__constant__ Sphere brdfSphere = { 5.5f, { 0.f, 0.f, 0.f, 0.0f },{ 0.0f, 0.0f, 0.0f, 0.0f }, { 1.f, 1.f, 1.f, 0.0f }, BRDF };
+
+// Lookup phi_diff index
+__device__ int phi_diff_index(float phi_diff)
+{
+		// Because of reciprocity, the BRDF is unchanged under
+		// phi_diff -> phi_diff + M_PI
+		if (phi_diff < 0.0)
+				phi_diff += M_PI;
+
+		// In: phi_diff in [0 .. pi]
+		// Out: tmp in [0 .. 179]
+		return clamp(int(phi_diff * (1.0/PI * (BRDF_SAMPLING_RES_PHI_D / 2))), 0, BRDF_SAMPLING_RES_PHI_D / 2 - 1);
+}
+
+
+// Lookup theta_half index
+// This is a non-linear mapping!
+// In:  [0 .. pi/2]
+// Out: [0 .. 89]
+__device__ int theta_half_index(float theta_half)
+{
+		if (theta_half <= 0.0)
+				return 0;
+
+		return clamp(int(sqrtf(theta_half * (2.0/PI)) * BRDF_SAMPLING_RES_THETA_H), 0, BRDF_SAMPLING_RES_THETA_H-1);
+}
+
+
+// Lookup theta_diff index
+// In:  [0 .. pi/2]
+// Out: [0 .. 89]
+__device__ int theta_diff_index(float theta_diff)
+{
+		return clamp(int(theta_diff * (2.0/PI * BRDF_SAMPLING_RES_THETA_D)), 0, BRDF_SAMPLING_RES_THETA_D - 1);
+}
 
 __device__ __inline__ void swap(int &_a, int &_b)
 {
@@ -75,213 +129,292 @@ __device__ inline bool intersectScene(const Ray *_ray,
 																			float2 *_uvs,
 																			vHitData *_hitData)
 {
-	/* initialise t to a very large number,
-	so t will be guaranteed to be smaller
-	when a hit with the scene occurs */
+//	initialise t to a very large number,
+//	so t will be guaranteed to be smaller
+//	when a hit with the scene occurs
 
 	int n = sizeof(spheres)/sizeof(Sphere);
 	float inf = 1e20f;
 	float t = inf;
 
-//	/* check if the ray intersects each sphere in the scene */
-	for(int i = 0; i < n; i++)  {
-		/* float hitdistance = intersectSphere(&spheres[i], ray); */
-		Sphere sphere = spheres[i]; /* create local copy of sphere */
+	for(int i = 0; i < n; ++i)
+	{
+		Sphere sphere = spheres[i];
 		float dist = sphere.intersect(_ray);
-		/* keep track of the closest intersection and hitobject found so far */
-		if(dist != 0.0f && dist < t) {
+		if(dist != 0.0f && dist < t)
+		{
 			t = dist;
 			_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
 			_hitData->m_normal = normalize(_hitData->m_hitPoint - sphere.m_pos);
+
+			// Calculate the uv coordinates (not used for now)
+			float u = atan2f(_hitData->m_normal.x, _hitData
+											 ->m_normal.z) / (2.f * PI) + 0.5f;
+			float v = _hitData->m_normal.y * 0.5f + 0.5f;
+
 			_hitData->m_color = sphere.m_col;
 			_hitData->m_emission = sphere.m_emission;
 			_hitData->m_hitType = (int)sphere.m_refl;
-			_hitData->m_specularColor = make_float4(0.f, 0.f, 0.f, 0.f);
+			_hitData->m_specularColor = make_float4(1.f, 1.f, 1.f, 0.f);
+
+			float r = distance(_hitData->m_hitPoint);
+			float theta = acosf(_hitData->m_hitPoint.z / r);
+			float phi = atan2f(_hitData->m_hitPoint.y, _hitData->m_hitPoint.x);
+			_hitData->m_tangent = make_float4(sinf(theta) * cosf(phi), sinf(theta) * sin(phi), cosf(theta), 0.f);
 		}
 	}
 
-	const int EntrypointSentinel = 0x76543210;
-	int startNode = 0;
-	int traversalStack[64];
-	traversalStack[0] = EntrypointSentinel;
-
-	char* stackPtr;											// Current position in traversal stack.
-	int leafAddr;                       // First postponed leaf, non-negative if none.
-	int nodeAddr = EntrypointSentinel;  // Non-negative: current internal node, negative: second postponed leaf.
-	stackPtr = (char*)&traversalStack[0];
-	leafAddr = 0;   // No postponed leaf.
-	nodeAddr = startNode;   // Start from the root.
-
-
-	float3 invDir = make_float3(1.0f / (fabsf(_ray->m_dir.x) > epsilon ? _ray->m_dir.x : epsilon),
-															1.0f / (fabsf(_ray->m_dir.y) > epsilon ? _ray->m_dir.y : epsilon),
-															1.0f / (fabsf(_ray->m_dir.z) > epsilon ? _ray->m_dir.z : epsilon));
-	float3 od = make_float3(_ray->m_origin.x * invDir.x,
-													_ray->m_origin.y * invDir.y,
-													_ray->m_origin.z * invDir.z);
-
-	while(nodeAddr != EntrypointSentinel)
+	if(kUseBRDFSphere)
 	{
-		while((unsigned int)nodeAddr < (unsigned int)EntrypointSentinel)
+		float dist = brdfSphere.intersect(_ray);
+		if(dist != 0.0f && dist < t)
 		{
-			const float4 n0xy = _bvhData[nodeAddr + 0]; // node 0 bounds xy
-			const float4 n1xy = _bvhData[nodeAddr + 1]; // node 1 bounds xy
-			const float4 nz = _bvhData[nodeAddr + 2]; // node 0 & 1 bounds z
-			float4 tmp = _bvhData[nodeAddr + 3]; // Child indices in x & y
+			t = dist;
+			_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+			_hitData->m_normal = normalize(_hitData->m_hitPoint - brdfSphere.m_pos);
 
-			int2 indices = make_int2(__float_as_int(tmp.x), __float_as_int(tmp.y));
+			_hitData->m_color = brdfSphere.m_col;
+			_hitData->m_emission = brdfSphere.m_emission;
 
-			const float c0lox = n0xy.x * invDir.x - od.x;
-			const float c0hix = n0xy.y * invDir.x - od.x;
-			const float c0loy = n0xy.z * invDir.y - od.y;
-			const float c0hiy = n0xy.w * invDir.y - od.y;
-			const float c0loz = nz.x   * invDir.z - od.z;
-			const float c0hiz = nz.y   * invDir.z - od.z;
-			const float c1loz = nz.z   * invDir.z - od.z;
-			const float c1hiz = nz.w   * invDir.z - od.z;
-			const float c0min = spanBeginKepler(c0lox, c0hix, c0loy, c0hiy, c0loz, c0hiz, 0);
-			const float c0max = spanEndKepler(c0lox, c0hix, c0loy, c0hiy, c0loz, c0hiz, 1e20);
-			const float c1lox = n1xy.x * invDir.x - od.x;
-			const float c1hix = n1xy.y * invDir.x - od.x;
-			const float c1loy = n1xy.z * invDir.y - od.y;
-			const float c1hiy = n1xy.w * invDir.y - od.y;
-			const float c1min = spanBeginKepler(c1lox, c1hix, c1loy, c1hiy, c1loz, c1hiz, 0);
-			const float c1max = spanEndKepler(c1lox, c1hix, c1loy, c1hiy, c1loz, c1hiz, 1e20);
+			_hitData->m_hitType = (int)brdfSphere.m_refl;
+			_hitData->m_specularColor = make_float4(0.f, 0.f, 0.f, 0.f);
 
-			bool swp = (c1min < c0min);
-			bool traverseChild0 = (c0max >= c0min);
-			bool traverseChild1 = (c1max >= c1min);
-
-			if(!traverseChild0 && !traverseChild1)
-			{
-				nodeAddr = *(int*)stackPtr;
-				stackPtr -= 4;
-			}
-			else
-			{
-				nodeAddr = (traverseChild0) ? indices.x : indices.y;
-				if(traverseChild0 && traverseChild1)
-				{
-					if(swp)
-						swap(nodeAddr, indices.y);
-					stackPtr += 4;
-					*(int*)stackPtr = indices.y;
-				}
-			}
-
-			if(nodeAddr < 0 && leafAddr >= 0) // Postpone max 1
-			{
-				leafAddr = nodeAddr;
-
-				nodeAddr = *(int*)stackPtr;
-				stackPtr -= 4;
-			}
-
-			unsigned int mask;
-			asm("{\n"
-				"   .reg .pred p;               \n"
-				"setp.ge.s32        p, %1, 0;   \n"
-				"vote.ballot.b32    %0,p;       \n"
-				"}"
-				: "=r"(mask)
-				: "r"(leafAddr));
-
-//			int mask = leafAddr >= 0;
-			if(!mask)
-				break;
+			float r = distance(_hitData->m_hitPoint);
+			float theta = acosf(_hitData->m_hitPoint.z / r);
+			float phi = atan2f(_hitData->m_hitPoint.y, _hitData->m_hitPoint.x);
+			_hitData->m_tangent = make_float4(sinf(theta) * cosf(phi), sinf(theta) * sin(phi), cosf(theta), 0.f);
 		}
-		while(leafAddr < 0)
+	}
+	else if(kMeshInitialised)
+	{
+		const int EntrypointSentinel = 0x76543210;
+		int startNode = 0;
+		int traversalStack[64];
+		traversalStack[0] = EntrypointSentinel;
+
+		char* stackPtr;											// Current position in traversal stack.
+		int leafAddr;                       // First postponed leaf, non-negative if none.
+		int nodeAddr = EntrypointSentinel;  // Non-negative: current internal node, negative: second postponed leaf.
+		stackPtr = (char*)&traversalStack[0];
+		leafAddr = 0;												// No postponed leaf.
+		nodeAddr = startNode;								// Start from the root.
+
+
+		float3 invDir = make_float3(1.0f / (fabsf(_ray->m_dir.x) > epsilon ? _ray->m_dir.x : epsilon),
+																1.0f / (fabsf(_ray->m_dir.y) > epsilon ? _ray->m_dir.y : epsilon),
+																1.0f / (fabsf(_ray->m_dir.z) > epsilon ? _ray->m_dir.z : epsilon));
+		float3 od = make_float3(_ray->m_origin.x * invDir.x,
+														_ray->m_origin.y * invDir.y,
+														_ray->m_origin.z * invDir.z);
+
+		while(nodeAddr != EntrypointSentinel)
 		{
-			for(int triAddr = ~leafAddr;; triAddr += 3)
+			while((unsigned int)nodeAddr < (unsigned int)EntrypointSentinel)
 			{
-				float4 vert0 = _vertices[triAddr];
-				// Did we reach the terminating point of the triangle(s) in the leaf
-				if(__float_as_int(vert0.x) == 0x80000000)
-					break;
+				const float4 n0xy = _bvhData[nodeAddr + 0]; // node 0 bounds xy
+				const float4 n1xy = _bvhData[nodeAddr + 1]; // node 1 bounds xy
+				const float4 nz = _bvhData[nodeAddr + 2]; // node 0 & 1 bounds z
+				float4 tmp = _bvhData[nodeAddr + 3]; // Child indices in x & y
 
-				float4 vert1 = _vertices[triAddr + 1];
-				float4 vert2 = _vertices[triAddr + 2];
+				int2 indices = make_int2(__float_as_int(tmp.x), __float_as_int(tmp.y));
 
-				// Check for an intersection (and barycentric coords for uv mapping)
-				float4 intersection = intersectTriangle(vert0, vert1, vert2, _ray);
-				if(intersection.x > epsilon && intersection.x < t)
+				const float c0lox = n0xy.x * invDir.x - od.x;
+				const float c0hix = n0xy.y * invDir.x - od.x;
+				const float c0loy = n0xy.z * invDir.y - od.y;
+				const float c0hiy = n0xy.w * invDir.y - od.y;
+				const float c0loz = nz.x   * invDir.z - od.z;
+				const float c0hiz = nz.y   * invDir.z - od.z;
+				const float c1loz = nz.z   * invDir.z - od.z;
+				const float c1hiz = nz.w   * invDir.z - od.z;
+				const float c0min = spanBeginKepler(c0lox, c0hix, c0loy, c0hiy, c0loz, c0hiz, 0);
+				const float c0max = spanEndKepler(c0lox, c0hix, c0loy, c0hiy, c0loz, c0hiz, 1e20);
+				const float c1lox = n1xy.x * invDir.x - od.x;
+				const float c1hix = n1xy.y * invDir.x - od.x;
+				const float c1loy = n1xy.z * invDir.y - od.y;
+				const float c1hiy = n1xy.w * invDir.y - od.y;
+				const float c1min = spanBeginKepler(c1lox, c1hix, c1loy, c1hiy, c1loz, c1hiz, 0);
+				const float c1max = spanEndKepler(c1lox, c1hix, c1loy, c1hiy, c1loz, c1hiz, 1e20);
+
+				bool swp = (c1min < c0min);
+				bool traverseChild0 = (c0max >= c0min);
+				bool traverseChild1 = (c1max >= c1min);
+
+				if(!traverseChild0 && !traverseChild1)
 				{
-					t = intersection.x;
-					_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
-
-					// UVS: (1 - u - v) * t0 + u * t1 + v * t2
-					float2 uv = (1.f - intersection.y - intersection.z) * _uvs[triAddr] +
-											intersection.y * _uvs[triAddr + 1] +
-											intersection.z * _uvs[triAddr + 2];
-
-					if(kHasDiffuseMap)
-					{
-						int x = kDiffuseDim.x * uv.x;
-						int y = kDiffuseDim.y * uv.y;
-						int addr = clamp(x + y*kDiffuseDim.x, 0, kDiffuseDim.x*kDiffuseDim.y - 1);
-						_hitData->m_color = tex1Dfetch(t_diffuse, addr);
-					}
-					else
-					{
-						_hitData->m_color = make_float4(1.f, 1.f, 1.f, 0.0f);
-					}
-
-					if(kHasNormalMap)
-					{
-						int x = kNormalDim.x * uv.x;
-						int y = kNormalDim.y * uv.y;
-						int addr = clamp(x + y*kNormalDim.x, 0, kNormalDim.x*kNormalDim.y - 1);
-						// Normal map to normals
-						float4 normal = normalize((1.f - intersection.y - intersection.z) * _normals[triAddr] +
-																			intersection.y * _normals[triAddr + 1] +
-																			intersection.z * _normals[triAddr + 2]);
-						normal.w = 0.f;
-						float4 tangent = normalize((1.f - intersection.y - intersection.z) * _tangents[triAddr] +
-																			 intersection.y * _tangents[triAddr + 1] +
-																			 intersection.z * _tangents[triAddr + 2]);
-						tangent.w = 0.f;
-
-						float4 bitangent = cross(normal, tangent);
-
-						mat4 tbn = mat4(tangent, bitangent, normal);
-
-						float4 normalMap = normalize(2.f * tex1Dfetch(t_normal, addr) - make_float4(1.f, 1.f, 1.f, 0.f));
-						_hitData->m_normal = normalize(tbn * normalMap);
-					}
-					else
-					{
-						// Calculate face normal for flat shading
-						_hitData->m_normal = normalize(cross(vert0 - vert1, vert0 - vert2));
-					}
-
-
-					if(kHasSpecularMap)
-					{
-						int x = kSpecularDim.x * uv.x;
-						int y = kSpecularDim.y * uv.y;
-						int addr = clamp(x + y*kSpecularDim.x, 0, kSpecularDim.x*kSpecularDim.y - 1);
-						// Normal map to normals
-						_hitData->m_specularColor = tex1Dfetch(t_specular, addr);
-					}
-					else
-					{
-						_hitData->m_specularColor = make_float4(0.f, 0.0f, 0.0f, 0.0f);
-					}
-
-					_hitData->m_emission = make_float4(0.f, 0.0f, 0.0f, 0.0f);
-					_hitData->m_hitType = 1;
+					nodeAddr = *(int*)stackPtr;
+					stackPtr -= 4;
 				}
+				else
+				{
+					nodeAddr = (traverseChild0) ? indices.x : indices.y;
+					if(traverseChild0 && traverseChild1)
+					{
+						if(swp)
+							swap(nodeAddr, indices.y);
+						stackPtr += 4;
+						*(int*)stackPtr = indices.y;
+					}
+				}
+
+				if(nodeAddr < 0 && leafAddr >= 0) // Postpone max 1
+				{
+					leafAddr = nodeAddr;
+
+					nodeAddr = *(int*)stackPtr;
+					stackPtr -= 4;
+				}
+
+				unsigned int mask;
+				asm("{\n"
+					"   .reg .pred p;               \n"
+					"setp.ge.s32        p, %1, 0;   \n"
+					"vote.ballot.b32    %0,p;       \n"
+					"}"
+					: "=r"(mask)
+					: "r"(leafAddr));
+
+	//			int mask = leafAddr >= 0;
+				if(!mask)
+					break;
 			}
-			leafAddr = nodeAddr;
-			if(nodeAddr < 0)
+			while(leafAddr < 0)
 			{
-				nodeAddr = *(int*)stackPtr;
-				stackPtr -= 4;
+				for(int triAddr = ~leafAddr;; triAddr += 3)
+				{
+					float4 vert0 = _vertices[triAddr];
+					// Did we reach the terminating point of the triangle(s) in the leaf
+					if(__float_as_int(vert0.x) == 0x80000000)
+						break;
+
+					float4 vert1 = _vertices[triAddr + 1];
+					float4 vert2 = _vertices[triAddr + 2];
+
+					// Check for an intersection (and barycentric coords for uv mapping)
+					float4 intersection = intersectTriangle(vert0, vert1, vert2, _ray);
+					if(intersection.x > epsilon && intersection.x < t)
+					{
+						t = intersection.x;
+						_hitData->m_hitPoint = _ray->m_origin + _ray->m_dir * t;
+
+						// UVS: (1 - u - v) * t0 + u * t1 + v * t2
+						float2 uv = (1.f - intersection.y - intersection.z) * _uvs[triAddr] +
+												intersection.y * _uvs[triAddr + 1] +
+												intersection.z * _uvs[triAddr + 2];
+
+						if(kHasDiffuseMap)
+						{
+							int x = kDiffuseDim.x * uv.x;
+							int y = kDiffuseDim.y * uv.y;
+							int addr = clamp(x + y*kDiffuseDim.x, 0, kDiffuseDim.x*kDiffuseDim.y - 1);
+							_hitData->m_color = tex1Dfetch(t_diffuse, addr);
+						}
+						else
+						{
+							_hitData->m_color = make_float4(1.f, 1.f, 1.f, 0.0f);
+						}
+
+						if(kHasNormalMap)
+						{
+							int x = kNormalDim.x * uv.x;
+							int y = kNormalDim.y * uv.y;
+							int addr = clamp(x + y*kNormalDim.x, 0, kNormalDim.x*kNormalDim.y - 1);
+							// Normal map to normals
+							float4 normal = normalize((1.f - intersection.y - intersection.z) * _normals[triAddr] +
+																				intersection.y * _normals[triAddr + 1] +
+																				intersection.z * _normals[triAddr + 2]);
+							normal.w = 0.f;
+							float4 tangent = normalize((1.f - intersection.y - intersection.z) * _tangents[triAddr] +
+																				 intersection.y * _tangents[triAddr + 1] +
+																				 intersection.z * _tangents[triAddr + 2]);
+							tangent.w = 0.f;
+
+							float4 bitangent = cross(normal, tangent);
+
+							mat4 tbn = mat4(tangent, bitangent, normal);
+
+							float4 normalMap = normalize(2.f * tex1Dfetch(t_normal, addr) - make_float4(1.f, 1.f, 1.f, 0.f));
+							_hitData->m_normal = normalize(tbn * normalMap);
+						}
+						else
+						{
+							// Calculate face normal for flat shading
+							_hitData->m_normal = normalize(cross(vert0 - vert1, vert0 - vert2));
+						}
+
+
+						if(kHasSpecularMap)
+						{
+							int x = kSpecularDim.x * uv.x;
+							int y = kSpecularDim.y * uv.y;
+							int addr = clamp(x + y*kSpecularDim.x, 0, kSpecularDim.x*kSpecularDim.y - 1);
+							// Normal map to normals
+							_hitData->m_specularColor = tex1Dfetch(t_specular, addr);
+						}
+						else
+						{
+							_hitData->m_specularColor = make_float4(0.f, 0.0f, 0.0f, 0.0f);
+						}
+
+						_hitData->m_emission = make_float4(0.f, 0.0f, 0.0f, 0.0f);
+						_hitData->m_hitType = 2;
+					}
+				}
+				leafAddr = nodeAddr;
+				if(nodeAddr < 0)
+				{
+					nodeAddr = *(int*)stackPtr;
+					stackPtr -= 4;
+				}
 			}
 		}
 	}
 
-	return t < inf; /* true when ray interesects the scene */
+	// Returns true if an intersection was found
+	return t < inf;
+}
+
+__device__ float4 lookupBRDF(const float4 _reflectedDir, const float4 _currentDir, const float4 _normal, const float4 _tangent)
+{
+	float4 bitangent = cross(_normal, _tangent);
+
+	float4 H = normalize(_reflectedDir - _currentDir);
+	float theta_H = acosf(clamp(dot(_normal, H), 0.f, 1.f));
+	float theta_diff = acosf(clamp(dot(H, _reflectedDir), 0.f, 1.f));
+	float phi_diff = 0.f;
+
+	if (theta_diff < 1e-3)
+	{
+		// phi_diff indeterminate, use phi_half instead
+		phi_diff = atan2f(clamp(-dot(_reflectedDir, bitangent), -1.f, 1.f), clamp(dot(_reflectedDir, _tangent), -1.f, 1.f));
+	}
+	else if (theta_H > 1e-3)
+	{
+		// use Gram-Schmidt orthonormalization to find diff basis vectors
+		float4 u = -1.f * normalize(_normal - dot(_normal, H) * H);
+		float4 v = cross(H, u);
+		phi_diff = atan2f(clamp(dot(_reflectedDir, v), -1.f, 1.f), clamp(dot(_reflectedDir, u), -1.f, 1.f));
+	}
+	else
+	{
+		theta_H = 0.f;
+	}
+
+	// Find index.
+	// Note that phi_half is ignored, since isotropic BRDFs are assumed
+	int ind = phi_diff_index(phi_diff) +
+			theta_diff_index(theta_diff) * BRDF_SAMPLING_RES_PHI_D / 2 +
+			theta_half_index(theta_H) * BRDF_SAMPLING_RES_PHI_D / 2 *
+			BRDF_SAMPLING_RES_THETA_D;
+
+	int redIndex = ind;
+	int greenIndex = ind + BRDF_SAMPLING_RES_THETA_H*BRDF_SAMPLING_RES_THETA_D*BRDF_SAMPLING_RES_PHI_D/2;
+	int blueIndex = ind + BRDF_SAMPLING_RES_THETA_H*BRDF_SAMPLING_RES_THETA_D*BRDF_SAMPLING_RES_PHI_D;
+
+	return make_float4(
+					tex1Dfetch(t_brdf, redIndex) * RED_SCALE,
+					tex1Dfetch(t_brdf, greenIndex) * GREEN_SCALE,
+					tex1Dfetch(t_brdf, blueIndex) * BLUE_SCALE,
+					0.f);
 }
 
 __device__ static unsigned int hash(unsigned int *seed0, unsigned int *seed1)
@@ -292,6 +425,37 @@ __device__ static unsigned int hash(unsigned int *seed0, unsigned int *seed1)
 	return *seed0**seed1;
 }
 
+__device__ void fresnel(const float4 &_incident, const float4 &_normal, const float &_ior, float *_kr)
+{
+	float cosi = clamp(dot(_incident, _normal), -1.f, 1.f);
+	float etai = 1;
+	float etat = _ior;
+	if(cosi > 0)
+	{
+		etai = _ior;
+		etat = 1.f;
+	}
+
+	// Compute sini using Snell's law
+	float sint = etai / etat * sqrtf(max(0.f, 1.f - cosi * cosi));
+
+	// Total internal reflection
+	if(sint >= 1.f)
+	{
+		*_kr = 1;
+	}
+	else
+	{
+		float cost = sqrtf(max(0.f, 1.f - sint * sint));
+		cosi = fabsf(cosi);
+		float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
+		float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
+		*_kr = 1.f - (Rs * Rs + Rp * Rp) / 2;
+	}
+	// As a consequence of the conservation of energy, transmittance is given by:
+	// kt = 1 - kr;
+}
+
 __device__ float4 trace(const Ray *_camray,
 												float4 *_vertices,
 												float4 *_normals,
@@ -299,6 +463,7 @@ __device__ float4 trace(const Ray *_camray,
 												float4 *_bvhData,
 												float2 *_uvs,
 												float4 *_hdr,
+												float _fresnelCoef,
 												unsigned int *_seed0,
 												unsigned int *_seed1)
 {
@@ -314,7 +479,7 @@ __device__ float4 trace(const Ray *_camray,
 
 		if(!intersectScene(&ray, _vertices, _normals, _tangents, _bvhData, _uvs, &hitData))
 		{
-			// Sample the HDR map, based on:
+			// Sample the HDRI map, based on:
 			// http://blog.hvidtfeldts.net/index.php/2012/10/image-based-lighting/
 			float2 longlat = make_float2(atan2f(ray.m_dir.x, ray.m_dir.z), acosf(ray.m_dir.y));
 			longlat.x = longlat.x < 0 ? longlat.x + 2.0 * PI : longlat.x;
@@ -344,45 +509,43 @@ __device__ float4 trace(const Ray *_camray,
 		ray.m_origin = hitData.m_hitPoint;
 		float4 normal = hitData.m_normal;
 
+		unsigned int seed = hash(_seed0, _seed1);
+		thrust::default_random_engine rng(seed);
+		thrust::uniform_real_distribution<float> uniformDist(0, 1);
+
 		if(hitData.m_hitType == 0)
 		{
 			ray.m_dir = ray.m_dir - normal * 2.f * dot(normal, ray.m_dir);
-			/* add a very small offset to the hitpoint to prevent self intersection */
 			ray.m_origin += normal * 0.05f;
 		}
 		else if(hitData.m_hitType == 1)
 		{
-			unsigned int seed = hash(_seed0, _seed1);
-			thrust::default_random_engine rng(seed);
-			thrust::uniform_real_distribution<float> uniformDist(0, 1);
+			float facingratio = dot(hitData.m_normal, -1.f * ray.m_dir);
+			float fresneleffect = lerp(powf(1.f - facingratio, 5.f), 1.f, _fresnelCoef);
 
-			float rouletteRandomFloat = uniformDist(rng);
-			float threshold = hitData.m_specularColor.x;
-			float4 specularColor = hitData.m_specularColor;  // hard-coded
-			bool reflectFromSurface = (rouletteRandomFloat < threshold); //computeFresnel(make_Vec3f(n.x, n.y, n.z), incident, incidentIOR, transmittedIOR, reflectionDirection, transmissionDirection).reflectionCoefficient);
+			bool reflectFromSurface = (uniformDist(rng) < fresneleffect);
 
 			float4 newdir;
 			float4 w = normal;
 			float4 axis = fabs(w.x) > 0.1f ? make_float4(0.0f, 1.0f, 0.0f, 0.f) : make_float4(1.0f, 0.0f, 0.0f, 0.f);
 
-			if (reflectFromSurface)
-			{ // calculate perfectly specular reflection
-
+			if(reflectFromSurface)
+			{
 				// Ray reflected from the surface. Trace a ray in the reflection direction.
 				// TODO: Use Russian roulette instead of simple multipliers!
 				// (Selecting between diffuse sample and no sample (absorption) in this case.)
 
-				mask *= specularColor;
+				mask *= hitData.m_specularColor;
 				newdir = normalize(ray.m_dir - normal * 2.f * dot(normal, ray.m_dir));
 			}
 			else
-			{  // calculate perfectly diffuse reflection
-				/* compute two random numbers to pick a random point on the hemisphere above the hitpoint*/
+			{
+				// compute two random numbers to pick a random point on the hemisphere above the hitpoint
 				float rand1 = 2.0f * PI * uniformDist(rng);
 				float rand2 = uniformDist(rng);
 				float rand2s = sqrt(rand2);
 
-				/* create a local orthogonal coordinate frame centered at the hitpoint */
+				// create a local orthogonal coordinate frame centered at the hitpoint
 				float4 u = normalize(cross(axis, w));
 				float4 v = cross(w, u);
 
@@ -393,8 +556,42 @@ __device__ float4 trace(const Ray *_camray,
 				mask *= hitData.m_color;
 			}
 
-			// offset origin next path segment to prevent self intersection
-			ray.m_origin += normal * 0.001f;  // // scene size dependent
+			ray.m_origin += normal * 0.001f;
+			ray.m_dir = newdir;
+		}
+		else if(hitData.m_hitType == 2)
+		{
+			float4 newdir;
+			float4 w = normal;
+			float4 axis = fabs(w.x) > 0.1f ? make_float4(0.0f, 1.0f, 0.0f, 0.f) : make_float4(1.0f, 0.0f, 0.0f, 0.f);
+
+			// compute two random numbers to pick a random point on the hemisphere above the hitpoint
+			float rand1 = 2.0f * PI * uniformDist(rng);
+			float rand2 = uniformDist(rng);
+			float rand2s = sqrt(rand2);
+
+			/* create a local orthogonal coordinate frame centered at the hitpoint */
+			float4 u = normalize(cross(axis, w));
+			float4 v = cross(w, u);
+
+			// compute cosine weighted random ray direction on hemisphere
+			newdir = normalize(u*cosf(rand1)*rand2s + v*sinf(rand1)*rand2s + w*sqrtf(1 - rand2));
+
+			if(kHasBRDF)
+			{
+
+				float dw = 24 * powf(newdir.x*newdir.x +
+														newdir.y*newdir.y +
+														newdir.z*newdir.z, -1.5);
+				mask *= dw * max(lookupBRDF(newdir, ray.m_dir, hitData.m_normal, hitData.m_tangent), make_float4(0.f, 0.f, 0.f, 0.f));
+			}
+			else
+			{
+				// multiply mask with colour of object
+				mask *= hitData.m_color;
+			}
+
+			ray.m_origin += normal * 0.001f;
 			ray.m_dir = newdir;
 		}
 	}
@@ -416,7 +613,8 @@ __global__ void render(cudaSurfaceObject_t o_tex,
 											 unsigned int _w,
 											 unsigned int _h,
 											 unsigned int _frame,
-											 unsigned int _time)
+											 unsigned int _time,
+											 float _fresnelCoef)
 {
 	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -449,7 +647,7 @@ __global__ void render(cudaSurfaceObject_t o_tex,
 			// create primary ray, add incoming radiance to pixelcolor
 			Ray newcam(camera.m_origin, normalize(d));
 
-			float4 result = trace(&newcam, _vertices, _normals, _tangents, _bvhData, _uvs, _hdr, &s1, &s2);
+			float4 result = trace(&newcam, _vertices, _normals, _tangents, _bvhData, _uvs, _hdr, _fresnelCoef, &s1, &s2);
 
 			unsigned char depth = (unsigned char)((1.f - result.w) * 255);
 			surf2Dwrite(make_uchar4(depth, depth, depth, 0xff), o_depth, x*sizeof(uchar4), y);
@@ -481,13 +679,14 @@ void cu_runRenderKernel(cudaSurfaceObject_t o_texture,
 												unsigned int _w,
 												unsigned int _h,
 												unsigned int _frame,
-												unsigned int _time)
+												unsigned int _time,
+												float _fresnelCoef)
 {
 	dim3 dimBlock(16, 16);
 	dim3 dimGrid((_w / dimBlock.x),
 							 (_h / dimBlock.y));
 
-	render<<<dimGrid, dimBlock>>>(o_texture, o_depth, io_colorArr, _hdr, _vertices, _normals, _tangents, _bvhData, _uvs, _cam, _w, _h, _frame, _time);
+	render<<<dimGrid, dimBlock>>>(o_texture, o_depth, io_colorArr, _hdr, _vertices, _normals, _tangents, _bvhData, _uvs, _cam, _w, _h, _frame, _time, _fresnelCoef);
 }
 
 void cu_bindTexture(const float4 *_deviceTexture, const unsigned int _w, const unsigned int _h, const vTextureType &_type)
@@ -549,15 +748,47 @@ void cu_bindTexture(const float4 *_deviceTexture, const unsigned int _w, const u
 	}
 }
 
+void cu_bindBRDF(const float *_brdf)
+{
+	bool dummyBool = true;
+	bool brdfLoaded = false;
+	uint dim = BRDF_SAMPLING_RES_THETA_H * BRDF_SAMPLING_RES_THETA_D * BRDF_SAMPLING_RES_PHI_D / 2;
+
+	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+
+	cudaMemcpyFromSymbol(&brdfLoaded, kHasBRDF, sizeof(bool));
+	if(brdfLoaded)
+	{
+		cudaUnbindTexture(t_brdf);
+	}
+	else
+	{
+		cudaMemcpyToSymbol(kHasBRDF, &dummyBool, sizeof(bool));
+	}
+
+	cudaBindTexture(NULL, &t_brdf, _brdf, &channelDesc, dim * 3 * sizeof(float));
+}
+
+void cu_useBRDF(const bool &_newVal)
+{
+	cudaMemcpyToSymbol(kUseBRDFSphere, &_newVal, sizeof(bool));
+}
+
 void cu_setHDRDim(const unsigned int &_w, const unsigned int &_h)
 {
 	cudaMemcpyToSymbol(kHDRwidth, &_w, sizeof(unsigned int));
 	cudaMemcpyToSymbol(kHDRheight, &_h, sizeof(unsigned int));
 }
 
-void cu_fillFloat4(float4 *d_ptr, float4 _val, unsigned int _size)
+void cu_meshInitialised()
 {
-	thrust::device_ptr<float4> ptr = thrust::device_pointer_cast(d_ptr);
+	bool dummyBool = true;
+	cudaMemcpyToSymbol(kMeshInitialised, &dummyBool, sizeof(bool));
+}
+
+void cu_fillFloat4(float4 *_dPtr, const float4 _val, const unsigned int _size)
+{
+	thrust::device_ptr<float4> ptr = thrust::device_pointer_cast(_dPtr);
 	thrust::fill(ptr, ptr + _size, _val);
 }
 

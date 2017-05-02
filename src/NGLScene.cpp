@@ -18,6 +18,7 @@
 #include <ngl/NGLInit.h>
 
 #include "MeshLoader.h"
+#include "BRDFLoader.h"
 #include "hdrloader.h"
 
 #ifdef __VRENDERER_CUDA__
@@ -34,7 +35,8 @@ NGLScene::NGLScene(QWidget *_parent) :
   m_fxaaEnabled(0),
 	m_renderChannel(0),
 	m_yaw(0.f),
-	m_pitch(0.f)
+	m_pitch(0.f),
+	m_brdf(nullptr)
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
 	m_renderTexture = false;
@@ -202,7 +204,7 @@ void NGLScene::initializeGL()
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/matt.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_mask.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_head.obj"));
-  m_renderer->initMesh(vMeshLoader::loadMesh("models/sebastian_head.obj"));
+//	m_renderer->initMesh(vMeshLoader::loadMesh("models/sebastian_head.obj"));
 
 //	HDRLoaderResult result;
 //	if(!HDRLoader::load("hdr/Arches_E_PineTree_3k.hdr", result))
@@ -212,13 +214,18 @@ void NGLScene::initializeGL()
 //	}
 
 //	m_renderer->initHDR(result.cols, result.width, result.height);
+//	m_renderer->loadBRDF(vBRDFLoader::loadBinary("brdf/alum-bronze.binary"));
+//	m_renderer->loadBRDF(vBRDFLoader::loadBinary("brdf/red-fabric.binary"));
+//	m_renderer->loadBRDF(vBRDFLoader::loadBinary("brdf/red-metallic-paint.binary"));
+//	m_renderer->loadBRDF(vBRDFLoader::loadBinary("brdf/cherry-235.binary"));
+//	m_renderer->loadBRDF(vBRDFLoader::loadBinary("brdf/yellow-matte-plastic.binary"));
 
 	Imf::Rgba *pixelBuffer;
 	try
 	{
 //		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
-    Imf::RgbaInputFile in("hdr/Topanga_Forest_B_3k.exr");
-//		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
+//    Imf::RgbaInputFile in("hdr/Topanga_Forest_B_3k.exr");
+		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
 		Imath::Box2i win = in.dataWindow();
 
 		Imath::V2i dim(win.max.x - win.min.x + 1,
@@ -409,7 +416,39 @@ void NGLScene::loadTexture(const unsigned int &_type)
 	}
 }
 
+void NGLScene::loadBRDF()
+{
+	QString location = QFileDialog::getOpenFileName(this, tr("Load BRDF Binary"), NULL, tr("Binary-files (*.binary)"));
+	if(!location.isEmpty())
+	{
+		if(m_brdf)
+		{
+			delete [] m_brdf;
+		}
+
+		if((m_brdf = vBRDFLoader::loadBinary(location.toStdString())))
+		{
+			m_renderer->loadBRDF(m_brdf);
+			m_renderer->clearBuffer();
+
+			emit brdfLoaded(location);
+		}
+	}
+}
+
+void NGLScene::useBRDF(const bool &_val)
+{
+	m_renderer->viewBRDF(_val);
+	m_renderer->clearBuffer();
+}
+
 void NGLScene::changeFov(const int &_newFov)
 {
 	m_virtualCamera->changeFov(static_cast<float>(_newFov));
+}
+
+void NGLScene::changeFresnelCoef(const int &_newVal)
+{
+	std::cout << _newVal/100.f << "\n";
+	m_renderer->setFresnelCoef(_newVal/100.f);
 }

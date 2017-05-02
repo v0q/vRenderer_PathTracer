@@ -102,6 +102,8 @@ private:
 		float m_yaw;
 		float m_pitch;
 
+		float *m_brdf;
+
 		//----------------------------------------------------------------------------------------------------------------------
 		/// @brief class for text rendering
 		//----------------------------------------------------------------------------------------------------------------------
@@ -126,14 +128,18 @@ private:
 public slots:
 		void loadMesh();
 		void loadHDR();
+		void loadBRDF();
+		void useBRDF(const bool &_val);
 		void loadDiffuse() { loadTexture(0); }
 		void loadNormal() { loadTexture(1); }
 		void loadSpecular() { loadTexture(2); }
 		void changeFov(const int &_newFov);
+		void changeFresnelCoef(const int &_newVal);
 
 signals:
     void meshLoaded(const QString &);
 		void textureLoaded(const QString &, const unsigned int &);
+		void brdfLoaded(const QString &);
 };
 
 #endif

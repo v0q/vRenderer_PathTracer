@@ -193,6 +193,11 @@ inline __device__ float4 clamp(const float4 &_val, const float &_low, const floa
 	return make_float4(x, y, z, _val.w);
 }
 
+inline __device__ float4 max(const float4 &_a, const float4 &_b)
+{
+	return make_float4(max(_a.x, _b.x), max(_a.y, _b.y), max(_a.z, _b.z), max(_a.w, _b.w));
+}
+
 inline __device__ float distanceSquared(const float4 &_v)
 {
 	return dot(_v, _v);
@@ -209,6 +214,11 @@ inline __device__ float4 powf(const float4 &_a, const float &_pow)
 										 powf(_a.y, _pow),
 										 powf(_a.z, _pow),
 										 powf(_a.w, _pow));
+}
+
+inline __device__ float lerp(const float &_a, const float &_b, const float &_w)
+{
+	return (1.f - _w) * _a + _w * _b;
 }
 
 ///

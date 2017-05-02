@@ -6,6 +6,16 @@
 #include "Utilities.cuh"
 
 vRendererCuda::vRendererCuda() :
+	m_vertices(nullptr),
+	m_normals(nullptr),
+	m_tangents(nullptr),
+	m_bvhData(nullptr),
+	m_uvs(nullptr),
+	m_hdr(nullptr),
+	m_diffuse(nullptr),
+	m_normal(nullptr),
+	m_specular(nullptr),
+	m_brdf(nullptr),
   m_frame(1),
 	m_vertCount(0),
 	m_bvhNodeCount(0),
@@ -108,7 +118,7 @@ void vRendererCuda::render()
 	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaImgArray, m_cudaGLTextureBuffer, 0, 0), "Attach the mapped texture buffer to a cuda resource");
 
 	validateCuda(cudaGraphicsMapResources(1, &m_cudaGLDepthBuffer), "Map GL depth buffer");
-	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaDepthArray, m_cudaGLDepthBuffer, 0, 0), "Attach the mapped texture buffer to a cuda resource");
+	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaDepthArray, m_cudaGLDepthBuffer, 0, 0), "Attach the mapped depth buffer to a cuda resource");
 
   cudaResourceDesc wdsc;
   wdsc.resType = cudaResourceTypeArray;
@@ -136,7 +146,8 @@ void vRendererCuda::render()
 										 m_width,
 										 m_height,
 										 m_frame++,
-										 std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count());
+										 std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count(),
+										 m_fresnelCoef);
 
 	validateCuda(cudaDestroySurfaceObject(textureSurface), "Clean up the surface");
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer), "Free the mapped GL texture buffer");
@@ -145,6 +156,7 @@ void vRendererCuda::render()
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLDepthBuffer), "Free the mapped GL depth buffer");
 
 	validateCuda(cudaStreamSynchronize(0), "Synchronize");
+//	exit(0);
 }
 
 void vRendererCuda::cleanUp()
@@ -263,6 +275,8 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 	validateCuda(cudaMalloc(&m_bvhData, bvhData.size()*sizeof(float4)), "Malloc BVH node device pointer");
   validateCuda(cudaMemcpy(m_bvhData, &bvhData[0], bvhData.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy bvh node data to gpu");
 
+	cu_meshInitialised();
+
 	m_vertCount = verts.size();
   m_bvhNodeCount = bvhData.size();
 }
@@ -278,7 +292,7 @@ void vRendererCuda::loadHDR(const Imf::Rgba *_colours, const unsigned int &_w, c
 
 	if(m_hdr)
 	{
-		validateCuda(cudaFree(m_hdr));
+		validateCuda(cudaFree(m_hdr), "Delete old HDR memory");
 	}
 
 	validateCuda(cudaMalloc(&m_hdr, _w*_h*sizeof(float4)), "Malloc HDR map device pointer");
@@ -338,6 +352,25 @@ void vRendererCuda::loadTexture(const unsigned char *_texture, const unsigned in
 	}
 
 	delete [] dataAsFloats;
+}
+
+void vRendererCuda::loadBRDF(const float *_brdf)
+{
+	if(m_brdf)
+	{
+		validateCuda(cudaFree(m_brdf), "Delete old brdf memory");
+	}
+
+	unsigned int n = BRDF_SAMPLING_RES_THETA_H * BRDF_SAMPLING_RES_THETA_D * BRDF_SAMPLING_RES_PHI_D / 2;
+
+	validateCuda(cudaMalloc(&m_brdf, n * 3 * sizeof(float)), "BRDF texture memory allocation");
+	validateCuda(cudaMemcpy(m_brdf, _brdf, n * 3 * sizeof(float), cudaMemcpyHostToDevice), "Memcpy to brdf texture");
+	cu_bindBRDF(m_brdf);
+}
+
+void vRendererCuda::viewBRDF(const bool &_newVal)
+{
+	cu_useBRDF(_newVal);
 }
 
 void vRendererCuda::validateCuda(cudaError_t _err, const std::string &_msg)

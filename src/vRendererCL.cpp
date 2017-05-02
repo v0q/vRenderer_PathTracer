@@ -17,6 +17,7 @@
 	#include <cuda/CL/cl_gl_ext.h>
 	#include <GL/glew.h>
 	#include <GL/glx.h>
+	#undef CursorShape
 #endif
 
 #include "vRendererCL.h"

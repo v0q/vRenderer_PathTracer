@@ -19,6 +19,8 @@ public:
 	void initMesh(const vMeshData &_meshData) override;
 	void loadHDR(const Imf::Rgba *_colours, const unsigned int &_w, const unsigned int &_h) override;
 	void loadTexture(const unsigned char *_texture, const unsigned int &_w, const unsigned int &_h, const unsigned int &_type) override;
+	void loadBRDF(const float *_brdf) override;
+	void viewBRDF(const bool &_newVal) override;
 	void clearBuffer() override;
   unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
@@ -37,15 +39,15 @@ private:
 	float4 *m_vertices;
 	float4 *m_normals;
 	float4 *m_tangents;
-	float4 *m_bitangents;
 	float4 *m_bvhData;
 	float2 *m_uvs;
-	unsigned int *m_triIdxList;
 
+	// Textures
 	float4 *m_hdr;
 	float4 *m_diffuse;
 	float4 *m_normal;
 	float4 *m_specular;
+	float *m_brdf;
 
   unsigned int m_width;
   unsigned int m_height;

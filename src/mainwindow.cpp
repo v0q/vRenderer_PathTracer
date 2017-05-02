@@ -23,11 +23,17 @@ MainWindow::MainWindow(QWidget *_parent) :
 	connect(m_ui->m_loadNormalTextureBtn, SIGNAL(released()), m_scene, SLOT(loadNormal()));
 	connect(m_ui->m_loadSpecularTextureBtn, SIGNAL(released()), m_scene, SLOT(loadSpecular()));
 
+	connect(m_ui->m_loadBRDFBtn, SIGNAL(released()), m_scene, SLOT(loadBRDF()));
+	connect(m_ui->m_useBRDF, SIGNAL(clicked(bool)), m_scene, SLOT(useBRDF(bool)));
+
 	connect(m_ui->m_fovSlider, SIGNAL(valueChanged(int)), m_scene, SLOT(changeFov(int)));
 	connect(m_ui->m_fovSlider, SIGNAL(valueChanged(int)), this, SLOT(updateUIFOV(int)));
 
+	connect(m_ui->m_fresnelSlider, SIGNAL(valueChanged(int)), m_scene, SLOT(changeFresnelCoef(const int &)));
+
 	connect(m_scene, SIGNAL(textureLoaded(const QString &, const unsigned int &)), this, SLOT(updateUITexture(const QString &, const unsigned int &)));
 	connect(m_scene, SIGNAL(meshLoaded(const QString &)), this, SLOT(updateSceneTree(const QString &)));
+	connect(m_scene, SIGNAL(brdfLoaded(const QString &)), this, SLOT(updateUIBRDF(const QString &)));
 
 	m_model.setHorizontalHeaderItem(0, new QStandardItem("Root"));
 	m_ui->m_sceneTreeView->setModel(&m_model);
@@ -70,6 +76,11 @@ void MainWindow::updateUITexture(const QString &_texture, const unsigned int &_t
 
 		default: break;
 	}
+}
+
+void MainWindow::updateUIBRDF(const QString &_brdf)
+{
+	m_ui->m_brdfLocation->setText(_brdf);
 }
 
 void MainWindow::updateSceneTree(const QString &_mesh)

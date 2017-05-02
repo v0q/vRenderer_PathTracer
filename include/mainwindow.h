@@ -27,6 +27,7 @@ private:
 public slots:
   void showHideHDRMenu();
 	void updateUITexture(const QString &_texture, const unsigned int &_type);
+	void updateUIBRDF(const QString &_brdf);
   void updateSceneTree(const QString &);
 	void updateUIFOV(const int &_newFov);
 };

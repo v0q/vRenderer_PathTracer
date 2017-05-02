@@ -67,7 +67,7 @@ color: rgb(0, 0, 0);</string>
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="m_sceneLoadLayout">
+      <layout class="QVBoxLayout" name="m_textureLayout">
        <item>
         <widget class="QPushButton" name="m_loadMeshBtn">
          <property name="autoFillBackground">
@@ -88,18 +88,18 @@ border-color: rgb(0, 0, 0);</string>
          </property>
         </widget>
        </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QPushButton" name="m_loadHDRBtn">
-       <property name="styleSheet">
-        <string notr="true">font: 700 13pt &quot;Helvetica Neue&quot;;
+       <item>
+        <widget class="QPushButton" name="m_loadHDRBtn">
+         <property name="styleSheet">
+          <string notr="true">font: 700 13pt &quot;Helvetica Neue&quot;;
 border-color: rgb(0, 0, 0);</string>
-       </property>
-       <property name="text">
-        <string>Load HDRI</string>
-       </property>
-      </widget>
+         </property>
+         <property name="text">
+          <string>Load HDRI</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <layout class="QVBoxLayout" name="m_testSpace">
@@ -174,19 +174,6 @@ border-color: rgb(0, 0, 0);</string>
           <bool>true</bool>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </item>
@@ -273,7 +260,74 @@ font: 13pt &quot;Helvetica Neue&quot;;</string>
         </widget>
        </item>
        <item>
+        <widget class="QSlider" name="m_fresnelSlider">
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="value">
+          <number>10</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="m_brdfLayout">
+       <item>
+        <widget class="QLabel" name="m_brdfLabel">
+         <property name="styleSheet">
+          <string notr="true">font: 13pt &quot;Helvetica Neue&quot;;</string>
+         </property>
+         <property name="text">
+          <string>BRDF</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="m_useBRDF">
+         <property name="text">
+          <string>Use MERL BRDF</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="m_loadBRDFBtn">
+         <property name="text">
+          <string>Load BRDF</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="m_brdfLocation">
+         <property name="styleSheet">
+          <string notr="true">font: 9pt &quot;Sans Serif&quot;;</string>
+         </property>
+         <property name="text">
+          <string>No BRDF loaded</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
