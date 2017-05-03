@@ -6,11 +6,6 @@
 #include "PathTracer.cuh"
 #include "MathHelpers.cuh"
 
-#define kNumPlaneSetNormals 7
-
-__constant__ __device__ float PI = 3.14159265359f;
-__constant__ __device__ float epsilon = 0.0000000003f;
-
 typedef struct Ray {
 	float4 m_origin;
 	float4 m_dir;

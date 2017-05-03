@@ -22,6 +22,8 @@ vRendererCuda::vRendererCuda() :
 	m_triIdxCount(0),
 	m_initialised(false)
 {
+	m_fresnelCoef = 0.1f;
+	m_fresnelPow = 3.f;
   std::cout << "Cuda vRenderer ctor called\n";
 }
 
@@ -147,7 +149,8 @@ void vRendererCuda::render()
 										 m_height,
 										 m_frame++,
 										 std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count(),
-										 m_fresnelCoef);
+										 m_fresnelCoef,
+										 m_fresnelPow);
 
 	validateCuda(cudaDestroySurfaceObject(textureSurface), "Clean up the surface");
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer), "Free the mapped GL texture buffer");
@@ -303,14 +306,33 @@ void vRendererCuda::loadHDR(const Imf::Rgba *_colours, const unsigned int &_w, c
 	delete [] dataAsFloats;
 }
 
-void vRendererCuda::loadTexture(const unsigned char *_texture, const unsigned int &_w, const unsigned int &_h, const unsigned int &_type)
+void vRendererCuda::loadTexture(const QImage &_texture, const float &_gamma, const unsigned int &_type)
 {
-	float4 *dataAsFloats = new float4[_w*_h];
+	unsigned int w = _texture.width();
+	unsigned int h = _texture.height();
+	float correction = (_gamma > 0.001f ? 1.f/_gamma : 1.f);
 
-	unsigned int j = 0;
-	for(unsigned int i = 0; i < _w*_h*4; i += 4)
+	float4 *dataAsFloats = new float4[w*h];
+
+	unsigned int k = 0;
+	for(unsigned int j = 0; j < h; ++j)
 	{
-		dataAsFloats[j++] = make_float4((int)(_texture[i + 2])/255.f, (int)(_texture[i + 1])/255.f, (int)(_texture[i])/255.f, (int)(_texture[i + 3])/255.f);
+		for(unsigned int i = 0; i < w; ++i)
+		{
+			QColor pixel(_texture.pixel(i, j));
+			if(_type == DIFFUSE)
+			{
+				// Invert gamma correction if it's already applied
+				dataAsFloats[k++] = make_float4(std::pow(pixel.red()/255.f, correction),
+																				std::pow(pixel.green()/255.f, correction),
+																				std::pow(pixel.blue()/255.f, correction),
+																				pixel.alpha()/255.f);
+			}
+			else
+			{
+				dataAsFloats[k++] = make_float4(pixel.red()/255.f, pixel.green()/255.f, pixel.blue()/255.f, pixel.alpha()/255.f);
+			}
+		}
 	}
 
 	switch(_type)
@@ -322,9 +344,9 @@ void vRendererCuda::loadTexture(const unsigned char *_texture, const unsigned in
 				validateCuda(cudaFree(m_diffuse), "Delete old diffuse memory");
 			}
 
-			validateCuda(cudaMalloc(&m_diffuse, _w*_h*sizeof(float4)), "Diffuse texture memory allocation");
-			validateCuda(cudaMemcpy(m_diffuse, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice), "Memcpy to diffuse texture");
-			cu_bindTexture(m_diffuse, _w, _h, static_cast<vTextureType>(_type));
+			validateCuda(cudaMalloc(&m_diffuse, w*h*sizeof(float4)), "Diffuse texture memory allocation");
+			validateCuda(cudaMemcpy(m_diffuse, dataAsFloats, w * h * sizeof(float4), cudaMemcpyHostToDevice), "Memcpy to diffuse texture");
+			cu_bindTexture(m_diffuse, w, h, static_cast<vTextureType>(_type));
 		} break;
 		case NORMAL:
 		{
@@ -333,9 +355,9 @@ void vRendererCuda::loadTexture(const unsigned char *_texture, const unsigned in
 				validateCuda(cudaFree(m_normal), "Delete old normal memory");
 			}
 
-			validateCuda(cudaMalloc(&m_normal, _w*_h*sizeof(float4)), "Normal texture memory allocation");
-			validateCuda(cudaMemcpy(m_normal, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice), "Memcpy to normal texture");
-			cu_bindTexture(m_normal, _w, _h, static_cast<vTextureType>(_type));
+			validateCuda(cudaMalloc(&m_normal, w*h*sizeof(float4)), "Normal texture memory allocation");
+			validateCuda(cudaMemcpy(m_normal, dataAsFloats, w * h * sizeof(float4), cudaMemcpyHostToDevice), "Memcpy to normal texture");
+			cu_bindTexture(m_normal, w, h, static_cast<vTextureType>(_type));
 		} break;
 		case SPECULAR:
 		{
@@ -344,9 +366,9 @@ void vRendererCuda::loadTexture(const unsigned char *_texture, const unsigned in
 				validateCuda(cudaFree(m_specular), "Delete old specular memory");
 			}
 
-			validateCuda(cudaMalloc(&m_specular, _w*_h*sizeof(float4)), "Specular texture memory allocation");
-			validateCuda(cudaMemcpy(m_specular, dataAsFloats, _w * _h * sizeof(float4), cudaMemcpyHostToDevice), "Memcpy to specular texture");
-			cu_bindTexture(m_specular, _w, _h, static_cast<vTextureType>(_type));
+			validateCuda(cudaMalloc(&m_specular, w*h*sizeof(float4)), "Specular texture memory allocation");
+			validateCuda(cudaMemcpy(m_specular, dataAsFloats, w * h * sizeof(float4), cudaMemcpyHostToDevice), "Memcpy to specular texture");
+			cu_bindTexture(m_specular, w, h, static_cast<vTextureType>(_type));
 		} break;
 		default: break;
 	}
@@ -368,9 +390,19 @@ void vRendererCuda::loadBRDF(const float *_brdf)
 	cu_bindBRDF(m_brdf);
 }
 
-void vRendererCuda::viewBRDF(const bool &_newVal)
+void vRendererCuda::useExampleSphere(const bool &_newVal)
+{
+	cu_useExampleSphere(_newVal);
+}
+
+void vRendererCuda::useBRDF(const bool &_newVal)
 {
 	cu_useBRDF(_newVal);
+}
+
+void vRendererCuda::useCornellBox(const bool &_newVal)
+{
+	cu_useCornellBox(_newVal);
 }
 
 void vRendererCuda::validateCuda(cudaError_t _err, const std::string &_msg)

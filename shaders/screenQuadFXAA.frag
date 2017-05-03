@@ -1,13 +1,10 @@
 #version 410 core
 
 #define FXAA_PC 1
+#define FXAA_QUALITY__PRESET 29
 #define FXAA_GLSL_130 1
-#define FXAA_QUALITY__PRESET 39
 #define FXAA_GREEN_AS_LUMA 1
-#define N 0.5f
-#define FXAA_QUALITY__SUBPIX 0.75f
-#define FXAA_QUALITY__EDGE_THRESHOLD 0.166f
-#define FXAA_QUALITY__EDGE_THRESHOLD_MIN 0.0833
+#define FXAA_QUALITY__EDGE_THRESHOLD_MIN 0.f
 #define FXAA_CONSOLE__EDGE_SHARPNESS 4.f
 #define FXAA_CONSOLE__EDGE_THRESHOLD 1.f/4.f
 #define FXAA_CONSOLE__EDGE_THRESHOLD_MIN 0.05f
@@ -2098,6 +2095,10 @@ uniform vec2 u_screenDim;
 uniform vec2 u_invScreenDim;
 uniform int u_channel;
 
+uniform float u_SubpixQuality = 0.75f;
+uniform float u_EdgeThreshold = 0.166f;
+uniform float u_Sharpness = 0.5f;
+
 in vec4 o_fxaaConsolePosPos;
 in vec2 o_FragCoord;
 
@@ -2114,11 +2115,11 @@ void main()
 				u_ptResult,
 				u_ptResult,
 				u_invScreenDim,
-				vec4(-N/u_screenDim.x, -N/u_screenDim.y, N/u_screenDim.x, N/u_screenDim.y),
+        vec4(-u_Sharpness/u_screenDim.x, -u_Sharpness/u_screenDim.y, u_Sharpness/u_screenDim.x, u_Sharpness/u_screenDim.y),
 				vec4(-2.f/u_screenDim.x, -2.f/u_screenDim.y, 2.f/u_screenDim.x, 2.f/u_screenDim.y),
 				vec4(8.f/u_screenDim.x, 8.f/u_screenDim.y, -4.f/u_screenDim.x, -4.f/u_screenDim.y),
-				FXAA_QUALITY__SUBPIX,
-				FXAA_QUALITY__EDGE_THRESHOLD,
+        u_SubpixQuality,
+        u_EdgeThreshold,
 				FXAA_QUALITY__EDGE_THRESHOLD_MIN,
 				FXAA_CONSOLE__EDGE_SHARPNESS,
 				FXAA_CONSOLE__EDGE_THRESHOLD,

@@ -28,10 +28,10 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 	{
 		if(scene->mNumMeshes != 1)
 			i = scene->mNumMeshes - 1;
-		std::cout << i << "\n";
+
     aiMesh* mesh = scene->mMeshes[i];
-    meshName = mesh->mName.C_Str();
-		std::cout << "Mesh: " << meshName.toStdString() << "\n";
+		meshName = mesh->mName.C_Str();
+
     unsigned int numFaces = mesh->mNumFaces;
 		unsigned int numVerts = mesh->mNumVertices;
 
@@ -45,13 +45,20 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		{
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
 			const aiVector3t<float> normal = mesh->mNormals[j];
-			const aiVector3t<float> tangent = mesh->mTangents[j];
 			vertices[j].m_vert = ngl::Vec3(vert.x, vert.y, vert.z);
-			vertices[j].m_tangent = ngl::Vec3(tangent.x, tangent.y, tangent.z);
-			vertices[j].m_u = mesh->mTextureCoords[0][j].x;
-			vertices[j].m_v = 1.f - mesh->mTextureCoords[0][j].y;
-
 			vertices[j].m_normal = ngl::Vec3(normal.x, normal.y, normal.z);
+
+			if(mesh->HasTangentsAndBitangents())
+			{
+				const aiVector3t<float> tangent = mesh->mTangents[j];
+				vertices[j].m_tangent = ngl::Vec3(tangent.x, tangent.y, tangent.z);
+			}
+
+			if(mesh->HasTextureCoords(0))
+			{
+				vertices[j].m_u = mesh->mTextureCoords[0][j].x;
+				vertices[j].m_v = 1.f - mesh->mTextureCoords[0][j].y;
+			}
 
 			center += vertices[j].m_vert;
 		}
@@ -61,7 +68,6 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
 			vertices[j].m_vert -= center;
-//			vertices[j].m_z -= 250.f;
 		}
 
 		for(unsigned int j = 0; j < numFaces; ++j)

@@ -51,7 +51,6 @@ class NGLScene : public QOpenGLWidget
     void paintGL();
 
 		void changeRenderChannel() { m_renderChannel ^= 1; }
-    void toggleFXAA() { m_fxaaEnabled ^= 1; std::cout << "FXAA: " << m_fxaaEnabled << "\n"; }
 
 private:
     //----------------------------------------------------------------------------------------------------------------------
@@ -102,6 +101,10 @@ private:
 		float m_yaw;
 		float m_pitch;
 
+		float m_fxaaSharpness;
+		float m_fxaaSubpixQuality;
+		float m_fxaaEdgeThreshold;
+
 		float *m_brdf;
 
 		//----------------------------------------------------------------------------------------------------------------------
@@ -129,17 +132,29 @@ public slots:
 		void loadMesh();
 		void loadHDR();
 		void loadBRDF();
+
 		void useBRDF(const bool &_val);
+		void useExampleSphere(const bool &_val);
+		void useCornellEnv(const bool &_val);
+
 		void loadDiffuse() { loadTexture(0); }
 		void loadNormal() { loadTexture(1); }
 		void loadSpecular() { loadTexture(2); }
+
 		void changeFov(const int &_newFov);
 		void changeFresnelCoef(const int &_newVal);
+		void changeFresnelPower(const int &_newVal);
+
+		void toggleFXAA(const bool &_enabled) { m_fxaaEnabled = _enabled ? 1 : 0; std::cout << m_fxaaEnabled << "\n"; }
+		void fxaaSharpness(const int &_newVal) { m_fxaaSharpness = _newVal/100.f; std::cout << m_fxaaSharpness << "\n"; }
+		void fxaaSubpixQuality(const int &_newVal) { m_fxaaSubpixQuality = _newVal/100.f; std::cout << m_fxaaSubpixQuality << "\n"; }
+		void fxaaEdgeThreshold(const int &_newVal) { m_fxaaEdgeThreshold = _newVal/1000.f; std::cout << m_fxaaEdgeThreshold << "\n"; }
 
 signals:
     void meshLoaded(const QString &);
 		void textureLoaded(const QString &, const unsigned int &);
 		void brdfLoaded(const QString &);
+		void HDRILoaded(const QString &);
 };
 
 #endif

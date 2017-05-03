@@ -64,10 +64,6 @@ color: rgb(0, 0, 0);</string>
          </property>
         </widget>
        </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="m_textureLayout">
        <item>
         <widget class="QPushButton" name="m_loadMeshBtn">
          <property name="autoFillBackground">
@@ -88,6 +84,34 @@ border-color: rgb(0, 0, 0);</string>
          </property>
         </widget>
        </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="m_envLayout">
+       <item>
+        <widget class="QLabel" name="m_envLabel">
+         <property name="text">
+          <string>Environment</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="m_envHDRI">
+         <property name="text">
+          <string>HDRI</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="m_envCornell">
+         <property name="text">
+          <string>Cornell box</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QPushButton" name="m_loadHDRBtn">
          <property name="styleSheet">
@@ -99,10 +123,46 @@ border-color: rgb(0, 0, 0);</string>
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="m_hdrLabel">
+         <property name="styleSheet">
+          <string notr="true">font: 9pt &quot;Sans Serif&quot;;</string>
+         </property>
+         <property name="text">
+          <string>No environment map loaded</string>
+         </property>
+         <property name="scaledContents">
+          <bool>false</bool>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
       <layout class="QVBoxLayout" name="m_testSpace">
+       <item>
+        <spacer name="verticalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Material</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QPushButton" name="m_loadDiffuseTextureBtn">
          <property name="text">
@@ -174,6 +234,91 @@ border-color: rgb(0, 0, 0);</string>
           <bool>true</bool>
          </property>
         </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="m_modifiersLayout">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="m_fresnelLabel">
+           <property name="text">
+            <string>Fresnel coef</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLCDNumber" name="m_fresnelNumber">
+           <property name="value" stdset="0">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QSlider" name="m_fresnelSlider">
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="value">
+          <number>10</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="m_fresnelPowLabel">
+           <property name="text">
+            <string>Fresnel pow</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLCDNumber" name="m_fresnelPowNumber">
+           <property name="smallDecimalPoint">
+            <bool>false</bool>
+           </property>
+           <property name="value" stdset="0">
+            <double>3.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QSlider" name="m_fresnelPowSlider">
+         <property name="minimum">
+          <number>5</number>
+         </property>
+         <property name="maximum">
+          <number>150</number>
+         </property>
+         <property name="value">
+          <number>30</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>
@@ -260,12 +405,64 @@ font: 13pt &quot;Helvetica Neue&quot;;</string>
         </widget>
        </item>
        <item>
-        <widget class="QSlider" name="m_fresnelSlider">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="m_fxaaLabel">
+         <property name="text">
+          <string>FXAA</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="m_useFXAA">
+         <property name="text">
+          <string>Enabled</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QLabel" name="m_fxaaSoftness">
+           <property name="text">
+            <string>Softness</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLCDNumber" name="m_fxaaSoftnessNum">
+           <property name="value" stdset="0">
+            <double>0.500000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QSlider" name="m_fxaaSoftnessSlider">
+         <property name="minimum">
+          <number>0</number>
+         </property>
          <property name="maximum">
           <number>100</number>
          </property>
          <property name="value">
-          <number>10</number>
+          <number>50</number>
          </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -273,7 +470,75 @@ font: 13pt &quot;Helvetica Neue&quot;;</string>
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_2">
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QLabel" name="m_fxaaSubpixQuality">
+           <property name="text">
+            <string>Subpix qlty</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLCDNumber" name="m_fxaaSubpixQualityNum">
+           <property name="value" stdset="0">
+            <double>0.750000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QSlider" name="m_fxaaSubpixQualitySlider">
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="value">
+          <number>75</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QLabel" name="m_fxaaSubpixEdgeThreshold">
+           <property name="text">
+            <string>Edge thld</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLCDNumber" name="m_fxaaSubpixEdgeThresholdNum">
+           <property name="value" stdset="0">
+            <double>0.166000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QSlider" name="m_fxaaSubpixEdgeThresholdSlider">
+         <property name="minimum">
+          <number>63</number>
+         </property>
+         <property name="maximum">
+          <number>333</number>
+         </property>
+         <property name="value">
+          <number>166</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_5">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -290,12 +555,43 @@ font: 13pt &quot;Helvetica Neue&quot;;</string>
      <item>
       <layout class="QVBoxLayout" name="m_brdfLayout">
        <item>
-        <widget class="QLabel" name="m_brdfLabel">
+        <widget class="QLabel" name="m_sphereLabel">
          <property name="styleSheet">
           <string notr="true">font: 13pt &quot;Helvetica Neue&quot;;</string>
          </property>
          <property name="text">
-          <string>BRDF</string>
+          <string>Example Sphere</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="m_useSphere">
+         <property name="text">
+          <string>Enable sphere</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Merl BRDF</string>
          </property>
         </widget>
        </item>
@@ -327,7 +623,7 @@ font: 13pt &quot;Helvetica Neue&quot;;</string>
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer">
+        <spacer name="verticalSpacer_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>

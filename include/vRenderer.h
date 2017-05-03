@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include <vector>
 #include <assert.h>
+#include <QImage>
 #include <OpenEXR/ImfRgba.h>
 
 #include "Camera.h"
@@ -26,16 +27,20 @@ public:
 	virtual void updateCamera() = 0;
 	virtual void initMesh(const vMeshData &_sbvhData) = 0;
 	virtual void loadHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h) = 0;
-	virtual void loadTexture(const unsigned char *_texture, const unsigned int &_w, const unsigned int &_h, const unsigned int &_type) = 0;
+	virtual void loadTexture(const QImage &_texture, const float &_gamma, const unsigned int &_type) = 0;
 	virtual void loadBRDF(const float *_brdf) = 0;
-	virtual void viewBRDF(const bool &_newVal) = 0;
+	virtual void useBRDF(const bool &_newVal) = 0;
+	virtual void useExampleSphere(const bool &_newVal) = 0;
+	virtual void useCornellBox(const bool &_newVal) = 0;
   virtual void clearBuffer() = 0;
   virtual unsigned int getFrameCount() const = 0;
 
 	void setFresnelCoef(const float &_newVal) { m_fresnelCoef = _newVal; clearBuffer(); }
+	void setFresnelPower(const float &_newVal) { m_fresnelPow = _newVal; clearBuffer(); }
   void setCamera(Camera *_cam) { m_virtualCamera = _cam; updateCamera(); }
 
 protected:
 	Camera *m_virtualCamera;
 	float m_fresnelCoef;
+	float m_fresnelPow;
 };

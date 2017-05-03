@@ -1,5 +1,6 @@
 #include <QMouseEvent>
 #include <QFileDialog>
+#include <QImageReader>
 #include <ngl/ShaderLib.h>
 #include <iostream>
 #include <vector>
@@ -36,6 +37,9 @@ NGLScene::NGLScene(QWidget *_parent) :
 	m_renderChannel(0),
 	m_yaw(0.f),
 	m_pitch(0.f),
+	m_fxaaSharpness(0.5f),
+	m_fxaaSubpixQuality(0.75f),
+	m_fxaaEdgeThreshold(0.166f),
 	m_brdf(nullptr)
 {
   // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
@@ -201,7 +205,7 @@ void NGLScene::initializeGL()
 //  m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/happy_buddha.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/matt.obj"));
+	m_renderer->initMesh(vMeshLoader::loadMesh("models/matt.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_mask.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_head.obj"));
 //	m_renderer->initMesh(vMeshLoader::loadMesh("models/sebastian_head.obj"));
@@ -223,8 +227,6 @@ void NGLScene::initializeGL()
 	Imf::Rgba *pixelBuffer;
 	try
 	{
-//		Imf::RgbaInputFile in("hdr/Topanga_Forest_B_2k.exr");
-//    Imf::RgbaInputFile in("hdr/Topanga_Forest_B_3k.exr");
 		Imf::RgbaInputFile in("hdr/Arches_E_PineTree_3k.exr");
 		Imath::Box2i win = in.dataWindow();
 
@@ -240,6 +242,7 @@ void NGLScene::initializeGL()
 		in.readPixels(win.min.y, win.max.y);
 
 		m_renderer->loadHDR(pixelBuffer, dim.x, dim.y);
+		emit(HDRILoaded("hdr/Arches_E_PineTree_3k.exr"));
 	}
 	catch (Iex::BaseExc &e)
 	{
@@ -312,6 +315,13 @@ void NGLScene::paintGL()
 
 	shader->setRegisteredUniform2f("u_screenDim", width(), height());
 	shader->setRegisteredUniform2f("u_invScreenDim", 1.f/width(), 1.f/height());
+
+	if(m_fxaaEnabled)
+	{
+		shader->setRegisteredUniform1f("u_SubPixQuality", m_fxaaSubpixQuality);
+		shader->setRegisteredUniform1f("u_EdgeThreshold", m_fxaaEdgeThreshold);
+		shader->setRegisteredUniform1f("u_Sharpness", m_fxaaSharpness);
+	}
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -400,6 +410,7 @@ void NGLScene::loadTexture(const unsigned int &_type)
 	QString location = QFileDialog::getOpenFileName(this, tr("Load texture"), NULL, tr("Image files (*.jpg *.jpeg *.tif *.tiff *.png)"));
 	if(!location.isEmpty())
 	{
+		QImageReader reader(location);
 		QImage texture(location);
 		if(texture.isNull())
 		{
@@ -407,11 +418,10 @@ void NGLScene::loadTexture(const unsigned int &_type)
 		}
 		else
 		{
-			m_renderer->loadTexture(texture.constBits(), texture.width(), texture.height(), _type);
+			m_renderer->loadTexture(texture, reader.gamma(), _type);
 		}
 
 		m_renderer->clearBuffer();
-
 		emit textureLoaded(location, _type);
 	}
 }
@@ -436,9 +446,21 @@ void NGLScene::loadBRDF()
 	}
 }
 
+void NGLScene::useExampleSphere(const bool &_val)
+{
+	m_renderer->useExampleSphere(_val);
+	m_renderer->clearBuffer();
+}
+
 void NGLScene::useBRDF(const bool &_val)
 {
-	m_renderer->viewBRDF(_val);
+	m_renderer->useBRDF(_val);
+	m_renderer->clearBuffer();
+}
+
+void NGLScene::useCornellEnv(const bool &_val)
+{
+	m_renderer->useCornellBox(_val);
 	m_renderer->clearBuffer();
 }
 
@@ -449,6 +471,10 @@ void NGLScene::changeFov(const int &_newFov)
 
 void NGLScene::changeFresnelCoef(const int &_newVal)
 {
-	std::cout << _newVal/100.f << "\n";
 	m_renderer->setFresnelCoef(_newVal/100.f);
+}
+
+void NGLScene::changeFresnelPower(const int &_newVal)
+{
+	m_renderer->setFresnelPower(_newVal/10.f);
 }

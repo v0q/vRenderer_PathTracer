@@ -2,6 +2,9 @@
 
 #include <cuda_runtime.h>
 
+__constant__ __device__ float PI = 3.14159265359f;
+__constant__ __device__ float epsilon = 0.0000000003f;
+
 typedef struct mat4
 {
 	__device__ mat4(const float4 _a = make_float4(1.f, 0.f, 0.f, 0.f),

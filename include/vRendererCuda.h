@@ -18,9 +18,11 @@ public:
 	void updateCamera() override;
 	void initMesh(const vMeshData &_meshData) override;
 	void loadHDR(const Imf::Rgba *_colours, const unsigned int &_w, const unsigned int &_h) override;
-	void loadTexture(const unsigned char *_texture, const unsigned int &_w, const unsigned int &_h, const unsigned int &_type) override;
+	void loadTexture(const QImage &_texture, const float &_gamma, const unsigned int &_type) override;
 	void loadBRDF(const float *_brdf) override;
-	void viewBRDF(const bool &_newVal) override;
+	void useBRDF(const bool &_newVal) override;
+	void useExampleSphere(const bool &_newVal) override;
+	void useCornellBox(const bool &_newVal) override;
 	void clearBuffer() override;
   unsigned int getFrameCount() const override { return m_frame - 1; }
 private:
