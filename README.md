@@ -60,7 +60,7 @@ UI Elements:
 # 3D models
 With this submission, I've included three different 3d models:
 - models/adam_head.obj
-- models/adam_mask.obj
+- models/adam_mask.obj<br />
 are models from the Unity3D's Tech demo "Adam" (Available online at https://unity3d.com/pages/adam) and are used only for educational purposes.
 - models/dragon_vrip_res2.obj is a 3D scan from the Stanford University Computer Graphics Laboratory and is available online at http://graphics.stanford.edu/data/3Dscanrep/
 # Textures
