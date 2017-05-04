@@ -24,7 +24,6 @@ SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/Camera.cpp \
           $$PWD/src/SBVH.cpp \
           $$PWD/src/BVHNodes.cpp \
-          $$PWD/src/hdrloader.cpp \
           $$PWD/src/BRDFLoader.cpp
 # same for the .h files
 HEADERS+= $$PWD/include/mainwindow.h \
@@ -38,13 +37,12 @@ HEADERS+= $$PWD/include/mainwindow.h \
           $$PWD/include/Utilities.h \
           $$PWD/include/vDataTypes.h \
           $$PWD/include/vRenderer.h \
-          $$PWD/include/hdrloader.h \
           $$PWD/include/BRDFLoader.h
 
 FORMS += $$PWD/ui/mainwindow.ui
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include
-LIBS += -lassimp -lIlmImf -lIex -lHalf #-L/public/devel/lib -lOpenImageIO -lOpenImageIO_Util -ltiff #-lOpenImageIO #-lOpenColorIO
+LIBS += -lassimp -lIlmImf -lIex -lHalf #-L/usr/lib64 -lOpenImageIO #-L/public/devel/lib -lOpenImageIO -lOpenImageIO_Util -ltiff #-lOpenImageIO #-lOpenColorIO
 # where our exe is going to live (root of project)
 DESTDIR=./
 # add the glsl shader files

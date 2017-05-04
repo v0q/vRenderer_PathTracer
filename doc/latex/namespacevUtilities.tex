@@ -1,0 +1,164 @@
+\hypertarget{namespacevUtilities}{\section{v\-Utilities Namespace Reference}
+\label{namespacevUtilities}\index{v\-Utilities@{v\-Utilities}}
+}
+
+
+Utility namespace.  
+
+
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+ngl\-::\-Vec3 \hyperlink{namespacevUtilities_aa7cc71c40bf034efd3a5834b2307a793}{min\-Vec3} (const ngl\-::\-Vec3 \&\-\_\-v1, const ngl\-::\-Vec3 \&\-\_\-v2)
+\begin{DoxyCompactList}\small\item\em min\-Vec3 Get the component-\/wise minimums from two vectors \end{DoxyCompactList}\item 
+ngl\-::\-Vec3 \hyperlink{namespacevUtilities_a8418b00f3f9e52b6f186b5e12ece8e15}{max\-Vec3} (const ngl\-::\-Vec3 \&\-\_\-v1, const ngl\-::\-Vec3 \&\-\_\-v2)
+\begin{DoxyCompactList}\small\item\em max\-Vec3 Get the component-\/wise maximums from two vectors \end{DoxyCompactList}\item 
+ngl\-::\-Vec3 \hyperlink{namespacevUtilities_adb4a633333be024bd738145162d53673}{lerp} (const ngl\-::\-Vec3 \&\-\_\-v1, const ngl\-::\-Vec3 \&\-\_\-v2, const float \&\-\_\-t)
+\begin{DoxyCompactList}\small\item\em lerp Perform linear interpolation between two vectors given an alpha \end{DoxyCompactList}\item 
+float \hyperlink{namespacevUtilities_a7e5df8352dd98340207816292e1ccfcf}{clamp} (const float \&\-\_\-v, const float \&\-\_\-min, const float \&\-\_\-max)
+\begin{DoxyCompactList}\small\item\em clamp Clamps a given float between two values \end{DoxyCompactList}\item 
+void \hyperlink{namespacevUtilities_a3828a1aa0cfbd068f42601e54f479359}{clamp\-Vec3} (ngl\-::\-Vec3 \&io\-\_\-v, const ngl\-::\-Vec3 \&\-\_\-low, const ngl\-::\-Vec3 \&\-\_\-high)
+\begin{DoxyCompactList}\small\item\em clamp\-Vec3 Performs component-\/wise clamping for a vector \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename T $>$ }\\void \hyperlink{namespacevUtilities_a7e8796a2bff5498b31a9e0ad63199ac7}{swap} (T \&\-\_\-a, T \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em swap Swaps two elements around \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Utility namespace. 
+
+\subsection{Function Documentation}
+\hypertarget{namespacevUtilities_a7e5df8352dd98340207816292e1ccfcf}{\index{v\-Utilities@{v\-Utilities}!clamp@{clamp}}
+\index{clamp@{clamp}!vUtilities@{v\-Utilities}}
+\subsubsection[{clamp}]{\setlength{\rightskip}{0pt plus 5cm}float v\-Utilities\-::clamp (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-v, }
+\item[{const float \&}]{\-\_\-min, }
+\item[{const float \&}]{\-\_\-max}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{namespacevUtilities_a7e5df8352dd98340207816292e1ccfcf}
+
+
+clamp Clamps a given float between two values 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-v} & Value to clamp \\
+\hline
+{\em \-\_\-min} & Minimum limit of the clamp \\
+\hline
+{\em \-\_\-max} & Maximum limit of the clamp \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Clamped value 
+\end{DoxyReturn}
+\hypertarget{namespacevUtilities_a3828a1aa0cfbd068f42601e54f479359}{\index{v\-Utilities@{v\-Utilities}!clamp\-Vec3@{clamp\-Vec3}}
+\index{clamp\-Vec3@{clamp\-Vec3}!vUtilities@{v\-Utilities}}
+\subsubsection[{clamp\-Vec3}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Utilities\-::clamp\-Vec3 (
+\begin{DoxyParamCaption}
+\item[{ngl\-::\-Vec3 \&}]{io\-\_\-v, }
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-low, }
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-high}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{namespacevUtilities_a3828a1aa0cfbd068f42601e54f479359}
+
+
+clamp\-Vec3 Performs component-\/wise clamping for a vector 
+
+
+\begin{DoxyParams}{Parameters}
+{\em io\-\_\-v} & Input vector to be clamped \\
+\hline
+{\em \-\_\-low} & Minimum limit of the clamp \\
+\hline
+{\em \-\_\-high} & Maximum limit of the clamp \\
+\hline
+\end{DoxyParams}
+\hypertarget{namespacevUtilities_adb4a633333be024bd738145162d53673}{\index{v\-Utilities@{v\-Utilities}!lerp@{lerp}}
+\index{lerp@{lerp}!vUtilities@{v\-Utilities}}
+\subsubsection[{lerp}]{\setlength{\rightskip}{0pt plus 5cm}ngl\-::\-Vec3 v\-Utilities\-::lerp (
+\begin{DoxyParamCaption}
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-v1, }
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-v2, }
+\item[{const float \&}]{\-\_\-t}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{namespacevUtilities_adb4a633333be024bd738145162d53673}
+
+
+lerp Perform linear interpolation between two vectors given an alpha 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-v1} & First vector \\
+\hline
+{\em \-\_\-v2} & Second vector \\
+\hline
+{\em \-\_\-t} & Alpha \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Interpolated vector \-\_\-v1 $\ast$ (1.\-f -\/ \-\_\-t) + \-\_\-v2 $\ast$ \-\_\-t 
+\end{DoxyReturn}
+\hypertarget{namespacevUtilities_a8418b00f3f9e52b6f186b5e12ece8e15}{\index{v\-Utilities@{v\-Utilities}!max\-Vec3@{max\-Vec3}}
+\index{max\-Vec3@{max\-Vec3}!vUtilities@{v\-Utilities}}
+\subsubsection[{max\-Vec3}]{\setlength{\rightskip}{0pt plus 5cm}ngl\-::\-Vec3 v\-Utilities\-::max\-Vec3 (
+\begin{DoxyParamCaption}
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-v1, }
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-v2}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{namespacevUtilities_a8418b00f3f9e52b6f186b5e12ece8e15}
+
+
+max\-Vec3 Get the component-\/wise maximums from two vectors 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-v1} & First vector \\
+\hline
+{\em \-\_\-v2} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Vector with maximum components of the two given vectors 
+\end{DoxyReturn}
+\hypertarget{namespacevUtilities_aa7cc71c40bf034efd3a5834b2307a793}{\index{v\-Utilities@{v\-Utilities}!min\-Vec3@{min\-Vec3}}
+\index{min\-Vec3@{min\-Vec3}!vUtilities@{v\-Utilities}}
+\subsubsection[{min\-Vec3}]{\setlength{\rightskip}{0pt plus 5cm}ngl\-::\-Vec3 v\-Utilities\-::min\-Vec3 (
+\begin{DoxyParamCaption}
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-v1, }
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-v2}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{namespacevUtilities_aa7cc71c40bf034efd3a5834b2307a793}
+
+
+min\-Vec3 Get the component-\/wise minimums from two vectors 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-v1} & First vector \\
+\hline
+{\em \-\_\-v2} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Vector with minimum components of the two given vectors 
+\end{DoxyReturn}
+\hypertarget{namespacevUtilities_a7e8796a2bff5498b31a9e0ad63199ac7}{\index{v\-Utilities@{v\-Utilities}!swap@{swap}}
+\index{swap@{swap}!vUtilities@{v\-Utilities}}
+\subsubsection[{swap}]{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T $>$ void v\-Utilities\-::swap (
+\begin{DoxyParamCaption}
+\item[{T \&}]{\-\_\-a, }
+\item[{T \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{namespacevUtilities_a7e8796a2bff5498b31a9e0ad63199ac7}
+
+
+swap Swaps two elements around 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & Element to be swapped with \-\_\-b \\
+\hline
+{\em \-\_\-b} & Element to be swapped with \-\_\-a \\
+\hline
+\end{DoxyParams}

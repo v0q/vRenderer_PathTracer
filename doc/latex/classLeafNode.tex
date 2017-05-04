@@ -1,0 +1,177 @@
+\hypertarget{classLeafNode}{\section{Leaf\-Node Class Reference}
+\label{classLeafNode}\index{Leaf\-Node@{Leaf\-Node}}
+}
+
+
+The \hyperlink{classLeafNode}{Leaf\-Node} class Simple leaf node class, stores indices to triangles inside the node.  
+
+
+
+
+{\ttfamily \#include $<$B\-V\-H\-Nodes.\-h$>$}
+
+Inheritance diagram for Leaf\-Node\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classLeafNode}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classLeafNode_a5d896a0ea632f27c4c62700123a353c5}{Leaf\-Node} (const \hyperlink{classAABB}{A\-A\-B\-B} \&\-\_\-bounds, const unsigned int \&\-\_\-first\-Ind, const unsigned int \&\-\_\-last\-Ind)
+\begin{DoxyCompactList}\small\item\em \hyperlink{classLeafNode}{Leaf\-Node} Default ctor for a leaf node. \end{DoxyCompactList}\item 
+bool \hyperlink{classLeafNode_a4971bdbac579dd2d7688aa8706a41ea1}{is\-Leaf} () const override
+\begin{DoxyCompactList}\small\item\em is\-Leaf Used to distinquish the abstract nodes from each other, will always return true \end{DoxyCompactList}\item 
+unsigned int \hyperlink{classLeafNode_a897312601f3726f7d20b3d73959c111a}{num\-Child\-Nodes} () const override
+\begin{DoxyCompactList}\small\item\em num\-Child\-Nodes Leaf node has no children but needs to implement the virtual method \end{DoxyCompactList}\item 
+\hyperlink{classBVHNode}{B\-V\-H\-Node} $\ast$ \hyperlink{classLeafNode_a5c8eac5f86f69e5cae6f41d902550d39}{child\-Node} (const unsigned int \&\-\_\-index) const override
+\begin{DoxyCompactList}\small\item\em child\-Node Leaf node has no children but needs to implement the virtual method \end{DoxyCompactList}\item 
+unsigned int \hyperlink{classLeafNode_a8c138df453e78a56905e9066fb246f4f}{num\-Triangles} () const override
+\begin{DoxyCompactList}\small\item\em num\-Triangles Get the number of triangles inside the leaf node \end{DoxyCompactList}\item 
+unsigned int \hyperlink{classLeafNode_ad354a711fb811f508b682c37ecf2b471}{first\-Index} () const 
+\begin{DoxyCompactList}\small\item\em first\-Index Get the first triangle index \end{DoxyCompactList}\item 
+unsigned int \hyperlink{classLeafNode_af096e8e428d5f02d02ed16ee182b56d4}{last\-Index} () const 
+\begin{DoxyCompactList}\small\item\em last\-Index Get the last triangle index \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classLeafNode}{Leaf\-Node} class Simple leaf node class, stores indices to triangles inside the node. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classLeafNode_a5d896a0ea632f27c4c62700123a353c5}{\index{Leaf\-Node@{Leaf\-Node}!Leaf\-Node@{Leaf\-Node}}
+\index{Leaf\-Node@{Leaf\-Node}!LeafNode@{Leaf\-Node}}
+\subsubsection[{Leaf\-Node}]{\setlength{\rightskip}{0pt plus 5cm}Leaf\-Node\-::\-Leaf\-Node (
+\begin{DoxyParamCaption}
+\item[{const {\bf A\-A\-B\-B} \&}]{\-\_\-bounds, }
+\item[{const unsigned int \&}]{\-\_\-first\-Ind, }
+\item[{const unsigned int \&}]{\-\_\-last\-Ind}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classLeafNode_a5d896a0ea632f27c4c62700123a353c5}
+
+
+\hyperlink{classLeafNode}{Leaf\-Node} Default ctor for a leaf node. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-bounds} & \hyperlink{classAABB}{A\-A\-B\-B} of the node \\
+\hline
+{\em \-\_\-first\-Ind} & Index to the first triangle contained by this node \\
+\hline
+{\em \-\_\-last\-Ind} & Index to the last triangle contained by this node \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classLeafNode_a5c8eac5f86f69e5cae6f41d902550d39}{\index{Leaf\-Node@{Leaf\-Node}!child\-Node@{child\-Node}}
+\index{child\-Node@{child\-Node}!LeafNode@{Leaf\-Node}}
+\subsubsection[{child\-Node}]{\setlength{\rightskip}{0pt plus 5cm}{\bf B\-V\-H\-Node}$\ast$ Leaf\-Node\-::child\-Node (
+\begin{DoxyParamCaption}
+\item[{const unsigned int \&}]{\-\_\-index}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classLeafNode_a5c8eac5f86f69e5cae6f41d902550d39}
+
+
+child\-Node Leaf node has no children but needs to implement the virtual method 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-index} & Index to the child \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+nullptr as there are no children 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{classBVHNode_acf8b2130dd63bd66e35f130f86c65400}{B\-V\-H\-Node}.
+
+\hypertarget{classLeafNode_ad354a711fb811f508b682c37ecf2b471}{\index{Leaf\-Node@{Leaf\-Node}!first\-Index@{first\-Index}}
+\index{first\-Index@{first\-Index}!LeafNode@{Leaf\-Node}}
+\subsubsection[{first\-Index}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int Leaf\-Node\-::first\-Index (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classLeafNode_ad354a711fb811f508b682c37ecf2b471}
+
+
+first\-Index Get the first triangle index 
+
+\begin{DoxyReturn}{Returns}
+Index to the first triangle 
+\end{DoxyReturn}
+\hypertarget{classLeafNode_a4971bdbac579dd2d7688aa8706a41ea1}{\index{Leaf\-Node@{Leaf\-Node}!is\-Leaf@{is\-Leaf}}
+\index{is\-Leaf@{is\-Leaf}!LeafNode@{Leaf\-Node}}
+\subsubsection[{is\-Leaf}]{\setlength{\rightskip}{0pt plus 5cm}bool Leaf\-Node\-::is\-Leaf (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classLeafNode_a4971bdbac579dd2d7688aa8706a41ea1}
+
+
+is\-Leaf Used to distinquish the abstract nodes from each other, will always return true 
+
+\begin{DoxyReturn}{Returns}
+True 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{classBVHNode_a9d6c31fcebf88cc4c128a2b3af1f4cbf}{B\-V\-H\-Node}.
+
+\hypertarget{classLeafNode_af096e8e428d5f02d02ed16ee182b56d4}{\index{Leaf\-Node@{Leaf\-Node}!last\-Index@{last\-Index}}
+\index{last\-Index@{last\-Index}!LeafNode@{Leaf\-Node}}
+\subsubsection[{last\-Index}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int Leaf\-Node\-::last\-Index (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classLeafNode_af096e8e428d5f02d02ed16ee182b56d4}
+
+
+last\-Index Get the last triangle index 
+
+\begin{DoxyReturn}{Returns}
+Index to the last triangle 
+\end{DoxyReturn}
+\hypertarget{classLeafNode_a897312601f3726f7d20b3d73959c111a}{\index{Leaf\-Node@{Leaf\-Node}!num\-Child\-Nodes@{num\-Child\-Nodes}}
+\index{num\-Child\-Nodes@{num\-Child\-Nodes}!LeafNode@{Leaf\-Node}}
+\subsubsection[{num\-Child\-Nodes}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int Leaf\-Node\-::num\-Child\-Nodes (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classLeafNode_a897312601f3726f7d20b3d73959c111a}
+
+
+num\-Child\-Nodes Leaf node has no children but needs to implement the virtual method 
+
+\begin{DoxyReturn}{Returns}
+0 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{classBVHNode_ae5ad50686b4c345c98d03f080afc403f}{B\-V\-H\-Node}.
+
+\hypertarget{classLeafNode_a8c138df453e78a56905e9066fb246f4f}{\index{Leaf\-Node@{Leaf\-Node}!num\-Triangles@{num\-Triangles}}
+\index{num\-Triangles@{num\-Triangles}!LeafNode@{Leaf\-Node}}
+\subsubsection[{num\-Triangles}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int Leaf\-Node\-::num\-Triangles (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classLeafNode_a8c138df453e78a56905e9066fb246f4f}
+
+
+num\-Triangles Get the number of triangles inside the leaf node 
+
+\begin{DoxyReturn}{Returns}
+The number of triangles contained by the node, e.\-g. last index -\/ first index 
+\end{DoxyReturn}
+
+
+Reimplemented from \hyperlink{classBVHNode_a8a53277e44a407a75e32118ceb4fa425}{B\-V\-H\-Node}.
+
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{BVHNodes_8h}{B\-V\-H\-Nodes.\-h}\end{DoxyCompactItemize}

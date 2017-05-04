@@ -1,0 +1,589 @@
+\hypertarget{PathTracer_8cu}{\section{cuda/src/\-Path\-Tracer.cu File Reference}
+\label{PathTracer_8cu}\index{cuda/src/\-Path\-Tracer.\-cu@{cuda/src/\-Path\-Tracer.\-cu}}
+}
+
+
+Device (cuda) implementation of the path tracer.  
+
+
+{\ttfamily \#include $<$cuda\-\_\-runtime.\-h$>$}\\*
+{\ttfamily \#include $<$thrust/random.\-h$>$}\\*
+{\ttfamily \#include $<$thrust/random/uniform\-\_\-real\-\_\-distribution.\-h$>$}\\*
+{\ttfamily \#include $<$thrust/device\-\_\-vector.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}Path\-Tracer.\-cuh\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}Ray\-Intersection.\-cuh\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}Math\-Helpers.\-cuh\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}Utilities.\-cuh\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structSphere}{Sphere}
+\begin{DoxyCompactList}\small\item\em \hyperlink{structSphere}{Sphere} Simple sphere structure, used for the example sphere, cornell box scene and few others. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{PathTracer_8cu_a8dc71902a3c956140d3533820b1ef731}{\#define {\bfseries B\-R\-D\-F\-\_\-\-S\-A\-M\-P\-L\-I\-N\-G\-\_\-\-R\-E\-S\-\_\-\-T\-H\-E\-T\-A\-\_\-\-H}~90}\label{PathTracer_8cu_a8dc71902a3c956140d3533820b1ef731}
+
+\item 
+\hypertarget{PathTracer_8cu_a91bb2b846851bbcfbf4d5e0040c867df}{\#define {\bfseries B\-R\-D\-F\-\_\-\-S\-A\-M\-P\-L\-I\-N\-G\-\_\-\-R\-E\-S\-\_\-\-T\-H\-E\-T\-A\-\_\-\-D}~90}\label{PathTracer_8cu_a91bb2b846851bbcfbf4d5e0040c867df}
+
+\item 
+\hypertarget{PathTracer_8cu_aa2ccfe1ed7a38e1147f3ede37fadc3cc}{\#define {\bfseries B\-R\-D\-F\-\_\-\-S\-A\-M\-P\-L\-I\-N\-G\-\_\-\-R\-E\-S\-\_\-\-P\-H\-I\-\_\-\-D}~360}\label{PathTracer_8cu_aa2ccfe1ed7a38e1147f3ede37fadc3cc}
+
+\item 
+\hypertarget{PathTracer_8cu_acf3f1b403789e38a95ccb2407c151be5}{\#define {\bfseries R\-E\-D\-\_\-\-S\-C\-A\-L\-E}~(1.\-0/1500.\-0)}\label{PathTracer_8cu_acf3f1b403789e38a95ccb2407c151be5}
+
+\item 
+\hypertarget{PathTracer_8cu_adcde58c7b09df0bb410fbabd1fddaf3c}{\#define {\bfseries G\-R\-E\-E\-N\-\_\-\-S\-C\-A\-L\-E}~(1.\-15/1500.\-0)}\label{PathTracer_8cu_adcde58c7b09df0bb410fbabd1fddaf3c}
+
+\item 
+\hypertarget{PathTracer_8cu_ab4be50e26575571331b47f2df98916a5}{\#define {\bfseries B\-L\-U\-E\-\_\-\-S\-C\-A\-L\-E}~(1.\-66/1500.\-0)}\label{PathTracer_8cu_ab4be50e26575571331b47f2df98916a5}
+
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{PathTracer_8cu_a8ed9f74716eba6a3b5dd5d8c4f04fea6}{typedef struct \hyperlink{structSphere}{Sphere} \hyperlink{PathTracer_8cu_a8ed9f74716eba6a3b5dd5d8c4f04fea6}{Sphere}}\label{PathTracer_8cu_a8ed9f74716eba6a3b5dd5d8c4f04fea6}
+
+\begin{DoxyCompactList}\small\item\em \hyperlink{structSphere}{Sphere} Simple sphere structure, used for the example sphere, cornell box scene and few others. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum {\bfseries Refl\-\_\-t} \{ \\*
+{\bfseries S\-P\-E\-C}, 
+{\bfseries D\-I\-F\-F}, 
+{\bfseries B\-R\-D\-F}, 
+{\bfseries S\-P\-E\-C}, 
+\\*
+{\bfseries D\-I\-F\-F}, 
+{\bfseries B\-R\-D\-F}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- bool \hyperlink{PathTracer_8cu_a3a7d49a03827792a75682fe15f4277c0}{intersect\-Scene} (const \hyperlink{structRay}{Ray} $\ast$\-\_\-ray, float4 $\ast$\-\_\-vertices, float4 $\ast$\-\_\-normals, float4 $\ast$\-\_\-tangents, float4 $\ast$\-\_\-bvh\-Data, float2 $\ast$\-\_\-uvs, \hyperlink{structvHitData}{v\-Hit\-Data} $\ast$\-\_\-hit\-Data)
+\begin{DoxyCompactList}\small\item\em intersect\-Scene Check the intersections of a given ray with the scene, checks for the intersections with the triangle meshes and spheres \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- int \hyperlink{PathTracer_8cu_af8a748763d0b1381610d17db7e629f11}{phi\-\_\-diff\-\_\-index} (float phi\-\_\-diff)
+\item 
+\hypertarget{PathTracer_8cu_ab0b08863f3853b7448c3483d37dd7a9a}{\-\_\-\-\_\-device\-\_\-\-\_\- int {\bfseries theta\-\_\-half\-\_\-index} (float theta\-\_\-half)}\label{PathTracer_8cu_ab0b08863f3853b7448c3483d37dd7a9a}
+
+\item 
+\hypertarget{PathTracer_8cu_a55d9710cfc505aad07005204ede4eb44}{\-\_\-\-\_\-device\-\_\-\-\_\- int {\bfseries theta\-\_\-diff\-\_\-index} (float theta\-\_\-diff)}\label{PathTracer_8cu_a55d9710cfc505aad07005204ede4eb44}
+
+\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{PathTracer_8cu_a4ba7d65d0b55f6b729da6a78b862f600}{lookup\-B\-R\-D\-F} (const float4 \-\_\-reflected\-Dir, const float4 \-\_\-current\-Dir, const float4 \-\_\-normal, const float4 \-\_\-tangent)
+\begin{DoxyCompactList}\small\item\em lookup\-B\-R\-D\-F Look up the measured B\-R\-D\-F value given the incident and reflected vector and normal and tangents of the surface \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{PathTracer_8cu_a46cfba192ea0adba7cd6cdd42bc39762}{trace} (const \hyperlink{structRay}{Ray} $\ast$\-\_\-camray, float4 $\ast$\-\_\-vertices, float4 $\ast$\-\_\-normals, float4 $\ast$\-\_\-tangents, float4 $\ast$\-\_\-bvh\-Data, float2 $\ast$\-\_\-uvs, float4 $\ast$\-\_\-hdr, float \-\_\-fresnel\-Coef, float \-\_\-fresnel\-Pow, unsigned int $\ast$\-\_\-seed0, unsigned int $\ast$\-\_\-seed1)
+\begin{DoxyCompactList}\small\item\em trace Main trace function, bounces the rays around a set number of times instead of using a Russian roulette approach. Calculates the accumulated colour from the trace \end{DoxyCompactList}\item 
+\-\_\-\-\_\-global\-\_\-\-\_\- void \hyperlink{PathTracer_8cu_adbe4eadbb88568d75c4ddc11b6c41d31}{render} (cuda\-Surface\-Object\-\_\-t o\-\_\-tex, cuda\-Surface\-Object\-\_\-t o\-\_\-depth, float4 $\ast$io\-\_\-colors, float4 $\ast$\-\_\-hdr, float4 $\ast$\-\_\-vertices, float4 $\ast$\-\_\-normals, float4 $\ast$\-\_\-tangents, float4 $\ast$\-\_\-bvh\-Data, float2 $\ast$\-\_\-uvs, \hyperlink{structvCamera}{v\-Camera} \-\_\-cam, unsigned int \-\_\-w, unsigned int \-\_\-h, unsigned int \-\_\-frame, unsigned int \-\_\-time, float \-\_\-fresnel\-Coef, float \-\_\-fresnel\-Pow)
+\begin{DoxyCompactList}\small\item\em render Main render call, generates the rays and calls the trace function for every pixel on the screen \end{DoxyCompactList}\item 
+void \hyperlink{PathTracer_8cu_ac928700f7e1284e9c48b3e9972057216}{cu\-\_\-run\-Render\-Kernel} (cuda\-Surface\-Object\-\_\-t o\-\_\-texture, cuda\-Surface\-Object\-\_\-t o\-\_\-depth, float4 $\ast$\-\_\-hdr, float4 $\ast$\-\_\-vertices, float4 $\ast$\-\_\-normals, float4 $\ast$\-\_\-tangents, float4 $\ast$\-\_\-bvh\-Data, float2 $\ast$\-\_\-uvs, float4 $\ast$io\-\_\-color\-Arr, \hyperlink{structvCamera}{v\-Camera} \-\_\-cam, unsigned int \-\_\-w, unsigned int \-\_\-h, unsigned int \-\_\-frame, unsigned int \-\_\-time, float \-\_\-fresnel\-Coef, float \-\_\-fresnel\-Pow)
+\begin{DoxyCompactList}\small\item\em cu\-\_\-run\-Render\-Kernel C\-P\-U function that calls the G\-P\-U kernel \end{DoxyCompactList}\item 
+void \hyperlink{PathTracer_8cu_a3c5a077c055656ec04072e241cb8abd9}{cu\-\_\-bind\-Texture} (const float4 $\ast$\-\_\-device\-Texture, const unsigned int \-\_\-w, const unsigned int \-\_\-h, const v\-Texture\-Type \&\-\_\-type)
+\begin{DoxyCompactList}\small\item\em cu\-\_\-bind\-Texture Binds a given buffer to a cuda texture \end{DoxyCompactList}\item 
+void \hyperlink{PathTracer_8cu_a96b4e745cacc70a0e1007d7df5176864}{cu\-\_\-bind\-B\-R\-D\-F} (const float $\ast$\-\_\-brdf)
+\begin{DoxyCompactList}\small\item\em cu\-\_\-bind\-B\-R\-D\-F Binds the B\-R\-D\-F data to a cuda texture \end{DoxyCompactList}\item 
+void \hyperlink{PathTracer_8cu_a0ebc9aa3ce310c2cd3c99793c212aefa}{cu\-\_\-use\-Example\-Sphere} (const bool \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em cu\-\_\-use\-Example\-Sphere Toggles a device symbol for example sphere usage \end{DoxyCompactList}\item 
+void \hyperlink{PathTracer_8cu_adf3705d0e2ca2e89001457104fefd218}{cu\-\_\-use\-B\-R\-D\-F} (const bool \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em cu\-\_\-use\-B\-R\-D\-F Toggles a device symbol for B\-R\-D\-F usage \end{DoxyCompactList}\item 
+void \hyperlink{PathTracer_8cu_a84c7787fce87bcd3aecd756480fba258}{cu\-\_\-use\-Cornell\-Box} (const bool \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em cu\-\_\-use\-Cornell\-Box Toggles a device symbol for whether to use the cornell box or H\-D\-R\-I \end{DoxyCompactList}\item 
+void \hyperlink{PathTracer_8cu_a57be5801cbad9c51e6ab73ea59a32c62}{cu\-\_\-set\-H\-D\-R\-Dim} (const unsigned int \&\-\_\-w, const unsigned int \&\-\_\-h)
+\begin{DoxyCompactList}\small\item\em cu\-\_\-set\-H\-D\-R\-Dim Set the dimensions of the H\-D\-R\-I map, as it's stored in a float4 buffer rather than a texture \end{DoxyCompactList}\item 
+\hypertarget{PathTracer_8cu_aed211bb31208e488f637a15f9a68587e}{void \hyperlink{PathTracer_8cu_aed211bb31208e488f637a15f9a68587e}{cu\-\_\-mesh\-Initialised} ()}\label{PathTracer_8cu_aed211bb31208e488f637a15f9a68587e}
+
+\begin{DoxyCompactList}\small\item\em cu\-\_\-mesh\-Initialised Propagate the info that a mesh has been initialised to the G\-P\-U \end{DoxyCompactList}\item 
+void \hyperlink{PathTracer_8cu_a7cfaf8db845b7c5c5af7361d54a10ca0}{cu\-\_\-fill\-Float4} (float4 $\ast$\-\_\-d\-Ptr, const float4 \-\_\-val, const unsigned int \-\_\-size)
+\begin{DoxyCompactList}\small\item\em cu\-\_\-fill\-Float4 Fill a device float4 pointer with a given value \end{DoxyCompactList}\item 
+\hypertarget{PathTracer_8cu_a6a3d532cae6d73f9efe5bf195eb14d1e}{void \hyperlink{PathTracer_8cu_a6a3d532cae6d73f9efe5bf195eb14d1e}{cu\-\_\-clean\-Up} ()}\label{PathTracer_8cu_a6a3d532cae6d73f9efe5bf195eb14d1e}
+
+\begin{DoxyCompactList}\small\item\em cu\-\_\-clean\-Up Cleans up the textures etc from the device \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{PathTracer_8cu_a44cc78152f4052d45ae5357bbb4a4cdd}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- bool \hyperlink{PathTracer_8cu_a44cc78152f4052d45ae5357bbb4a4cdd}{k\-Has\-Diffuse\-Map} = false}\label{PathTracer_8cu_a44cc78152f4052d45ae5357bbb4a4cdd}
+
+\begin{DoxyCompactList}\small\item\em Device constant memory symbols. \end{DoxyCompactList}\item 
+\hypertarget{PathTracer_8cu_a2b1b58a89b1a273183e45f1a96a1f3cd}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- bool {\bfseries k\-Has\-Normal\-Map} = false}\label{PathTracer_8cu_a2b1b58a89b1a273183e45f1a96a1f3cd}
+
+\item 
+\hypertarget{PathTracer_8cu_a728ffb705f8175362e6d93c8d91bf2b5}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- bool {\bfseries k\-Has\-Specular\-Map} = false}\label{PathTracer_8cu_a728ffb705f8175362e6d93c8d91bf2b5}
+
+\item 
+\hypertarget{PathTracer_8cu_ab1e9e933b9ff184d8c63237b03462c21}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- bool {\bfseries k\-Has\-B\-R\-D\-F} = false}\label{PathTracer_8cu_ab1e9e933b9ff184d8c63237b03462c21}
+
+\item 
+\hypertarget{PathTracer_8cu_ae756e7197857f67fbed551afe1d55ecb}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- bool {\bfseries k\-Mesh\-Initialised} = false}\label{PathTracer_8cu_ae756e7197857f67fbed551afe1d55ecb}
+
+\item 
+\hypertarget{PathTracer_8cu_a7991d1e30454fd1b671ea2d3f52aec30}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- bool {\bfseries k\-Use\-Example\-Sphere} = false}\label{PathTracer_8cu_a7991d1e30454fd1b671ea2d3f52aec30}
+
+\item 
+\hypertarget{PathTracer_8cu_a31c3c62a28c62f6b2d6e8efb4eb2f56f}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- bool {\bfseries k\-View\-B\-R\-D\-F} = false}\label{PathTracer_8cu_a31c3c62a28c62f6b2d6e8efb4eb2f56f}
+
+\item 
+\hypertarget{PathTracer_8cu_a404f8aee500bbfaf9fdde22334935ae5}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- bool {\bfseries k\-Use\-Cornell\-Box} = false}\label{PathTracer_8cu_a404f8aee500bbfaf9fdde22334935ae5}
+
+\item 
+\hypertarget{PathTracer_8cu_a5ffe23e61e0b0e291092031689bf723d}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- uint2 {\bfseries k\-Diffuse\-Dim}}\label{PathTracer_8cu_a5ffe23e61e0b0e291092031689bf723d}
+
+\item 
+\hypertarget{PathTracer_8cu_ad6f9887943280ba6afcc0a1c2718faca}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- uint2 {\bfseries k\-Normal\-Dim}}\label{PathTracer_8cu_ad6f9887943280ba6afcc0a1c2718faca}
+
+\item 
+\hypertarget{PathTracer_8cu_a339845c441b64bc83a2d6b8def41ac76}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- uint2 {\bfseries k\-Specular\-Dim}}\label{PathTracer_8cu_a339845c441b64bc83a2d6b8def41ac76}
+
+\item 
+\hypertarget{PathTracer_8cu_a9851c41ea272158daad1cf42b5f9594f}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- float {\bfseries k\-Inv\-Gamma} = 1.f/2.\-2f}\label{PathTracer_8cu_a9851c41ea272158daad1cf42b5f9594f}
+
+\item 
+\hypertarget{PathTracer_8cu_afd8a1c4b2c21deb46bdcbc77d8606ac0}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- float {\bfseries k\-Inv\-Samps} = 1.f/2.f}\label{PathTracer_8cu_afd8a1c4b2c21deb46bdcbc77d8606ac0}
+
+\item 
+\hypertarget{PathTracer_8cu_a5b6778486d807e8985816b9abc2a48a6}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- \\*
+unsigned int {\bfseries k\-Samps} = 2}\label{PathTracer_8cu_a5b6778486d807e8985816b9abc2a48a6}
+
+\item 
+\hypertarget{PathTracer_8cu_a51c1ea8a638a21d49eae94a0090af5fb}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- \\*
+unsigned int {\bfseries k\-H\-D\-Rwidth} = 0}\label{PathTracer_8cu_a51c1ea8a638a21d49eae94a0090af5fb}
+
+\item 
+\hypertarget{PathTracer_8cu_a8d48ccae760d1fdeac9587240813e5f7}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- \\*
+unsigned int {\bfseries k\-H\-D\-Rheight} = 0}\label{PathTracer_8cu_a8d48ccae760d1fdeac9587240813e5f7}
+
+\item 
+\hypertarget{PathTracer_8cu_a5aedfe43232fa7feb8f8f9f2ffcc2a7c}{texture$<$ float4, \\*
+1, cuda\-Read\-Mode\-Element\-Type $>$ \hyperlink{PathTracer_8cu_a5aedfe43232fa7feb8f8f9f2ffcc2a7c}{t\-\_\-diffuse}}\label{PathTracer_8cu_a5aedfe43232fa7feb8f8f9f2ffcc2a7c}
+
+\begin{DoxyCompactList}\small\item\em Device texture memory objects. \end{DoxyCompactList}\item 
+\hypertarget{PathTracer_8cu_a6a7be04f28a49c5de6198ffdd141f535}{texture$<$ float4, \\*
+1, cuda\-Read\-Mode\-Element\-Type $>$ {\bfseries t\-\_\-normal}}\label{PathTracer_8cu_a6a7be04f28a49c5de6198ffdd141f535}
+
+\item 
+\hypertarget{PathTracer_8cu_a0c37a5ddd8cdb941f5a67d99c23f2116}{texture$<$ float4, \\*
+1, cuda\-Read\-Mode\-Element\-Type $>$ {\bfseries t\-\_\-specular}}\label{PathTracer_8cu_a0c37a5ddd8cdb941f5a67d99c23f2116}
+
+\item 
+\hypertarget{PathTracer_8cu_a418288dac1003cc592ea1f31b80a0924}{texture$<$ float, \\*
+1, cuda\-Read\-Mode\-Element\-Type $>$ {\bfseries t\-\_\-brdf}}\label{PathTracer_8cu_a418288dac1003cc592ea1f31b80a0924}
+
+\item 
+\-\_\-\-\_\-constant\-\_\-\-\_\- \hyperlink{structSphere}{Sphere} {\bfseries spheres} \mbox{[}$\,$\mbox{]}
+\item 
+\-\_\-\-\_\-constant\-\_\-\-\_\- \hyperlink{structSphere}{Sphere} {\bfseries cornell\-Box} \mbox{[}$\,$\mbox{]}
+\item 
+\hypertarget{PathTracer_8cu_a119aa674eb10f7fdb207268b935a0771}{\-\_\-\-\_\-constant\-\_\-\-\_\- \hyperlink{structSphere}{Sphere} {\bfseries example\-Sphere} = \{ 10.f, \{ 0.f, 0.f, 0.f, 0.f \},\{ 0.f, 0.f, 0.f, 0.f \}, \{ 1.f, 1.f, 1.f, 0.f \}, D\-I\-F\-F \}}\label{PathTracer_8cu_a119aa674eb10f7fdb207268b935a0771}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Device (cuda) implementation of the path tracer. 
+
+\subsection{Function Documentation}
+\hypertarget{PathTracer_8cu_a96b4e745cacc70a0e1007d7df5176864}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!cu\-\_\-bind\-B\-R\-D\-F@{cu\-\_\-bind\-B\-R\-D\-F}}
+\index{cu\-\_\-bind\-B\-R\-D\-F@{cu\-\_\-bind\-B\-R\-D\-F}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{cu\-\_\-bind\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}void cu\-\_\-bind\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const float $\ast$}]{\-\_\-brdf}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_a96b4e745cacc70a0e1007d7df5176864}
+
+
+cu\-\_\-bind\-B\-R\-D\-F Binds the B\-R\-D\-F data to a cuda texture 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-brdf} & Device brdf buffer \\
+\hline
+\end{DoxyParams}
+\hypertarget{PathTracer_8cu_a3c5a077c055656ec04072e241cb8abd9}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!cu\-\_\-bind\-Texture@{cu\-\_\-bind\-Texture}}
+\index{cu\-\_\-bind\-Texture@{cu\-\_\-bind\-Texture}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{cu\-\_\-bind\-Texture}]{\setlength{\rightskip}{0pt plus 5cm}void cu\-\_\-bind\-Texture (
+\begin{DoxyParamCaption}
+\item[{const float4 $\ast$}]{\-\_\-device\-Texture, }
+\item[{const unsigned int}]{\-\_\-w, }
+\item[{const unsigned int}]{\-\_\-h, }
+\item[{const v\-Texture\-Type \&}]{\-\_\-type}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_a3c5a077c055656ec04072e241cb8abd9}
+
+
+cu\-\_\-bind\-Texture Binds a given buffer to a cuda texture 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-device\-Texture} & Device texture buffer \\
+\hline
+{\em \-\_\-w} & Width of the texture \\
+\hline
+{\em \-\_\-h} & Height of the texture \\
+\hline
+{\em \-\_\-type} & Type of the texture, 0 = Diffuse, 1 = Normal, 2 = Specular \\
+\hline
+\end{DoxyParams}
+\hypertarget{PathTracer_8cu_a7cfaf8db845b7c5c5af7361d54a10ca0}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!cu\-\_\-fill\-Float4@{cu\-\_\-fill\-Float4}}
+\index{cu\-\_\-fill\-Float4@{cu\-\_\-fill\-Float4}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{cu\-\_\-fill\-Float4}]{\setlength{\rightskip}{0pt plus 5cm}void cu\-\_\-fill\-Float4 (
+\begin{DoxyParamCaption}
+\item[{float4 $\ast$}]{\-\_\-d\-Ptr, }
+\item[{const float4}]{\-\_\-val, }
+\item[{const unsigned int}]{\-\_\-size}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_a7cfaf8db845b7c5c5af7361d54a10ca0}
+
+
+cu\-\_\-fill\-Float4 Fill a device float4 pointer with a given value 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-d\-Ptr} & Device pointer \\
+\hline
+{\em \-\_\-val} & Value to fill the pointer with \\
+\hline
+{\em \-\_\-size} & Size of the device pointer \\
+\hline
+\end{DoxyParams}
+\hypertarget{PathTracer_8cu_ac928700f7e1284e9c48b3e9972057216}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!cu\-\_\-run\-Render\-Kernel@{cu\-\_\-run\-Render\-Kernel}}
+\index{cu\-\_\-run\-Render\-Kernel@{cu\-\_\-run\-Render\-Kernel}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{cu\-\_\-run\-Render\-Kernel}]{\setlength{\rightskip}{0pt plus 5cm}void cu\-\_\-run\-Render\-Kernel (
+\begin{DoxyParamCaption}
+\item[{cuda\-Surface\-Object\-\_\-t}]{o\-\_\-texture, }
+\item[{cuda\-Surface\-Object\-\_\-t}]{o\-\_\-depth, }
+\item[{float4 $\ast$}]{\-\_\-hdr, }
+\item[{float4 $\ast$}]{\-\_\-vertices, }
+\item[{float4 $\ast$}]{\-\_\-normals, }
+\item[{float4 $\ast$}]{\-\_\-tangents, }
+\item[{float4 $\ast$}]{\-\_\-bvh\-Data, }
+\item[{float2 $\ast$}]{\-\_\-uvs, }
+\item[{float4 $\ast$}]{io\-\_\-color\-Arr, }
+\item[{{\bf v\-Camera}}]{\-\_\-cam, }
+\item[{unsigned int}]{\-\_\-w, }
+\item[{unsigned int}]{\-\_\-h, }
+\item[{unsigned int}]{\-\_\-frame, }
+\item[{unsigned int}]{\-\_\-time, }
+\item[{float}]{\-\_\-fresnel\-Coef, }
+\item[{float}]{\-\_\-fresnel\-Pow}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_ac928700f7e1284e9c48b3e9972057216}
+
+
+cu\-\_\-run\-Render\-Kernel C\-P\-U function that calls the G\-P\-U kernel 
+
+
+\begin{DoxyParams}{Parameters}
+{\em o\-\_\-texture} & G\-L texture to write the result to \\
+\hline
+{\em o\-\_\-depth} & G\-L depth texture to write the depth to \\
+\hline
+{\em \-\_\-hdr} & H\-D\-R\-I map \\
+\hline
+{\em \-\_\-vertices} & Mesh vertices \\
+\hline
+{\em \-\_\-normals} & Mesh normals \\
+\hline
+{\em \-\_\-tangents} & Mesh tangents \\
+\hline
+{\em \-\_\-bvh\-Data} & \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure \\
+\hline
+{\em \-\_\-uvs} & Mesh U\-Vs \\
+\hline
+{\em io\-\_\-color\-Arr} & Colour accumulation buffer \\
+\hline
+{\em \-\_\-cam} & \hyperlink{classCamera}{Camera} \\
+\hline
+{\em \-\_\-w} & Width of the screen/render area \\
+\hline
+{\em \-\_\-h} & Height of the screen/render area \\
+\hline
+{\em \-\_\-frame} & Current frame number \\
+\hline
+{\em \-\_\-time} & Elapsed time (used as a seed for rng) \\
+\hline
+{\em \-\_\-fresnel\-Coef} & Fresnel coefficient \\
+\hline
+{\em \-\_\-fresnel\-Pow} & Fresnel power \\
+\hline
+\end{DoxyParams}
+\hypertarget{PathTracer_8cu_a57be5801cbad9c51e6ab73ea59a32c62}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!cu\-\_\-set\-H\-D\-R\-Dim@{cu\-\_\-set\-H\-D\-R\-Dim}}
+\index{cu\-\_\-set\-H\-D\-R\-Dim@{cu\-\_\-set\-H\-D\-R\-Dim}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{cu\-\_\-set\-H\-D\-R\-Dim}]{\setlength{\rightskip}{0pt plus 5cm}void cu\-\_\-set\-H\-D\-R\-Dim (
+\begin{DoxyParamCaption}
+\item[{const unsigned int \&}]{\-\_\-w, }
+\item[{const unsigned int \&}]{\-\_\-h}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_a57be5801cbad9c51e6ab73ea59a32c62}
+
+
+cu\-\_\-set\-H\-D\-R\-Dim Set the dimensions of the H\-D\-R\-I map, as it's stored in a float4 buffer rather than a texture 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-w} & Width of the H\-D\-R\-I map \\
+\hline
+{\em \-\_\-h} & Height of the H\-D\-R\-I map \\
+\hline
+\end{DoxyParams}
+\hypertarget{PathTracer_8cu_adf3705d0e2ca2e89001457104fefd218}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!cu\-\_\-use\-B\-R\-D\-F@{cu\-\_\-use\-B\-R\-D\-F}}
+\index{cu\-\_\-use\-B\-R\-D\-F@{cu\-\_\-use\-B\-R\-D\-F}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{cu\-\_\-use\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}void cu\-\_\-use\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_adf3705d0e2ca2e89001457104fefd218}
+
+
+cu\-\_\-use\-B\-R\-D\-F Toggles a device symbol for B\-R\-D\-F usage 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New value, whether to use B\-R\-D\-F or not \\
+\hline
+\end{DoxyParams}
+\hypertarget{PathTracer_8cu_a84c7787fce87bcd3aecd756480fba258}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!cu\-\_\-use\-Cornell\-Box@{cu\-\_\-use\-Cornell\-Box}}
+\index{cu\-\_\-use\-Cornell\-Box@{cu\-\_\-use\-Cornell\-Box}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{cu\-\_\-use\-Cornell\-Box}]{\setlength{\rightskip}{0pt plus 5cm}void cu\-\_\-use\-Cornell\-Box (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_a84c7787fce87bcd3aecd756480fba258}
+
+
+cu\-\_\-use\-Cornell\-Box Toggles a device symbol for whether to use the cornell box or H\-D\-R\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New value, whether to use cornell box or not \\
+\hline
+\end{DoxyParams}
+\hypertarget{PathTracer_8cu_a0ebc9aa3ce310c2cd3c99793c212aefa}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!cu\-\_\-use\-Example\-Sphere@{cu\-\_\-use\-Example\-Sphere}}
+\index{cu\-\_\-use\-Example\-Sphere@{cu\-\_\-use\-Example\-Sphere}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{cu\-\_\-use\-Example\-Sphere}]{\setlength{\rightskip}{0pt plus 5cm}void cu\-\_\-use\-Example\-Sphere (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_a0ebc9aa3ce310c2cd3c99793c212aefa}
+
+
+cu\-\_\-use\-Example\-Sphere Toggles a device symbol for example sphere usage 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New value, whether to use the example sphere or not \\
+\hline
+\end{DoxyParams}
+\hypertarget{PathTracer_8cu_a3a7d49a03827792a75682fe15f4277c0}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!intersect\-Scene@{intersect\-Scene}}
+\index{intersect\-Scene@{intersect\-Scene}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{intersect\-Scene}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- bool intersect\-Scene (
+\begin{DoxyParamCaption}
+\item[{const {\bf Ray} $\ast$}]{\-\_\-ray, }
+\item[{float4 $\ast$}]{\-\_\-vertices, }
+\item[{float4 $\ast$}]{\-\_\-normals, }
+\item[{float4 $\ast$}]{\-\_\-tangents, }
+\item[{float4 $\ast$}]{\-\_\-bvh\-Data, }
+\item[{float2 $\ast$}]{\-\_\-uvs, }
+\item[{{\bf v\-Hit\-Data} $\ast$}]{\-\_\-hit\-Data}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_a3a7d49a03827792a75682fe15f4277c0}
+
+
+intersect\-Scene Check the intersections of a given ray with the scene, checks for the intersections with the triangle meshes and spheres 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-ray} & \hyperlink{structRay}{Ray} to check intersections against \\
+\hline
+{\em \-\_\-vertices} & Vertices of a triangle mesh \\
+\hline
+{\em \-\_\-normals} & Normals of a triangle mesh \\
+\hline
+{\em \-\_\-tangents} & Tangents of a triangle mesh \\
+\hline
+{\em \-\_\-bvh\-Data} & \hyperlink{classSBVH}{S\-B\-V\-H} structure \\
+\hline
+{\em \-\_\-uvs} & U\-Vs of a triangle mesh \\
+\hline
+{\em \-\_\-hit\-Data} & Structure to store the hit results to \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if an intersection was found 
+\end{DoxyReturn}
+This section is from Hannes Hergeth's Cuda\-Tracer\-Lib available at \href{https://github.com/hhergeth/CudaTracerLib}{\tt https\-://github.\-com/hhergeth/\-Cuda\-Tracer\-Lib}\hypertarget{PathTracer_8cu_a4ba7d65d0b55f6b729da6a78b862f600}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!lookup\-B\-R\-D\-F@{lookup\-B\-R\-D\-F}}
+\index{lookup\-B\-R\-D\-F@{lookup\-B\-R\-D\-F}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{lookup\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 lookup\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const float4}]{\-\_\-reflected\-Dir, }
+\item[{const float4}]{\-\_\-current\-Dir, }
+\item[{const float4}]{\-\_\-normal, }
+\item[{const float4}]{\-\_\-tangent}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_a4ba7d65d0b55f6b729da6a78b862f600}
+
+
+lookup\-B\-R\-D\-F Look up the measured B\-R\-D\-F value given the incident and reflected vector and normal and tangents of the surface 
+
+The above functions are from M\-E\-R\-L 100 database B\-R\-D\-F lookup code available at \href{http://people.csail.mit.edu/wojciech/BRDFDatabase/code/BRDFRead.cpp}{\tt http\-://people.\-csail.\-mit.\-edu/wojciech/\-B\-R\-D\-F\-Database/code/\-B\-R\-D\-F\-Read.\-cpp} 
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-reflected\-Dir} & Direction of the reflected light \\
+\hline
+{\em \-\_\-current\-Dir} & Current direction \\
+\hline
+{\em \-\_\-normal} & Normal of the surface \\
+\hline
+{\em \-\_\-tangent} & Tangent of the surface \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The R\-G\-B value from the B\-R\-D\-F lookup 
+\end{DoxyReturn}
+The following lookup code is adapted from Disney's B\-R\-D\-F Explorer available at \href{https://github.com/wdas/brdf}{\tt https\-://github.\-com/wdas/brdf} and is based on the M\-E\-R\-L 100 B\-R\-D\-F lookup code available at \href{http://people.csail.mit.edu/wojciech/BRDFDatabase/code/BRDFRead.cpp}{\tt http\-://people.\-csail.\-mit.\-edu/wojciech/\-B\-R\-D\-F\-Database/code/\-B\-R\-D\-F\-Read.\-cpp}\hypertarget{PathTracer_8cu_af8a748763d0b1381610d17db7e629f11}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!phi\-\_\-diff\-\_\-index@{phi\-\_\-diff\-\_\-index}}
+\index{phi\-\_\-diff\-\_\-index@{phi\-\_\-diff\-\_\-index}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{phi\-\_\-diff\-\_\-index}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- int phi\-\_\-diff\-\_\-index (
+\begin{DoxyParamCaption}
+\item[{float}]{phi\-\_\-diff}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{PathTracer_8cu_af8a748763d0b1381610d17db7e629f11}
+The following functions are from M\-E\-R\-L 100 database B\-R\-D\-F lookup code available at \href{http://people.csail.mit.edu/wojciech/BRDFDatabase/code/BRDFRead.cpp}{\tt http\-://people.\-csail.\-mit.\-edu/wojciech/\-B\-R\-D\-F\-Database/code/\-B\-R\-D\-F\-Read.\-cpp} \hypertarget{PathTracer_8cu_adbe4eadbb88568d75c4ddc11b6c41d31}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!render@{render}}
+\index{render@{render}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{render}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-global\-\_\-\-\_\- void render (
+\begin{DoxyParamCaption}
+\item[{cuda\-Surface\-Object\-\_\-t}]{o\-\_\-tex, }
+\item[{cuda\-Surface\-Object\-\_\-t}]{o\-\_\-depth, }
+\item[{float4 $\ast$}]{io\-\_\-colors, }
+\item[{float4 $\ast$}]{\-\_\-hdr, }
+\item[{float4 $\ast$}]{\-\_\-vertices, }
+\item[{float4 $\ast$}]{\-\_\-normals, }
+\item[{float4 $\ast$}]{\-\_\-tangents, }
+\item[{float4 $\ast$}]{\-\_\-bvh\-Data, }
+\item[{float2 $\ast$}]{\-\_\-uvs, }
+\item[{{\bf v\-Camera}}]{\-\_\-cam, }
+\item[{unsigned int}]{\-\_\-w, }
+\item[{unsigned int}]{\-\_\-h, }
+\item[{unsigned int}]{\-\_\-frame, }
+\item[{unsigned int}]{\-\_\-time, }
+\item[{float}]{\-\_\-fresnel\-Coef, }
+\item[{float}]{\-\_\-fresnel\-Pow}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_adbe4eadbb88568d75c4ddc11b6c41d31}
+
+
+render Main render call, generates the rays and calls the trace function for every pixel on the screen 
+
+
+\begin{DoxyParams}{Parameters}
+{\em o\-\_\-tex} & Open\-G\-L texture buffer to write the result to \\
+\hline
+{\em o\-\_\-depth} & Open\-G\-L depth texture buffer to write the depth result to \\
+\hline
+{\em io\-\_\-colors} & Colour accumulation buffer for iterative sampling \\
+\hline
+{\em \-\_\-hdr} & H\-D\-R\-I map \\
+\hline
+{\em \-\_\-vertices} & Mesh vertices \\
+\hline
+{\em \-\_\-normals} & Mesh normals \\
+\hline
+{\em \-\_\-tangents} & Mesh tangents \\
+\hline
+{\em \-\_\-bvh\-Data} & \hyperlink{classSBVH}{S\-B\-V\-H} structure for the mesh \\
+\hline
+{\em \-\_\-uvs} & Mesh U\-Vs \\
+\hline
+{\em \-\_\-cam} & Virtual camera \\
+\hline
+{\em \-\_\-w} & Width of the screen \\
+\hline
+{\em \-\_\-h} & Height of the screen \\
+\hline
+{\em \-\_\-frame} & Current frame \\
+\hline
+{\em \-\_\-time} & Elapsed time, used for R\-N\-G seeding \\
+\hline
+{\em \-\_\-fresnel\-Coef} & Fresnel coefficient \\
+\hline
+{\em \-\_\-fresnel\-Pow} & Fresnel power \\
+\hline
+\end{DoxyParams}
+\hypertarget{PathTracer_8cu_a46cfba192ea0adba7cd6cdd42bc39762}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!trace@{trace}}
+\index{trace@{trace}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{trace}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 trace (
+\begin{DoxyParamCaption}
+\item[{const {\bf Ray} $\ast$}]{\-\_\-camray, }
+\item[{float4 $\ast$}]{\-\_\-vertices, }
+\item[{float4 $\ast$}]{\-\_\-normals, }
+\item[{float4 $\ast$}]{\-\_\-tangents, }
+\item[{float4 $\ast$}]{\-\_\-bvh\-Data, }
+\item[{float2 $\ast$}]{\-\_\-uvs, }
+\item[{float4 $\ast$}]{\-\_\-hdr, }
+\item[{float}]{\-\_\-fresnel\-Coef, }
+\item[{float}]{\-\_\-fresnel\-Pow, }
+\item[{unsigned int $\ast$}]{\-\_\-seed0, }
+\item[{unsigned int $\ast$}]{\-\_\-seed1}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cu_a46cfba192ea0adba7cd6cdd42bc39762}
+
+
+trace Main trace function, bounces the rays around a set number of times instead of using a Russian roulette approach. Calculates the accumulated colour from the trace 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-camray} & Initial ray shot from the camera \\
+\hline
+{\em \-\_\-vertices} & Vertices of a mesh \\
+\hline
+{\em \-\_\-normals} & Normals of a mesh \\
+\hline
+{\em \-\_\-tangents} & Tangents of a mesh \\
+\hline
+{\em \-\_\-bvh\-Data} & \hyperlink{classSBVH}{S\-B\-V\-H} acceleration data \\
+\hline
+{\em \-\_\-uvs} & U\-Vs of a mesh \\
+\hline
+{\em \-\_\-hdr} & H\-D\-R\-I map data \\
+\hline
+{\em \-\_\-fresnel\-Coef} & Fresnel coefficient \\
+\hline
+{\em \-\_\-fresnel\-Pow} & Fresnel power \\
+\hline
+{\em \-\_\-seed0} & First initial seed for the rng \\
+\hline
+{\em \-\_\-seed1} & Second initial seed for the rng \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The accumulated colour from the trace 
+\end{DoxyReturn}
+
+
+\subsection{Variable Documentation}
+\hypertarget{PathTracer_8cu_a56f2720c988af7d5a4f483289d1a7857}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!cornell\-Box@{cornell\-Box}}
+\index{cornell\-Box@{cornell\-Box}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{cornell\-Box}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-constant\-\_\-\-\_\- {\bf Sphere} cornell\-Box\mbox{[}$\,$\mbox{]}}}\label{PathTracer_8cu_a56f2720c988af7d5a4f483289d1a7857}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+=
+\{
+    \{ 160.f, \{ 0.f, 160.f + 49.f, 0.f, 0.f \}, \{ 4.f, 3.6f, 3.2f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, DIFF \}, 
+    \{ 1e5f, \{ 1e5f + 50.f, 0.f, 0.f, 0.f \}, \{ 0.075f, 0.025f, 0.025f, 0.f \}, \{ 0.75f, 0.25f, 0.25f, 0.f \}, 
+      DIFF \}, 
+    \{ 1e5f, \{ -1e5f - 50.f, 0.f, 0.f, 0.f \}, \{ 0.025f, 0.075f, 0.025f, 0.f \}, \{ 0.25f, 0.75f, 0.25f, 0.f \},
+       DIFF \}, 
+    \{ 1e5f, \{ 0.f, 0.f, -1e5f - 100.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, \{ 1.f, 1.f, 1.f, 0.f \}, DIFF \}, 
+    \{ 1e5f, \{ 0.f, 1e5f + 50.f, 0.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, \{ 1.f, 1.f, 1.f, 0.f \}, DIFF \}, 
+    \{ 1e5f, \{ 0.f, -1e5f - 50.f, 0.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, \{ 1.f, 1.f, 1.f, 0.f \}, DIFF \} 
+\}
+\end{DoxyCode}
+\hypertarget{PathTracer_8cu_a605596ee17fca97fd100e0f463252f3d}{\index{Path\-Tracer.\-cu@{Path\-Tracer.\-cu}!spheres@{spheres}}
+\index{spheres@{spheres}!PathTracer.cu@{Path\-Tracer.\-cu}}
+\subsubsection[{spheres}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-constant\-\_\-\-\_\- {\bf Sphere} spheres\mbox{[}$\,$\mbox{]}}}\label{PathTracer_8cu_a605596ee17fca97fd100e0f463252f3d}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+=
+\{
+    \{ 3.5f, \{ 15.f, 0.f, 15.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, SPEC \}, 
+    \{ 3.5f, \{ 25.f, 0.f, 15.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, \{ 1.f, 1.f, 1.f, 0.f \}, DIFF \}, 
+\}
+\end{DoxyCode}

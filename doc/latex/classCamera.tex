@@ -1,0 +1,204 @@
+\hypertarget{classCamera}{\section{Camera Class Reference}
+\label{classCamera}\index{Camera@{Camera}}
+}
+
+
+The \hyperlink{classCamera}{Camera} class Simple camera class that handles movement and rotations, also keeps track whether the camera is dirty e.\-g. if the renderer needs to clear its buffers and start tracing from the beginning.  
+
+
+
+
+{\ttfamily \#include $<$Camera.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classCamera_a01f94c3543f56ede7af49dc778f19331}{\hyperlink{classCamera_a01f94c3543f56ede7af49dc778f19331}{Camera} ()}\label{classCamera_a01f94c3543f56ede7af49dc778f19331}
+
+\begin{DoxyCompactList}\small\item\em \hyperlink{classCamera}{Camera} Default ctor. \end{DoxyCompactList}\item 
+\hypertarget{classCamera_ad1897942d0ccf91052386388a497349f}{\hyperlink{classCamera_ad1897942d0ccf91052386388a497349f}{$\sim$\-Camera} ()}\label{classCamera_ad1897942d0ccf91052386388a497349f}
+
+\begin{DoxyCompactList}\small\item\em $\sim$\-Camera Default dtor \end{DoxyCompactList}\item 
+void \hyperlink{classCamera_a132f6e602fdcaabc5d361e6d9392bda2}{pitch} (const float \&\-\_\-angle)
+\begin{DoxyCompactList}\small\item\em pitch Add pitch to the camera, triggers the dirty flag \end{DoxyCompactList}\item 
+void \hyperlink{classCamera_ae6140b78de760fd0ef9a2c69d6d1018d}{yaw} (const float \&\-\_\-angle)
+\begin{DoxyCompactList}\small\item\em yaw Add yaw to the camera, triggers the dirty flag \end{DoxyCompactList}\item 
+void \hyperlink{classCamera_af7e91ff00e0259e2917c09d850c50364}{move\-Forward} (const float \&\-\_\-amt)
+\begin{DoxyCompactList}\small\item\em move\-Forward Move forward/backward, triggers the dirty flag \end{DoxyCompactList}\item 
+void \hyperlink{classCamera_a8d323c4dd7346ff6a46a611108e22e1f}{change\-Fov} (const float \&\-\_\-new\-Fov)
+\begin{DoxyCompactList}\small\item\em change\-Fov Change the field of view of the camera, triggers the dirty flag \end{DoxyCompactList}\item 
+ngl\-::\-Vec3 \hyperlink{classCamera_a609beb780b3bb52a4b94ec19ca831a9b}{get\-Orig} () const 
+\begin{DoxyCompactList}\small\item\em get\-Orig Get the location of the camera \end{DoxyCompactList}\item 
+ngl\-::\-Vec3 \hyperlink{classCamera_a2ccd198eae7f90000f53422b760876e0}{get\-Dir} () const 
+\begin{DoxyCompactList}\small\item\em get\-Dir Get the direction of the camera \end{DoxyCompactList}\item 
+ngl\-::\-Vec3 \hyperlink{classCamera_a375c97c35eb25d7839d85361d1858c3f}{get\-Up} () const 
+\begin{DoxyCompactList}\small\item\em get\-Up Get the up vector of the camera \end{DoxyCompactList}\item 
+ngl\-::\-Vec3 \hyperlink{classCamera_a19c7285d6919678bc1b11206bfe895fb}{get\-Right} () const 
+\begin{DoxyCompactList}\small\item\em get\-Right Get the right vector of the camera \end{DoxyCompactList}\item 
+float \hyperlink{classCamera_add207b5f24a14de6bfefb4425f200e15}{get\-Fov\-Scale} () const 
+\begin{DoxyCompactList}\small\item\em get\-Fov\-Scale Get the scale used to calculate ray offsets based on the field of view \end{DoxyCompactList}\item 
+\hypertarget{classCamera_a2da4f15a13acdc03870b0dca36de7986}{void \hyperlink{classCamera_a2da4f15a13acdc03870b0dca36de7986}{consume} ()}\label{classCamera_a2da4f15a13acdc03870b0dca36de7986}
+
+\begin{DoxyCompactList}\small\item\em consume Update all the vectors and values and reset the dirty flag \end{DoxyCompactList}\item 
+bool \hyperlink{classCamera_afd2d3859c75b0f8fa7288a4b70527bf3}{is\-Dirty} () const 
+\begin{DoxyCompactList}\small\item\em is\-Dirty Used to check if the camera has updates that need to be consumed \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classCamera}{Camera} class Simple camera class that handles movement and rotations, also keeps track whether the camera is dirty e.\-g. if the renderer needs to clear its buffers and start tracing from the beginning. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classCamera_a8d323c4dd7346ff6a46a611108e22e1f}{\index{Camera@{Camera}!change\-Fov@{change\-Fov}}
+\index{change\-Fov@{change\-Fov}!Camera@{Camera}}
+\subsubsection[{change\-Fov}]{\setlength{\rightskip}{0pt plus 5cm}void Camera\-::change\-Fov (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-new\-Fov}
+\end{DoxyParamCaption}
+)}}\label{classCamera_a8d323c4dd7346ff6a46a611108e22e1f}
+
+
+change\-Fov Change the field of view of the camera, triggers the dirty flag 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Fov} & New field of view to use \\
+\hline
+\end{DoxyParams}
+\hypertarget{classCamera_a2ccd198eae7f90000f53422b760876e0}{\index{Camera@{Camera}!get\-Dir@{get\-Dir}}
+\index{get\-Dir@{get\-Dir}!Camera@{Camera}}
+\subsubsection[{get\-Dir}]{\setlength{\rightskip}{0pt plus 5cm}ngl\-::\-Vec3 Camera\-::get\-Dir (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classCamera_a2ccd198eae7f90000f53422b760876e0}
+
+
+get\-Dir Get the direction of the camera 
+
+\begin{DoxyReturn}{Returns}
+The direction, which is the negative forward vector 
+\end{DoxyReturn}
+\hypertarget{classCamera_add207b5f24a14de6bfefb4425f200e15}{\index{Camera@{Camera}!get\-Fov\-Scale@{get\-Fov\-Scale}}
+\index{get\-Fov\-Scale@{get\-Fov\-Scale}!Camera@{Camera}}
+\subsubsection[{get\-Fov\-Scale}]{\setlength{\rightskip}{0pt plus 5cm}float Camera\-::get\-Fov\-Scale (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classCamera_add207b5f24a14de6bfefb4425f200e15}
+
+
+get\-Fov\-Scale Get the scale used to calculate ray offsets based on the field of view 
+
+\begin{DoxyReturn}{Returns}
+The field of view scale 
+\end{DoxyReturn}
+\hypertarget{classCamera_a609beb780b3bb52a4b94ec19ca831a9b}{\index{Camera@{Camera}!get\-Orig@{get\-Orig}}
+\index{get\-Orig@{get\-Orig}!Camera@{Camera}}
+\subsubsection[{get\-Orig}]{\setlength{\rightskip}{0pt plus 5cm}ngl\-::\-Vec3 Camera\-::get\-Orig (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classCamera_a609beb780b3bb52a4b94ec19ca831a9b}
+
+
+get\-Orig Get the location of the camera 
+
+\begin{DoxyReturn}{Returns}
+Location of the camera in space 
+\end{DoxyReturn}
+\hypertarget{classCamera_a19c7285d6919678bc1b11206bfe895fb}{\index{Camera@{Camera}!get\-Right@{get\-Right}}
+\index{get\-Right@{get\-Right}!Camera@{Camera}}
+\subsubsection[{get\-Right}]{\setlength{\rightskip}{0pt plus 5cm}ngl\-::\-Vec3 Camera\-::get\-Right (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classCamera_a19c7285d6919678bc1b11206bfe895fb}
+
+
+get\-Right Get the right vector of the camera 
+
+\begin{DoxyReturn}{Returns}
+Vector perpendicular to the forward and up vectors, facing right 
+\end{DoxyReturn}
+\hypertarget{classCamera_a375c97c35eb25d7839d85361d1858c3f}{\index{Camera@{Camera}!get\-Up@{get\-Up}}
+\index{get\-Up@{get\-Up}!Camera@{Camera}}
+\subsubsection[{get\-Up}]{\setlength{\rightskip}{0pt plus 5cm}ngl\-::\-Vec3 Camera\-::get\-Up (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classCamera_a375c97c35eb25d7839d85361d1858c3f}
+
+
+get\-Up Get the up vector of the camera 
+
+\begin{DoxyReturn}{Returns}
+Vector perpendicular to the forward and right vectors, facing upwards 
+\end{DoxyReturn}
+\hypertarget{classCamera_afd2d3859c75b0f8fa7288a4b70527bf3}{\index{Camera@{Camera}!is\-Dirty@{is\-Dirty}}
+\index{is\-Dirty@{is\-Dirty}!Camera@{Camera}}
+\subsubsection[{is\-Dirty}]{\setlength{\rightskip}{0pt plus 5cm}bool Camera\-::is\-Dirty (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classCamera_afd2d3859c75b0f8fa7288a4b70527bf3}
+
+
+is\-Dirty Used to check if the camera has updates that need to be consumed 
+
+\begin{DoxyReturn}{Returns}
+Whether the camera is considered dirty 
+\end{DoxyReturn}
+\hypertarget{classCamera_af7e91ff00e0259e2917c09d850c50364}{\index{Camera@{Camera}!move\-Forward@{move\-Forward}}
+\index{move\-Forward@{move\-Forward}!Camera@{Camera}}
+\subsubsection[{move\-Forward}]{\setlength{\rightskip}{0pt plus 5cm}void Camera\-::move\-Forward (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-amt}
+\end{DoxyParamCaption}
+)}}\label{classCamera_af7e91ff00e0259e2917c09d850c50364}
+
+
+move\-Forward Move forward/backward, triggers the dirty flag 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-amt} & Amount to move \\
+\hline
+\end{DoxyParams}
+\hypertarget{classCamera_a132f6e602fdcaabc5d361e6d9392bda2}{\index{Camera@{Camera}!pitch@{pitch}}
+\index{pitch@{pitch}!Camera@{Camera}}
+\subsubsection[{pitch}]{\setlength{\rightskip}{0pt plus 5cm}void Camera\-::pitch (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-angle}
+\end{DoxyParamCaption}
+)}}\label{classCamera_a132f6e602fdcaabc5d361e6d9392bda2}
+
+
+pitch Add pitch to the camera, triggers the dirty flag 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-angle} & Pitch to add \\
+\hline
+\end{DoxyParams}
+\hypertarget{classCamera_ae6140b78de760fd0ef9a2c69d6d1018d}{\index{Camera@{Camera}!yaw@{yaw}}
+\index{yaw@{yaw}!Camera@{Camera}}
+\subsubsection[{yaw}]{\setlength{\rightskip}{0pt plus 5cm}void Camera\-::yaw (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-angle}
+\end{DoxyParamCaption}
+)}}\label{classCamera_ae6140b78de760fd0ef9a2c69d6d1018d}
+
+
+yaw Add yaw to the camera, triggers the dirty flag 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-angle} & Yaw to add \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{Camera_8h}{Camera.\-h}\item 
+src/\hyperlink{Camera_8cpp}{Camera.\-cpp}\end{DoxyCompactItemize}

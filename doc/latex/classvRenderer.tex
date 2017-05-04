@@ -1,0 +1,374 @@
+\hypertarget{classvRenderer}{\section{v\-Renderer Class Reference}
+\label{classvRenderer}\index{v\-Renderer@{v\-Renderer}}
+}
+
+
+The \hyperlink{classvRenderer}{v\-Renderer} class Abstract base class for the path tracer.  
+
+
+
+
+{\ttfamily \#include $<$v\-Renderer.\-h$>$}
+
+Inheritance diagram for v\-Renderer\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classvRenderer}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classvRenderer_a1ae1d94f9eb933cab90812dd24d5a425}{\hyperlink{classvRenderer_a1ae1d94f9eb933cab90812dd24d5a425}{v\-Renderer} ()}\label{classvRenderer_a1ae1d94f9eb933cab90812dd24d5a425}
+
+\begin{DoxyCompactList}\small\item\em \hyperlink{classvRenderer}{v\-Renderer} Default ctor \end{DoxyCompactList}\item 
+\hypertarget{classvRenderer_ad90f4d86e010009e2c7bf2d5ac2cb73e}{virtual \hyperlink{classvRenderer_ad90f4d86e010009e2c7bf2d5ac2cb73e}{$\sim$v\-Renderer} ()}\label{classvRenderer_ad90f4d86e010009e2c7bf2d5ac2cb73e}
+
+\begin{DoxyCompactList}\small\item\em $\sim$v\-Renderer Default virtual dtor \end{DoxyCompactList}\item 
+virtual void \hyperlink{classvRenderer_aded5e62557a8e73c5ba81ef2dae422b3}{init} (const unsigned int \&\-\_\-w=0, const unsigned int \&\-\_\-h=0)=0
+\begin{DoxyCompactList}\small\item\em init Used to initialise everything that the renderer needs before it can render \end{DoxyCompactList}\item 
+virtual void \hyperlink{classvRenderer_adb2aafca5b39b1e6c9b8cf04a7bf4f84}{register\-Texture\-Buffer} (G\-Luint \&\-\_\-texture)=0
+\begin{DoxyCompactList}\small\item\em register\-Texture\-Buffer Register the Open\-G\-L texture for Cuda/\-Open\-C\-L interop \end{DoxyCompactList}\item 
+virtual void \hyperlink{classvRenderer_a9ffabf6f4fcceac59ad192ef78c4f1b5}{register\-Depth\-Buffer} (G\-Luint \&\-\_\-depth\-Texture)=0
+\begin{DoxyCompactList}\small\item\em register\-Depth\-Buffer Register the Open\-G\-L depth texture for Cuda/\-Open\-C\-L interop \end{DoxyCompactList}\item 
+\hypertarget{classvRenderer_a2d8fbb867093b06cfa19b099ce3eedb0}{virtual void \hyperlink{classvRenderer_a2d8fbb867093b06cfa19b099ce3eedb0}{render} ()=0}\label{classvRenderer_a2d8fbb867093b06cfa19b099ce3eedb0}
+
+\begin{DoxyCompactList}\small\item\em render Main render function, maps and reserves the needed opengl buffers once available, performs few tracing samples and frees the mapped buffers for drawing \end{DoxyCompactList}\item 
+\hypertarget{classvRenderer_a7d9cedd13f2d3e87477a570af14ed7cf}{virtual void \hyperlink{classvRenderer_a7d9cedd13f2d3e87477a570af14ed7cf}{clean\-Up} ()=0}\label{classvRenderer_a7d9cedd13f2d3e87477a570af14ed7cf}
+
+\begin{DoxyCompactList}\small\item\em clean\-Up Cleans the allocated memory and G\-P\-U buffers \end{DoxyCompactList}\item 
+\hypertarget{classvRenderer_a19141ca681f34f6ae43919087e6cd83c}{virtual void \hyperlink{classvRenderer_a19141ca681f34f6ae43919087e6cd83c}{update\-Camera} ()=0}\label{classvRenderer_a19141ca681f34f6ae43919087e6cd83c}
+
+\begin{DoxyCompactList}\small\item\em update\-Camera Consumes the updates from the virtual camera and passes the data to the G\-P\-U \end{DoxyCompactList}\item 
+virtual void \hyperlink{classvRenderer_aa8e0dd2ed5b56dc3b10a3035d9678557}{init\-Mesh} (const \hyperlink{structvMeshData}{v\-Mesh\-Data} \&\-\_\-sbvh\-Data)=0
+\begin{DoxyCompactList}\small\item\em init\-Mesh Takes in 3d mesh data and the \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure, packs and copies the data to the G\-P\-U \end{DoxyCompactList}\item 
+virtual void \hyperlink{classvRenderer_aac0b1a8021d071e0816de34995488f6b}{load\-H\-D\-R} (const Imf\-::\-Rgba $\ast$\-\_\-pixel\-Buffer, const unsigned int \&\-\_\-w, const unsigned int \&\-\_\-h)=0
+\begin{DoxyCompactList}\small\item\em load\-H\-D\-R Loads an E\-X\-R pixelbuffer to the G\-P\-U \end{DoxyCompactList}\item 
+virtual void \hyperlink{classvRenderer_a904bc18544cfe877fc7e33d12d449c05}{load\-Texture} (const Q\-Image \&\-\_\-texture, const float \&\-\_\-gamma, const unsigned int \&\-\_\-type)=0
+\begin{DoxyCompactList}\small\item\em load\-Texture Loads a texture to the G\-P\-U, performs \char`\"{}inverse gamma correction\char`\"{} if needed as gamma correction is applied at the end of each trace step \end{DoxyCompactList}\item 
+virtual void \hyperlink{classvRenderer_af2d6b7f027ea76018a83b3c11177c9cf}{use\-B\-R\-D\-F} (const bool \&\-\_\-new\-Val)=0
+\begin{DoxyCompactList}\small\item\em use\-B\-R\-D\-F Passes the data to the tracer, whether to use the loaded B\-R\-D\-F data \end{DoxyCompactList}\item 
+virtual void \hyperlink{classvRenderer_ac4e01b762661e82813c8909d1c7a47c3}{use\-Example\-Sphere} (const bool \&\-\_\-new\-Val)=0
+\begin{DoxyCompactList}\small\item\em use\-Example\-Sphere Passes the info to the tracer, whether to use the example sphere \end{DoxyCompactList}\item 
+virtual void \hyperlink{classvRenderer_ad5664d5c12c8869f94f9a65d4d3b2cb9}{use\-Cornell\-Box} (const bool \&\-\_\-new\-Val)=0
+\begin{DoxyCompactList}\small\item\em use\-Cornell\-Box Passes the info to the tracer, whether to use the cornell box scene or H\-D\-R\-I environment map \end{DoxyCompactList}\item 
+\hypertarget{classvRenderer_a14def36b2a1d0f9c8d346200d81a8e0f}{virtual void \hyperlink{classvRenderer_a14def36b2a1d0f9c8d346200d81a8e0f}{clear\-Buffer} ()=0}\label{classvRenderer_a14def36b2a1d0f9c8d346200d81a8e0f}
+
+\begin{DoxyCompactList}\small\item\em clear\-Buffer Clears the colour buffer, used when something changes in the scene \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classvRenderer_a5ef0c07cbcc1d5bbdfd7fe290de700c5}{load\-B\-R\-D\-F} (const float $\ast$\-\_\-brdf)=0
+\begin{DoxyCompactList}\small\item\em load\-B\-R\-D\-F Loads the B\-R\-D\-F data to the G\-P\-U \end{DoxyCompactList}\item 
+virtual unsigned int \hyperlink{classvRenderer_a623eb6b3f67b6b22137783de6c788e49}{get\-Frame\-Count} () const =0
+\begin{DoxyCompactList}\small\item\em get\-Frame\-Count Get the number of frames the current trace has performed \end{DoxyCompactList}\item 
+void \hyperlink{classvRenderer_a34b0760641ec58f48eb1029d7f56c82c}{set\-Fresnel\-Coef} (const float \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em set\-Fresnel\-Coef Set the fresnel coefficient for fresnel-\/like reflections, also clears the colour buffer \end{DoxyCompactList}\item 
+void \hyperlink{classvRenderer_a17188eb1567d612d3f27d290e3fd237b}{set\-Fresnel\-Power} (const float \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em set\-Fresnel\-Power Set the fresnel power for fresnel-\/life reflections, also clears the colour buffer \end{DoxyCompactList}\item 
+void \hyperlink{classvRenderer_a329c3c3b1977f7cb6fd465bcd0e13c9f}{set\-Camera} (\hyperlink{classCamera}{Camera} $\ast$\-\_\-cam)
+\begin{DoxyCompactList}\small\item\em set\-Camera Initialises the virtual camera for the renderer \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classvRenderer_adce32b13617ef4ae296b89d622cfab2f}{\hyperlink{classCamera}{Camera} $\ast$ \hyperlink{classvRenderer_adce32b13617ef4ae296b89d622cfab2f}{m\-\_\-virtual\-Camera}}\label{classvRenderer_adce32b13617ef4ae296b89d622cfab2f}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-virtual\-Camera Pointer to the camera \end{DoxyCompactList}\item 
+\hypertarget{classvRenderer_a1aba28d9b3d67626d0fccb0ab02ceda8}{float \hyperlink{classvRenderer_a1aba28d9b3d67626d0fccb0ab02ceda8}{m\-\_\-fresnel\-Coef}}\label{classvRenderer_a1aba28d9b3d67626d0fccb0ab02ceda8}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-fresnel\-Coef Fresnel coefficient \end{DoxyCompactList}\item 
+\hypertarget{classvRenderer_aa0521c8cd17ef469ddccb770b34161dc}{float \hyperlink{classvRenderer_aa0521c8cd17ef469ddccb770b34161dc}{m\-\_\-fresnel\-Pow}}\label{classvRenderer_aa0521c8cd17ef469ddccb770b34161dc}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-fresnel\-Pow Fresnel power \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classvRenderer}{v\-Renderer} class Abstract base class for the path tracer. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classvRenderer_a623eb6b3f67b6b22137783de6c788e49}{\index{v\-Renderer@{v\-Renderer}!get\-Frame\-Count@{get\-Frame\-Count}}
+\index{get\-Frame\-Count@{get\-Frame\-Count}!vRenderer@{v\-Renderer}}
+\subsubsection[{get\-Frame\-Count}]{\setlength{\rightskip}{0pt plus 5cm}virtual unsigned int v\-Renderer\-::get\-Frame\-Count (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_a623eb6b3f67b6b22137783de6c788e49}
+
+
+get\-Frame\-Count Get the number of frames the current trace has performed 
+
+\begin{DoxyReturn}{Returns}
+The number of frames 
+\end{DoxyReturn}
+
+
+Implemented in \hyperlink{classvRendererCL_a30e02c917778a288dd83a7a29882d030}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_a59adae8a97ef2a63fc542f64d4686f37}{v\-Renderer\-Cuda}.
+
+\hypertarget{classvRenderer_aded5e62557a8e73c5ba81ef2dae422b3}{\index{v\-Renderer@{v\-Renderer}!init@{init}}
+\index{init@{init}!vRenderer@{v\-Renderer}}
+\subsubsection[{init}]{\setlength{\rightskip}{0pt plus 5cm}virtual void v\-Renderer\-::init (
+\begin{DoxyParamCaption}
+\item[{const unsigned int \&}]{\-\_\-w = {\ttfamily 0}, }
+\item[{const unsigned int \&}]{\-\_\-h = {\ttfamily 0}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_aded5e62557a8e73c5ba81ef2dae422b3}
+
+
+init Used to initialise everything that the renderer needs before it can render 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-w} & Width of the screen \\
+\hline
+{\em \-\_\-h} & Height of the screen \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \hyperlink{classvRendererCL_a01207b7fea56df11fc2af4cb87cad7e4}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_a1f6382acd2ad665c724c65a535ed86d1}{v\-Renderer\-Cuda}.
+
+\hypertarget{classvRenderer_aa8e0dd2ed5b56dc3b10a3035d9678557}{\index{v\-Renderer@{v\-Renderer}!init\-Mesh@{init\-Mesh}}
+\index{init\-Mesh@{init\-Mesh}!vRenderer@{v\-Renderer}}
+\subsubsection[{init\-Mesh}]{\setlength{\rightskip}{0pt plus 5cm}virtual void v\-Renderer\-::init\-Mesh (
+\begin{DoxyParamCaption}
+\item[{const {\bf v\-Mesh\-Data} \&}]{\-\_\-sbvh\-Data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_aa8e0dd2ed5b56dc3b10a3035d9678557}
+
+
+init\-Mesh Takes in 3d mesh data and the \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure, packs and copies the data to the G\-P\-U 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-sbvh\-Data} & Structure containing the needed data \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \hyperlink{classvRendererCL_a06033a095680d83224fa3d12b703d213}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_aaad1a6c4a4ada9bbbbce2db3cfb02f32}{v\-Renderer\-Cuda}.
+
+\hypertarget{classvRenderer_a5ef0c07cbcc1d5bbdfd7fe290de700c5}{\index{v\-Renderer@{v\-Renderer}!load\-B\-R\-D\-F@{load\-B\-R\-D\-F}}
+\index{load\-B\-R\-D\-F@{load\-B\-R\-D\-F}!vRenderer@{v\-Renderer}}
+\subsubsection[{load\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}virtual bool v\-Renderer\-::load\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const float $\ast$}]{\-\_\-brdf}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_a5ef0c07cbcc1d5bbdfd7fe290de700c5}
+
+
+load\-B\-R\-D\-F Loads the B\-R\-D\-F data to the G\-P\-U 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-brdf} & B\-R\-D\-F data read from a binary file \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the data was loaded correctly 
+\end{DoxyReturn}
+
+
+Implemented in \hyperlink{classvRendererCL_a80988c343d250965cc184695fafc7a10}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_a77eb1673efa671d9a21353fe22f576d7}{v\-Renderer\-Cuda}.
+
+\hypertarget{classvRenderer_aac0b1a8021d071e0816de34995488f6b}{\index{v\-Renderer@{v\-Renderer}!load\-H\-D\-R@{load\-H\-D\-R}}
+\index{load\-H\-D\-R@{load\-H\-D\-R}!vRenderer@{v\-Renderer}}
+\subsubsection[{load\-H\-D\-R}]{\setlength{\rightskip}{0pt plus 5cm}virtual void v\-Renderer\-::load\-H\-D\-R (
+\begin{DoxyParamCaption}
+\item[{const Imf\-::\-Rgba $\ast$}]{\-\_\-pixel\-Buffer, }
+\item[{const unsigned int \&}]{\-\_\-w, }
+\item[{const unsigned int \&}]{\-\_\-h}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_aac0b1a8021d071e0816de34995488f6b}
+
+
+load\-H\-D\-R Loads an E\-X\-R pixelbuffer to the G\-P\-U 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-pixel\-Buffer} & Loaded pixelbuffer \\
+\hline
+{\em \-\_\-w} & Width of the H\-D\-R\-I map \\
+\hline
+{\em \-\_\-h} & Height of the H\-D\-R\-I map \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \hyperlink{classvRendererCL_a4df104a5f4a9e19db7d9c8678ada7cd6}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_a0994f4f68ad6973f6e80664714eb44e8}{v\-Renderer\-Cuda}.
+
+\hypertarget{classvRenderer_a904bc18544cfe877fc7e33d12d449c05}{\index{v\-Renderer@{v\-Renderer}!load\-Texture@{load\-Texture}}
+\index{load\-Texture@{load\-Texture}!vRenderer@{v\-Renderer}}
+\subsubsection[{load\-Texture}]{\setlength{\rightskip}{0pt plus 5cm}virtual void v\-Renderer\-::load\-Texture (
+\begin{DoxyParamCaption}
+\item[{const Q\-Image \&}]{\-\_\-texture, }
+\item[{const float \&}]{\-\_\-gamma, }
+\item[{const unsigned int \&}]{\-\_\-type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_a904bc18544cfe877fc7e33d12d449c05}
+
+
+load\-Texture Loads a texture to the G\-P\-U, performs \char`\"{}inverse gamma correction\char`\"{} if needed as gamma correction is applied at the end of each trace step 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-texture} & Q\-Image to read the texture data from \\
+\hline
+{\em \-\_\-gamma} & Gamma value of the texture \\
+\hline
+{\em \-\_\-type} & Type of the texture, 0 = Diffuse, 1 = Normal, 2 = Specular \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \hyperlink{classvRendererCL_aeb2feac32793ba1ab9c74ff3abf9ff78}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_a1eca8504cfb3287725cef2bbca08180f}{v\-Renderer\-Cuda}.
+
+\hypertarget{classvRenderer_a9ffabf6f4fcceac59ad192ef78c4f1b5}{\index{v\-Renderer@{v\-Renderer}!register\-Depth\-Buffer@{register\-Depth\-Buffer}}
+\index{register\-Depth\-Buffer@{register\-Depth\-Buffer}!vRenderer@{v\-Renderer}}
+\subsubsection[{register\-Depth\-Buffer}]{\setlength{\rightskip}{0pt plus 5cm}virtual void v\-Renderer\-::register\-Depth\-Buffer (
+\begin{DoxyParamCaption}
+\item[{G\-Luint \&}]{\-\_\-depth\-Texture}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_a9ffabf6f4fcceac59ad192ef78c4f1b5}
+
+
+register\-Depth\-Buffer Register the Open\-G\-L depth texture for Cuda/\-Open\-C\-L interop 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-depth\-Texture} & Open\-G\-L depth texture object \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \hyperlink{classvRendererCL_a663d4055fdcc26820c769a3ed11a7cfd}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_a3374740da969eb673531d99da8a2b2fd}{v\-Renderer\-Cuda}.
+
+\hypertarget{classvRenderer_adb2aafca5b39b1e6c9b8cf04a7bf4f84}{\index{v\-Renderer@{v\-Renderer}!register\-Texture\-Buffer@{register\-Texture\-Buffer}}
+\index{register\-Texture\-Buffer@{register\-Texture\-Buffer}!vRenderer@{v\-Renderer}}
+\subsubsection[{register\-Texture\-Buffer}]{\setlength{\rightskip}{0pt plus 5cm}virtual void v\-Renderer\-::register\-Texture\-Buffer (
+\begin{DoxyParamCaption}
+\item[{G\-Luint \&}]{\-\_\-texture}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_adb2aafca5b39b1e6c9b8cf04a7bf4f84}
+
+
+register\-Texture\-Buffer Register the Open\-G\-L texture for Cuda/\-Open\-C\-L interop 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-texture} & Open\-G\-L texture object \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \hyperlink{classvRendererCL_a124b31960cb2e8cfe821acf888e712a9}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_aee52063dd808dd194ceb81f54935f099}{v\-Renderer\-Cuda}.
+
+\hypertarget{classvRenderer_a329c3c3b1977f7cb6fd465bcd0e13c9f}{\index{v\-Renderer@{v\-Renderer}!set\-Camera@{set\-Camera}}
+\index{set\-Camera@{set\-Camera}!vRenderer@{v\-Renderer}}
+\subsubsection[{set\-Camera}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-::set\-Camera (
+\begin{DoxyParamCaption}
+\item[{{\bf Camera} $\ast$}]{\-\_\-cam}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classvRenderer_a329c3c3b1977f7cb6fd465bcd0e13c9f}
+
+
+set\-Camera Initialises the virtual camera for the renderer 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-cam} & Virtual camera that the renderer will use \\
+\hline
+\end{DoxyParams}
+\hypertarget{classvRenderer_a34b0760641ec58f48eb1029d7f56c82c}{\index{v\-Renderer@{v\-Renderer}!set\-Fresnel\-Coef@{set\-Fresnel\-Coef}}
+\index{set\-Fresnel\-Coef@{set\-Fresnel\-Coef}!vRenderer@{v\-Renderer}}
+\subsubsection[{set\-Fresnel\-Coef}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-::set\-Fresnel\-Coef (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classvRenderer_a34b0760641ec58f48eb1029d7f56c82c}
+
+
+set\-Fresnel\-Coef Set the fresnel coefficient for fresnel-\/like reflections, also clears the colour buffer 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New coefficient \\
+\hline
+\end{DoxyParams}
+\hypertarget{classvRenderer_a17188eb1567d612d3f27d290e3fd237b}{\index{v\-Renderer@{v\-Renderer}!set\-Fresnel\-Power@{set\-Fresnel\-Power}}
+\index{set\-Fresnel\-Power@{set\-Fresnel\-Power}!vRenderer@{v\-Renderer}}
+\subsubsection[{set\-Fresnel\-Power}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-::set\-Fresnel\-Power (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classvRenderer_a17188eb1567d612d3f27d290e3fd237b}
+
+
+set\-Fresnel\-Power Set the fresnel power for fresnel-\/life reflections, also clears the colour buffer 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New power \\
+\hline
+\end{DoxyParams}
+\hypertarget{classvRenderer_af2d6b7f027ea76018a83b3c11177c9cf}{\index{v\-Renderer@{v\-Renderer}!use\-B\-R\-D\-F@{use\-B\-R\-D\-F}}
+\index{use\-B\-R\-D\-F@{use\-B\-R\-D\-F}!vRenderer@{v\-Renderer}}
+\subsubsection[{use\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}virtual void v\-Renderer\-::use\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_af2d6b7f027ea76018a83b3c11177c9cf}
+
+
+use\-B\-R\-D\-F Passes the data to the tracer, whether to use the loaded B\-R\-D\-F data 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Whether to use the loaded B\-R\-D\-F data \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \hyperlink{classvRendererCL_ad08264f1738f5a2effdef21fc3852758}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_a8bc09351a8cd99d86d36963e430025d7}{v\-Renderer\-Cuda}.
+
+\hypertarget{classvRenderer_ad5664d5c12c8869f94f9a65d4d3b2cb9}{\index{v\-Renderer@{v\-Renderer}!use\-Cornell\-Box@{use\-Cornell\-Box}}
+\index{use\-Cornell\-Box@{use\-Cornell\-Box}!vRenderer@{v\-Renderer}}
+\subsubsection[{use\-Cornell\-Box}]{\setlength{\rightskip}{0pt plus 5cm}virtual void v\-Renderer\-::use\-Cornell\-Box (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_ad5664d5c12c8869f94f9a65d4d3b2cb9}
+
+
+use\-Cornell\-Box Passes the info to the tracer, whether to use the cornell box scene or H\-D\-R\-I environment map 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Whether to use cornell box or not \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \hyperlink{classvRendererCL_ae9991460d59a4a86cc19c436a98cd346}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_a40978e8a1b32dbad5b683b0f097d9c60}{v\-Renderer\-Cuda}.
+
+\hypertarget{classvRenderer_ac4e01b762661e82813c8909d1c7a47c3}{\index{v\-Renderer@{v\-Renderer}!use\-Example\-Sphere@{use\-Example\-Sphere}}
+\index{use\-Example\-Sphere@{use\-Example\-Sphere}!vRenderer@{v\-Renderer}}
+\subsubsection[{use\-Example\-Sphere}]{\setlength{\rightskip}{0pt plus 5cm}virtual void v\-Renderer\-::use\-Example\-Sphere (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classvRenderer_ac4e01b762661e82813c8909d1c7a47c3}
+
+
+use\-Example\-Sphere Passes the info to the tracer, whether to use the example sphere 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Whether to use the example sphere \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \hyperlink{classvRendererCL_ace3572b0e58f9ef81ad3853a719d8537}{v\-Renderer\-C\-L}, and \hyperlink{classvRendererCuda_ab552724c473de30893fe9dc21ee2c961}{v\-Renderer\-Cuda}.
+
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{vRenderer_8h}{v\-Renderer.\-h}\end{DoxyCompactItemize}

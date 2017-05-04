@@ -2,10 +2,6 @@
 
 #include <cuda_runtime.h>
 
-#define BRDF_SAMPLING_RES_THETA_H       90
-#define BRDF_SAMPLING_RES_THETA_D       90
-#define BRDF_SAMPLING_RES_PHI_D         360
-
 inline __device__ __host__ float intAsFloat(const int &_val)
 {
 	union

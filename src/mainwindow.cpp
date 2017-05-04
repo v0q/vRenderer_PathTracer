@@ -5,6 +5,8 @@ MainWindow::MainWindow(QWidget *_parent) :
 	QMainWindow(_parent),
   m_ui(new Ui::MainWindow)
 {
+	// Make sure that we're using OpenGL 4.1
+	// and set swap interval to 0 so the FPS is not limited
   QSurfaceFormat format;
   format.setSamples(4);
   format.setVersion(4, 1);
@@ -12,11 +14,14 @@ MainWindow::MainWindow(QWidget *_parent) :
   format.setSwapInterval(0);
   QSurfaceFormat::setDefaultFormat(format);
 
+	// Initialise the UI and create the NGLScene
   m_ui->setupUi(this);
 	m_scene = new NGLScene(this);
 
+	// Add the NGLScene to the window
 	m_ui->m_renderWidgetLayout->addWidget(m_scene, 0, 0, 1, 1);
 
+	/// SIGNAL-SLOT connections
 	// Scene/mesh loading
 	connect(m_ui->m_loadMeshBtn, SIGNAL(released()), m_scene, SLOT(loadMesh()));
 
@@ -62,21 +67,24 @@ MainWindow::MainWindow(QWidget *_parent) :
 	connect(m_ui->m_fxaaSoftnessSlider, SIGNAL(valueChanged(int)), m_scene, SLOT(fxaaSharpness(const int &)));
 	connect(m_ui->m_fxaaSoftnessSlider, SIGNAL(valueChanged(int)), this, SLOT(updateUIFXAASoftness(const int &)));
 
-	// Signals
+	// Signals from the scene
 	connect(m_scene, SIGNAL(textureLoaded(const QString &, const unsigned int &)), this, SLOT(updateUITexture(const QString &, const unsigned int &)));
 	connect(m_scene, SIGNAL(meshLoaded(const QString &)), this, SLOT(updateUISceneTree(const QString &)));
 	connect(m_scene, SIGNAL(brdfLoaded(const QString &)), this, SLOT(updateUIBRDF(const QString &)));
 	connect(m_scene, SIGNAL(HDRILoaded(const QString &)), this, SLOT(updateUIHDRI(const QString &)));
 
+	// Set the header for the scene tree and assign the model to it
 	m_model.setHorizontalHeaderItem(0, new QStandardItem("Root"));
 	m_ui->m_sceneTreeView->setModel(&m_model);
 
-	// For whatever reason not every keypress triggers without this
+	// Force Qt to keep strong focus on the main window
+	// For whatever reason some keypresses won't trigger without this
 	this->setFocusPolicy(Qt::StrongFocus);
 }
 
 MainWindow::~MainWindow()
 {
+	// Cleanup
 	delete m_scene;
   delete m_ui;
 }
@@ -94,6 +102,7 @@ void MainWindow::keyPressEvent(QKeyEvent *_event)
 
 void MainWindow::updateUITexture(const QString &_texture, const unsigned int &_type)
 {
+	// Update the UI with the loaded texture path based on the texture type
 	switch(_type)
 	{
 		case 0:
@@ -112,6 +121,7 @@ void MainWindow::updateUITexture(const QString &_texture, const unsigned int &_t
 
 void MainWindow::updateUISceneTree(const QString &_mesh)
 {
+	// Update the scene tree
 	QStandardItem *mesh = new QStandardItem(_mesh);
 	m_model.setItem(0, 0, mesh);
 }
@@ -154,11 +164,4 @@ void MainWindow::updateUIFXAAEdgeThreshold(const int &_newVal)
 void MainWindow::updateUIFXAASubpixQuality(const int &_newVal)
 {
 	m_ui->m_fxaaSubpixQualityNum->display(_newVal/100.f);
-}
-
-void MainWindow::showHideHDRMenu()
-{
-//  QSize geom = m_ui->m_hdrLayout->sizeHint();
-//	m_ui->m_hdrLayout->sizeHint().setHeight(0);
-	std::cout << "Triggered\n";
 }

@@ -1,0 +1,35 @@
+\hypertarget{NGLScene_8h}{\section{include/\-N\-G\-L\-Scene.h File Reference}
+\label{NGLScene_8h}\index{include/\-N\-G\-L\-Scene.\-h@{include/\-N\-G\-L\-Scene.\-h}}
+}
+
+
+This class inherits from the Qt Open\-G\-L\-Window and allows us to use N\-G\-L to draw Open\-G\-L Creates the renderer, handles data propagation from the U\-I to the renderer and creates Open\-G\-L textures and V\-B\-O's to visualise the renderer output.  
+
+
+{\ttfamily \#include $<$iostream$>$}\\*
+{\ttfamily \#include $<$memory$>$}\\*
+{\ttfamily \#include $<$ngl/\-Vec3.\-h$>$}\\*
+{\ttfamily \#include $<$ngl/\-Text.\-h$>$}\\*
+{\ttfamily \#include $<$Q\-Open\-G\-L\-Widget$>$}\\*
+{\ttfamily \#include $<$Q\-Time$>$}\\*
+{\ttfamily \#include \char`\"{}Camera.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}Window\-Params.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classNGLScene}{N\-G\-L\-Scene}
+\begin{DoxyCompactList}\small\item\em our main glwindow widget for N\-G\-L applications all drawing elements are put in this file \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This class inherits from the Qt Open\-G\-L\-Window and allows us to use N\-G\-L to draw Open\-G\-L Creates the renderer, handles data propagation from the U\-I to the renderer and creates Open\-G\-L textures and V\-B\-O's to visualise the renderer output. \begin{DoxyAuthor}{Authors}
+Jonathan Macey, Teemu Lindborg 
+\end{DoxyAuthor}
+\begin{DoxyVersion}{Version}
+1.\-0 
+\end{DoxyVersion}
+\begin{DoxyDate}{Date}
+10/9/13 Revision History \-: This is an initial version used for the new N\-G\-L6 / Qt 5 demos Initial Version 08/12/16 Updated to N\-C\-C\-A Coding standard 04/05/17 
+\end{DoxyDate}
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000011}{Todo}]General cleanup and move the pass through slots from the scene to the renderer Switch to Open\-Image\-I\-O for H\-D\-R\-I and texture loading. Bring in colour management options with Open\-Color\-I\-O \end{DoxyRefDesc}

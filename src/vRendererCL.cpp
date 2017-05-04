@@ -1,7 +1,13 @@
+///
+/// \file vRendererCL.cpp
+/// \brief Implements the OpenCL version of the renderer
+///
+
 /*
  * Ref: http://sa10.idav.ucdavis.edu/docs/sa10-dg-opencl-gl-interop.pdf
  */
 
+#include <QImage>
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -23,6 +29,7 @@
 #include "vRendererCL.h"
 
 vRendererCL::vRendererCL() :
+	m_brdf(nullptr),
   m_hdr(nullptr),
   m_diffuse(nullptr),
   m_normal(nullptr),
@@ -31,8 +38,15 @@ vRendererCL::vRendererCL() :
   m_diffuseMapSet(false),
   m_normalMapSet(false),
   m_specularMapSet(false),
+	m_useCornellBox(false),
+	m_useExampleSphere(false),
+	m_meshInitialised(false),
+	m_viewBRDF(false),
+	m_hasBRDF(false),
   m_initialised(false)
 {
+	m_fresnelCoef = 0.1f;
+	m_fresnelPow = 3.f;
   std::cout << "OpenCL vRenderer ctor called\n";
   m_GLBuffers.clear();
 }
@@ -48,6 +62,10 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
   assert(_w != 0 && _h != 0);
   m_width = _w;
 	m_height = _h;
+
+	///
+	/// Get and create OpenCL/OpenGL interop context
+	///
 
 	std::vector<cl::Platform> platforms;
 	cl::Platform::get(&platforms);
@@ -137,39 +155,27 @@ void vRendererCL::init(const unsigned int &_w, const unsigned int &_h)
 
   float initImage[4] = {0.f, 0.f, 0.f, 0.f};
 
-  m_diffuse = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, 1, 1, 0, initImage, &err);
-  if(err != CL_SUCCESS)
-  {
-    std::cerr << "Failed to initialise diffuse map to GPU " << err << "\n";
-    exit(EXIT_FAILURE);
-  }
+	// Need to allocate the buffers to something so the kernel can be enqueued
+	m_diffuse = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, 1, 1, 0, initImage, &err);
+	if(err != CL_SUCCESS)
+	{
+		std::cerr << "Failed to initialise diffuse map to GPU " << err << "\n";
+		exit(EXIT_FAILURE);
+	}
 
-  m_normal = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, 1, 1, 0, initImage, &err);
-  if(err != CL_SUCCESS)
-  {
-    std::cerr << "Failed to initialise diffuse map to GPU " << err << "\n";
-    exit(EXIT_FAILURE);
-  }
+	m_normal = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, 1, 1, 0, initImage, &err);
+	if(err != CL_SUCCESS)
+	{
+		std::cerr << "Failed to initialise diffuse map to GPU " << err << "\n";
+		exit(EXIT_FAILURE);
+	}
 
-  m_specular = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, 1, 1, 0, initImage, &err);
-  if(err != CL_SUCCESS)
-  {
-    std::cerr << "Failed to initialise diffuse map to GPU " << err << "\n";
-    exit(EXIT_FAILURE);
-  }
-
-//  cl_int err;
-//  size_t nullLength = 0;
-//  m_vertices = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, nullLength, nullptr, &err);
-//  std::cout << "err " << err << "\n";
-//  m_normals = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, nullLength, nullptr, &err);
-//  std::cout << "err " << err << "\n";
-//  m_bvhNodes = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, nullLength, nullptr, &err);
-//  std::cout << "err " << err << "\n";
-//  m_tangents = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, nullLength, nullptr, &err);
-//  std::cout << "err " << err << "\n";
-//  m_uvs = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, nullLength, nullptr, &err);
-//  std::cout << "err " << err << "\n";
+	m_specular = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, 1, 1, 0, initImage, &err);
+	if(err != CL_SUCCESS)
+	{
+		std::cerr << "Failed to initialise diffuse map to GPU " << err << "\n";
+		exit(EXIT_FAILURE);
+	}
 
   m_initialised = true;
 }
@@ -189,11 +195,12 @@ void vRendererCL::registerTextureBuffer(GLuint &_texture)
 
 void vRendererCL::registerDepthBuffer(GLuint &_depthTexture)
 {
-
+	// Not implemented yet for OpenCL
 }
 
 void vRendererCL::cleanUp()
 {
+	// The OpenCL C++ wrapper handles the cleanup of OpenCL buffers automatically
   if(m_initialised)
   {
     m_GLBuffers.clear();
@@ -259,26 +266,36 @@ void vRendererCL::render()
 
 	event.wait();
 
+	// Set kernel arguments
   m_kernel.setArg(0, m_glTexture);
   m_kernel.setArg(1, m_vertices);
   m_kernel.setArg(2, m_normals);
   m_kernel.setArg(3, m_tangents);
   m_kernel.setArg(4, m_bvhNodes);
   m_kernel.setArg(5, m_uvs);
-  m_kernel.setArg(6, m_colorArray);
-  m_kernel.setArg(7, m_hdr);
-  m_kernel.setArg(8, m_diffuse);
-  m_kernel.setArg(9, m_normal);
-  m_kernel.setArg(10, m_specular);
-  m_kernel.setArg(11, (m_diffuseMapSet ? 1 : 0 ));
-  m_kernel.setArg(12, (m_normalMapSet ? 1 : 0 ));
-  m_kernel.setArg(13, (m_specularMapSet ? 1 : 0 ));
-  m_kernel.setArg(14, m_camera);
-  m_kernel.setArg(15, m_width);
-  m_kernel.setArg(16, m_height);
-  m_kernel.setArg(17, m_frame++);
-  m_kernel.setArg(18, static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count()));
+	m_kernel.setArg(6, m_brdf);
+	m_kernel.setArg(7, m_colorArray);
+	m_kernel.setArg(8, m_hdr);
+	m_kernel.setArg(9, m_diffuse);
+	m_kernel.setArg(10, m_normal);
+	m_kernel.setArg(11, m_specular);
+	m_kernel.setArg(12, m_fresnelPow);
+	m_kernel.setArg(13, m_fresnelCoef);
+	m_kernel.setArg(14, (m_diffuseMapSet ? 1 : 0 ));
+	m_kernel.setArg(15, (m_normalMapSet ? 1 : 0 ));
+	m_kernel.setArg(16, (m_specularMapSet ? 1 : 0 ));
+	m_kernel.setArg(17, (m_useCornellBox ? 1 : 0 ));
+	m_kernel.setArg(18, (m_useExampleSphere ? 1 : 0 ));
+	m_kernel.setArg(19, (m_meshInitialised ? 1 : 0 ));
+	m_kernel.setArg(20, (m_viewBRDF ? 1 : 0 ));
+	m_kernel.setArg(21, (m_hasBRDF ? 1 : 0 ));
+	m_kernel.setArg(22, m_camera);
+	m_kernel.setArg(23, m_width);
+	m_kernel.setArg(24, m_height);
+	m_kernel.setArg(25, m_frame++);
+	m_kernel.setArg(26, static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(t1.time_since_epoch()).count()));
 
+	// Run the trace step
   if((err = m_queue.enqueueNDRangeKernel(m_kernel, cl::NullRange, globalRange, localRange, nullptr, &event)) != CL_SUCCESS)
   {
     std::cout << "Failed to enqueue the kernel: " << err << "\n";
@@ -288,6 +305,7 @@ void vRendererCL::render()
 
 	cl::finish();
 
+	// After we're finished, release the acquired GL objects
 	if((err = m_queue.enqueueReleaseGLObjects(&m_GLBuffers, nullptr, &event)) != CL_SUCCESS)
 	{
 		std::cout << "Failed to release gl objects: " << err << "\n";
@@ -322,6 +340,7 @@ void vRendererCL::initMesh(const vMeshData &_meshData)
   terminator.x = intAsFloat(0x80000000);
   terminator.y = 0.f;
 
+	// Loop through the SBVH tree
   while(nodeStack.size())
   {
     const BVHNode *node = nodeStack.back().first;
@@ -332,94 +351,95 @@ void vRendererCL::initMesh(const vMeshData &_meshData)
     int indices[2];
 //		if(!node->isLeaf())
 //		{
-      for(unsigned int i = 0; i < 2; ++i)
-      {
-        // Get the bounds of the node
-        const BVHNode *child = node->childNode(i);
-        bounds[i] = child->getBounds();
+		for(unsigned int i = 0; i < 2; ++i)
+		{
+			// Get the bounds of the node
+			const BVHNode *child = node->childNode(i);
+			bounds[i] = child->getBounds();
 
-        if(!child->isLeaf())
-        {
-          // Index for the next node is an offset in memory
-          unsigned int cidx = bvhData.size();
-          indices[i] = cidx;// * sizeof(float4);
-          nodeStack.push_back(std::make_pair(child, cidx));
+			if(!child->isLeaf())
+			{
+				// Index for the next node is an offset in memory
+				unsigned int cidx = bvhData.size();
+				indices[i] = cidx;// * sizeof(float4);
+				nodeStack.push_back(std::make_pair(child, cidx));
 
-          // Allocate space for the node data (e.g. bounds, indices etc)
-          bvhData.resize(bvhData.size() + 4);
-          continue;
-        }
+				// Allocate space for the node data (e.g. bounds, indices etc)
+				bvhData.resize(bvhData.size() + 4);
+				continue;
+			}
 
-        const LeafNode *leaf = dynamic_cast<const LeafNode *>(child);
-        // Triangle index stored as its complement to distinquish them from child nodes (e.g. ~0 = -1, ~1 = -2...)
-        indices[i] = ~verts.size();
-        for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
-        {
-          unsigned int triInd = _meshData.m_bvh.getTriIndex(j);
-          const vHTriangle tri = _meshData.m_triangles[triInd];
-          for(unsigned int k = 0; k < 3; ++k)
-          {
-            const ngl::Vec3 &vert = _meshData.m_vertices[tri.m_indices[k]].m_vert;
-            const ngl::Vec3 &norm = _meshData.m_vertices[tri.m_indices[k]].m_normal;
-            const ngl::Vec3 &tangent = _meshData.m_vertices[tri.m_indices[k]].m_tangent;
+			const LeafNode *leaf = dynamic_cast<const LeafNode *>(child);
+			// Triangle index stored as its complement to distinquish them from child nodes (e.g. ~0 = -1, ~1 = -2...)
+			indices[i] = ~verts.size();
+			for(unsigned int j = leaf->firstIndex(); j < leaf->lastIndex(); ++j)
+			{
+				unsigned int triInd = _meshData.m_bvh.getTriIndex(j);
+				const vHTriangle tri = _meshData.m_triangles[triInd];
+				// Get the triangle data and push it to their respective buffers
+				for(unsigned int k = 0; k < 3; ++k)
+				{
+					const ngl::Vec3 &vert = _meshData.m_vertices[tri.m_indices[k]].m_vert;
+					const ngl::Vec3 &norm = _meshData.m_vertices[tri.m_indices[k]].m_normal;
+					const ngl::Vec3 &tangent = _meshData.m_vertices[tri.m_indices[k]].m_tangent;
 
-            cl_float4 v;
-            v.x = vert.m_x;
-            v.y = vert.m_y;
-            v.z = vert.m_z;
-            v.w = 0.f;
+					cl_float4 v;
+					v.x = vert.m_x;
+					v.y = vert.m_y;
+					v.z = vert.m_z;
+					v.w = 0.f;
 
-            cl_float4 n;
-            n.x = norm.m_x;
-            n.y = norm.m_y;
-            n.z = norm.m_z;
-            n.w = 0.f;
+					cl_float4 n;
+					n.x = norm.m_x;
+					n.y = norm.m_y;
+					n.z = norm.m_z;
+					n.w = 0.f;
 
-            cl_float4 t;
-            t.x = tangent.m_x;
-            t.y = tangent.m_y;
-            t.z = tangent.m_z;
-            t.w = 0.f;
+					cl_float4 t;
+					t.x = tangent.m_x;
+					t.y = tangent.m_y;
+					t.z = tangent.m_z;
+					t.w = 0.f;
 
-            cl_float2 uv;
-            uv.x = _meshData.m_vertices[tri.m_indices[k]].m_u;
-            uv.y = _meshData.m_vertices[tri.m_indices[k]].m_v;
+					cl_float2 uv;
+					uv.x = _meshData.m_vertices[tri.m_indices[k]].m_u;
+					uv.y = _meshData.m_vertices[tri.m_indices[k]].m_v;
 
-            verts.push_back(v);
-            normals.push_back(n);
-            tangents.push_back(t);
-            uvs.push_back(uv);
-          }
-        }
-        // Terminate triangles
-        verts.push_back(terminator);
-        normals.push_back(terminator);
-        tangents.push_back(terminator);
-        uvs.push_back(uvterminator);
-      }
+					verts.push_back(v);
+					normals.push_back(n);
+					tangents.push_back(t);
+					uvs.push_back(uv);
+				}
+			}
+			// Terminate triangles
+			verts.push_back(terminator);
+			normals.push_back(terminator);
+			tangents.push_back(terminator);
+			uvs.push_back(uvterminator);
+		}
 
-    // Node bounding box
-    // Stored int child 1 XY, child 2 XY, child 1 & 2 Z
-    bvhData[idx + 0].x = bounds[0].minBounds().m_x;
-    bvhData[idx + 0].y = bounds[0].maxBounds().m_x;
-    bvhData[idx + 0].z = bounds[0].minBounds().m_y;
-    bvhData[idx + 0].w = bounds[0].maxBounds().m_y;
+		// Node bounding box
+		// Stored int child 1 XY, child 2 XY, child 1 & 2 Z
+		bvhData[idx + 0].x = bounds[0].minBounds().m_x;
+		bvhData[idx + 0].y = bounds[0].maxBounds().m_x;
+		bvhData[idx + 0].z = bounds[0].minBounds().m_y;
+		bvhData[idx + 0].w = bounds[0].maxBounds().m_y;
 
-    bvhData[idx + 1].x = bounds[1].minBounds().m_x;
-    bvhData[idx + 1].y = bounds[1].maxBounds().m_x;
-    bvhData[idx + 1].z = bounds[1].minBounds().m_y;
-    bvhData[idx + 1].w = bounds[1].maxBounds().m_y;
+		bvhData[idx + 1].x = bounds[1].minBounds().m_x;
+		bvhData[idx + 1].y = bounds[1].maxBounds().m_x;
+		bvhData[idx + 1].z = bounds[1].minBounds().m_y;
+		bvhData[idx + 1].w = bounds[1].maxBounds().m_y;
 
-    bvhData[idx + 2].x = bounds[0].minBounds().m_z;
-    bvhData[idx + 2].y = bounds[0].maxBounds().m_z;
-    bvhData[idx + 2].z = bounds[1].minBounds().m_z;
-    bvhData[idx + 2].w = bounds[1].maxBounds().m_z;
+		bvhData[idx + 2].x = bounds[0].minBounds().m_z;
+		bvhData[idx + 2].y = bounds[0].maxBounds().m_z;
+		bvhData[idx + 2].z = bounds[1].minBounds().m_z;
+		bvhData[idx + 2].w = bounds[1].maxBounds().m_z;
 
-    // Storing indices as floats
-    bvhData[idx + 3].x = intAsFloat(indices[0]);
-    bvhData[idx + 3].y = intAsFloat(indices[1]);
+		// Storing indices as floats
+		bvhData[idx + 3].x = intAsFloat(indices[0]);
+		bvhData[idx + 3].y = intAsFloat(indices[1]);
 		bvhData[idx + 3].z = 0.f;
-    bvhData[idx + 3].w = 0.f;
+		bvhData[idx + 3].w = 0.f;
   }
 
   // Copy buffers to GPU
@@ -462,6 +482,8 @@ void vRendererCL::initMesh(const vMeshData &_meshData)
     std::cerr << "Failed to BVH data to GPU " << err << "\n";
     exit(EXIT_FAILURE);
   }
+
+	m_meshInitialised = true;
 }
 
 void vRendererCL::loadHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w, const unsigned int &_h)
@@ -471,10 +493,7 @@ void vRendererCL::loadHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w,
   format.image_channel_data_type = CL_HALF_FLOAT;
   format.image_channel_order = CL_RGBA;
 
-  if(m_hdr())
-  {
-    m_hdr.~Image2D();
-  }
+	// Load the pixelbuffer data to the GPU
   m_hdr = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, _w, _h, 0, (void*)_pixelBuffer, &err);
 
   if(err != CL_SUCCESS)
@@ -484,50 +503,59 @@ void vRendererCL::loadHDR(const Imf::Rgba *_pixelBuffer, const unsigned int &_w,
   }
 }
 
-void vRendererCL::loadTexture(const unsigned char *_texture, const unsigned int &_w, const unsigned int &_h, const unsigned int &_type)
+
+void vRendererCL::loadTexture(const QImage &_texture, const float &_gamma, const unsigned int &_type)
 {
-  float *dataAsFloats = new float[_w*_h*4];
+	unsigned int w = _texture.width();
+	unsigned int h = _texture.height();
+	float correction = (_gamma > 0.001f ? 1.f/_gamma : 1.f);
+
+	float *dataAsFloats = new float[w*h*4];
 
   cl_int err = CL_SUCCESS;
   cl::ImageFormat format;
   format.image_channel_data_type = CL_FLOAT;
   format.image_channel_order = CL_RGBA;
 
-  for(unsigned int i = 0; i < _w*_h*4; i += 4)
-  {
-    dataAsFloats[i + 0] = static_cast<int>(_texture[i + 2])/255.f;
-    dataAsFloats[i + 1] = static_cast<int>(_texture[i + 1])/255.f;
-    dataAsFloats[i + 2] = static_cast<int>(_texture[i])/255.f;
-    dataAsFloats[i + 3] = static_cast<int>(_texture[i + 3])/255.f;
-  }
+	for(unsigned int j = 0; j < h; ++j)
+	{
+		for(unsigned int i = 0; i < w; ++i)
+		{
+			QColor pixel(_texture.pixel(i, j));
+			if(_type == DIFFUSE)
+			{
+				// Invert gamma correction if it's already applied
+				dataAsFloats[i*4 + j*w*4 + 0] = std::pow(pixel.red()/255.f, correction);
+				dataAsFloats[i*4 + j*w*4 + 1] = std::pow(pixel.green()/255.f, correction);
+				dataAsFloats[i*4 + j*w*4 + 2] = std::pow(pixel.blue()/255.f, correction);
+				dataAsFloats[i*4 + j*w*4 + 3] = pixel.alpha()/255.f;
+			}
+			else
+			{
+				dataAsFloats[i*4 + j*w*4 + 0] = pixel.red()/255.f;
+				dataAsFloats[i*4 + j*w*4 + 1] = pixel.green()/255.f;
+				dataAsFloats[i*4 + j*w*4 + 2] = pixel.blue()/255.f;
+				dataAsFloats[i*4 + j*w*4 + 3] = pixel.alpha()/255.f;
+			}
+		}
+	}
 
+	// Load the data to the correct buffer
   switch(_type)
   {
     case DIFFUSE:
-    {
-//      if(m_diffuse())
-//      {
-//        m_diffuse.~Image2D();
-//      }
-      m_diffuse = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, _w, _h, 0, (void*)dataAsFloats, &err);
+		{
+			m_diffuse = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, w, h, 0, (void*)dataAsFloats, &err);
       m_diffuseMapSet = true;
     } break;
     case NORMAL:
-    {
-//      if(m_normal())
-//      {
-//        m_normal.~Image2D();
-//      }
-      m_normal = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, _w, _h, 0, (void*)dataAsFloats, &err);
+		{
+			m_normal = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, w, h, 0, (void*)dataAsFloats, &err);
       m_normalMapSet = true;
     } break;
     case SPECULAR:
-    {
-//      if(m_specular())
-//      {
-//        m_specular.~Image2D();
-//      }
-      m_specular = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, _w, _h, 0, (void*)dataAsFloats, &err);
+		{
+			m_specular = cl::Image2D(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, format, w, h, 0, (void*)dataAsFloats, &err);
       m_specularMapSet = true;
     } break;
     default: break;
@@ -535,11 +563,56 @@ void vRendererCL::loadTexture(const unsigned char *_texture, const unsigned int 
 
   if(err != CL_SUCCESS)
   {
-    std::cerr << "Failed to load HDR map to GPU " << err << "\n";
+		std::cerr << "Failed to load a texture map to GPU " << err << "\n";
     exit(EXIT_FAILURE);
   }
 
+	// Delete the buffer from the CPU as it's no longer needed
   delete [] dataAsFloats;
+}
+
+bool vRendererCL::loadBRDF(const float *_brdf)
+{
+	// If the brdf data is valid (e.g. not a nullptr), load it to the GPU
+	if(_brdf)
+	{
+		unsigned int n = BRDF_SAMPLING_RES_THETA_H * BRDF_SAMPLING_RES_THETA_D * BRDF_SAMPLING_RES_PHI_D / 2;
+
+		cl_int err;
+		// Copy brdf to GPU
+		m_brdf = cl::Buffer(m_context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, n * 3 * sizeof(float), const_cast<float *>(_brdf), &err);
+
+		if(err != CL_SUCCESS)
+		{
+			std::cerr << "Failed to copy vertex data to GPU " << err << "\n";
+			exit(EXIT_FAILURE);
+		}
+
+		m_hasBRDF = true;
+
+		// Free the CPU memory
+		delete [] _brdf;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void vRendererCL::useBRDF(const bool &_newVal)
+{
+	m_viewBRDF = _newVal;
+}
+
+void vRendererCL::useExampleSphere(const bool &_newVal)
+{
+	m_useExampleSphere = _newVal;
+}
+
+void vRendererCL::useCornellBox(const bool &_newVal)
+{
+	m_useCornellBox = _newVal;
 }
 
 float vRendererCL::intAsFloat(const unsigned int &_v)

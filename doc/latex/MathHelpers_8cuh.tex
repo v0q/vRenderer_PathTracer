@@ -1,0 +1,861 @@
+\hypertarget{MathHelpers_8cuh}{\section{cuda/include/\-Math\-Helpers.cuh File Reference}
+\label{MathHelpers_8cuh}\index{cuda/include/\-Math\-Helpers.\-cuh@{cuda/include/\-Math\-Helpers.\-cuh}}
+}
+
+
+Device math helper functions.  
+
+
+{\ttfamily \#include $<$cuda\-\_\-runtime.\-h$>$}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structmat4}{mat4}
+\begin{DoxyCompactList}\small\item\em Simple \hyperlink{structmat4}{mat4} struct used for normal map calculations. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{MathHelpers_8cuh_a31bcd5c31fc67c7eaa2e81d722d2fcff}{typedef struct \hyperlink{structmat4}{mat4} \hyperlink{MathHelpers_8cuh_a31bcd5c31fc67c7eaa2e81d722d2fcff}{mat4}}\label{MathHelpers_8cuh_a31bcd5c31fc67c7eaa2e81d722d2fcff}
+
+\begin{DoxyCompactList}\small\item\em Simple \hyperlink{structmat4}{mat4} struct used for normal map calculations. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_a6c4b60926b6de2cc4677b88a0eb38592}{operator$\ast$} (const \hyperlink{structmat4}{mat4} \&\-\_\-a, const float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator$\ast$ Matrix-\/\-Vector multiplication, used for normal map calculations \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_a6c05ec280b580976b827526db2241e83}{operator+} (const float4 \&\-\_\-a, const float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator+ Vector-\/\-Vector addition \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_a7dc2dab63123e6b57bd81d3105e3bc89}{operator-\/} (const float4 \&\-\_\-a, const float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator-\/ Vector-\/\-Vector subtraction \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- void \hyperlink{MathHelpers_8cuh_aebfed131f08629907ecd235839a55955}{operator+=} (float4 \&\-\_\-a, const float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator+= Vector-\/\-Vector addition \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- void \hyperlink{MathHelpers_8cuh_ad74d65299664baf9e31b9fd5b80ffaaf}{operator$\ast$=} (float4 \&\-\_\-a, const float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator$\ast$= Vector-\/\-Vector multiplication \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- void \hyperlink{MathHelpers_8cuh_a4b0908aeb68c540e1d8eab24be0457f2}{operator$\ast$=} (float4 \&\-\_\-a, const float \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator+= Vector-\/\-Float addition \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- void \hyperlink{MathHelpers_8cuh_aa0079d65f459311e3a405303341117a6}{operator/=} (float4 \&\-\_\-a, const float \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator/= Vector-\/\-Float division \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_afb9acd59ace59f5399422dfc0961e8e8}{operator/} (const float \&\-\_\-a, float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator/ Float-\/\-Vector division \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_ac85bdc63747d2660f8239b6ffb07ac68}{operator$\ast$} (const float4 \&\-\_\-a, const float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator$\ast$ Vector-\/\-Vector multiplication \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_a7fb5ca8f0fa9f285c63371ec6b96f44e}{operator$\ast$} (const float4 \&\-\_\-a, const float \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator$\ast$ Vector-\/\-Float multiplication \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_a8e5e570ecc2fd4b44ea25472f0f995d2}{operator$\ast$} (const float \&\-\_\-a, const float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator$\ast$ Float-\/\-Vector multiplication \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float2 \hyperlink{MathHelpers_8cuh_a48abcf7bba893357551375e9438d6f3b}{operator+} (const float2 \&\-\_\-a, const float2 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator+ Vector-\/\-Vector addition \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float2 \hyperlink{MathHelpers_8cuh_a679e7ae0603882bbc3410dedfa37ed52}{operator-\/} (const float2 \&\-\_\-a, const float2 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator-\/ Vector-\/\-Vector subtraction \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- void \hyperlink{MathHelpers_8cuh_ac99554ab5f9a33bda703e865f7843f62}{operator+=} (float2 \&\-\_\-a, const float2 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator+= Vector-\/\-Vector addition \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- void \hyperlink{MathHelpers_8cuh_afaff943e572e0afdb79e12072d04603b}{operator$\ast$=} (float2 \&\-\_\-a, const float2 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator$\ast$= Vector-\/\-Vector multiplication \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- void \hyperlink{MathHelpers_8cuh_af0cf6e6b14ba2dc47b261f4706e9930a}{operator$\ast$=} (float2 \&\-\_\-a, const float \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator$\ast$= Vector-\/\-Float multiplication \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- void \hyperlink{MathHelpers_8cuh_adf398ce3423b85758d94a34cafc99c9a}{operator/=} (float2 \&\-\_\-a, const float \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator/= Vector-\/\-Vector divison \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float2 \hyperlink{MathHelpers_8cuh_af24dd0cf2f2fb216ba4187fdae04e520}{operator/} (const float \&\-\_\-a, float2 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator/ Float-\/\-Vector divison \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float2 \hyperlink{MathHelpers_8cuh_a8b844332829230fc87333cd82cbb6a03}{operator$\ast$} (const float2 \&\-\_\-a, const float2 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator$\ast$ Vector-\/\-Vector multiplication \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float2 \hyperlink{MathHelpers_8cuh_aea83e7300751487dd17c6bc918e326d4}{operator$\ast$} (const float2 \&\-\_\-a, const float \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator$\ast$ Vector-\/\-Float multiplication \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float2 \hyperlink{MathHelpers_8cuh_a9a67ff307ea6af26e06754d0db14c8bc}{operator$\ast$} (const float \&\-\_\-a, const float2 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator$\ast$ Float-\/\-Vector multiplication \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- void \hyperlink{MathHelpers_8cuh_a32ff41e712ed04ea8b45f8a3915d74c4}{operator/=} (float2 \&\-\_\-a, const float2 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em operator/= Vector-\/\-Vector division \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float \hyperlink{MathHelpers_8cuh_ab32ad31d03f2fc9d78ae15ae00571950}{dot} (const float4 \&\-\_\-a, const float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em dot Dot product \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_a70bbccab5c43317c98743fcbb16f1fe9}{cross} (const float4 \&\-\_\-a, const float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em cross Vector cross product \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_ab505c6170599adb7d8cd7c983da3b0ad}{normalize} (const float4 \&\-\_\-a)
+\begin{DoxyCompactList}\small\item\em normalize Normalizes a given vector \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float \hyperlink{MathHelpers_8cuh_a9e940177924516937ce79892653e50fd}{clamp} (const int \&\-\_\-val, const int \&\-\_\-low, const int \&\-\_\-hi)
+\begin{DoxyCompactList}\small\item\em clamp Clamps an integer between two values \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float \hyperlink{MathHelpers_8cuh_a2a072dabd84a1dfb096792d5eb0d7601}{clamp} (const float \&\-\_\-val, const float \&\-\_\-low, const float \&\-\_\-hi)
+\begin{DoxyCompactList}\small\item\em clamp Clamps a float between two values \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_a1f38a602055e97b6ea06e2b2da3e6772}{clamp} (const float4 \&\-\_\-val, const float \&\-\_\-low, const float \&\-\_\-hi)
+\begin{DoxyCompactList}\small\item\em clamp Clamps a vector between two values \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_ab63a29e23d6a3a7f99f537d1f73bc659}{max} (const float4 \&\-\_\-a, const float4 \&\-\_\-b)
+\begin{DoxyCompactList}\small\item\em max Returns a component-\/wise max vector from two vectors \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float \hyperlink{MathHelpers_8cuh_adb5b67ae0abd3db51000d69d0d0d9b85}{distance\-Squared} (const float4 \&\-\_\-v)
+\begin{DoxyCompactList}\small\item\em distance\-Squared Gets the squared distance of a given vector \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float \hyperlink{MathHelpers_8cuh_a02992387188f814d8d426432e9dc40e8}{distance} (const float4 \&\-\_\-v)
+\begin{DoxyCompactList}\small\item\em distance Calculates and returns the length of a given vector \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{MathHelpers_8cuh_a6d88746ea92fc75d76dbabf90bf189f9}{powf} (const float4 \&\-\_\-a, const float \&\-\_\-pow)
+\begin{DoxyCompactList}\small\item\em powf Calculate a vector to a given power \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float \hyperlink{MathHelpers_8cuh_a58869102c1eb50c1e1476fcee48a240b}{lerp} (const float \&\-\_\-a, const float \&\-\_\-b, const float \&\-\_\-w)
+\begin{DoxyCompactList}\small\item\em lerp Calculate the linear interpolation between the two given values \end{DoxyCompactList}\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- int \hyperlink{MathHelpers_8cuh_a78cf7ac0b1a34e13feb284871f698604}{min\-\_\-min} (const int \&\-\_\-a, const int \&\-\_\-b, const int \&\-\_\-c)
+\item 
+\hypertarget{MathHelpers_8cuh_ae5945e834beb12796bbd16cefdda33d1}{\-\_\-\-\_\-device\-\_\-\-\_\- int {\bfseries min\-\_\-max} (const int \&\-\_\-a, const int \&\-\_\-b, const int \&\-\_\-c)}\label{MathHelpers_8cuh_ae5945e834beb12796bbd16cefdda33d1}
+
+\item 
+\hypertarget{MathHelpers_8cuh_a3f474b285d9ba547ee45c40231bb227e}{\-\_\-\-\_\-device\-\_\-\-\_\- int {\bfseries max\-\_\-min} (const int \&\-\_\-a, const int \&\-\_\-b, const int \&\-\_\-c)}\label{MathHelpers_8cuh_a3f474b285d9ba547ee45c40231bb227e}
+
+\item 
+\hypertarget{MathHelpers_8cuh_a6be66ab1dc348834263e5160a8e6dbae}{\-\_\-\-\_\-device\-\_\-\-\_\- int {\bfseries max\-\_\-max} (const int \&\-\_\-a, const int \&\-\_\-b, const int \&\-\_\-c)}\label{MathHelpers_8cuh_a6be66ab1dc348834263e5160a8e6dbae}
+
+\item 
+\hypertarget{MathHelpers_8cuh_ab0973c241c8ffcf6990be1d15b504b06}{\-\_\-\-\_\-device\-\_\-\-\_\- float {\bfseries fmin\-\_\-fmin} (const float \&\-\_\-a, const float \&\-\_\-b, const float \&\-\_\-c)}\label{MathHelpers_8cuh_ab0973c241c8ffcf6990be1d15b504b06}
+
+\item 
+\hypertarget{MathHelpers_8cuh_a803e7bc317092b4a518c01665c42bd16}{\-\_\-\-\_\-device\-\_\-\-\_\- float {\bfseries fmin\-\_\-fmax} (const float \&\-\_\-a, const float \&\-\_\-b, const float \&\-\_\-c)}\label{MathHelpers_8cuh_a803e7bc317092b4a518c01665c42bd16}
+
+\item 
+\hypertarget{MathHelpers_8cuh_aaf48f2af61e0c6b973de0d961acd16b0}{\-\_\-\-\_\-device\-\_\-\-\_\- float {\bfseries fmax\-\_\-fmin} (const float \&\-\_\-a, const float \&\-\_\-b, const float \&\-\_\-c)}\label{MathHelpers_8cuh_aaf48f2af61e0c6b973de0d961acd16b0}
+
+\item 
+\hypertarget{MathHelpers_8cuh_a937b9ff47af7eb505a037fa86e1523a9}{\-\_\-\-\_\-device\-\_\-\-\_\- float {\bfseries fmax\-\_\-fmax} (const float \&\-\_\-a, const float \&\-\_\-b, const float \&\-\_\-c)}\label{MathHelpers_8cuh_a937b9ff47af7eb505a037fa86e1523a9}
+
+\item 
+\hypertarget{MathHelpers_8cuh_a17a7bff6cc0b6d64ab41e1fa53b976ee}{\-\_\-\-\_\-device\-\_\-\-\_\- float {\bfseries span\-Begin\-Kepler} (const float \&\-\_\-a0, const float \&\-\_\-a1, const float \&\-\_\-b0, const float \&\-\_\-b1, const float \&\-\_\-c0, const float \&\-\_\-c1, const float \&\-\_\-d)}\label{MathHelpers_8cuh_a17a7bff6cc0b6d64ab41e1fa53b976ee}
+
+\item 
+\hypertarget{MathHelpers_8cuh_a85b98f5676293e397b05185edbeb416e}{\-\_\-\-\_\-device\-\_\-\-\_\- float {\bfseries span\-End\-Kepler} (const float \&\-\_\-a0, const float \&\-\_\-a1, const float \&\-\_\-b0, const float \&\-\_\-b1, const float \&\-\_\-c0, const float \&\-\_\-c1, const float \&\-\_\-d)}\label{MathHelpers_8cuh_a85b98f5676293e397b05185edbeb416e}
+
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{MathHelpers_8cuh_a6139c42f2db8c596bda238a11dbbc8d8}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- float {\bfseries P\-I} = 3.\-14159265359f}\label{MathHelpers_8cuh_a6139c42f2db8c596bda238a11dbbc8d8}
+
+\item 
+\hypertarget{MathHelpers_8cuh_aff7a0c4d113adf3ffba39244d3ea8c5b}{\-\_\-\-\_\-constant\-\_\-\-\_\- \-\_\-\-\_\-device\-\_\-\-\_\- float {\bfseries epsilon} = 0.\-0000000003f}\label{MathHelpers_8cuh_aff7a0c4d113adf3ffba39244d3ea8c5b}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Device math helper functions. \begin{DoxyAuthor}{Authors}
+Teemu Lindborg 
+\end{DoxyAuthor}
+\begin{DoxyVersion}{Version}
+1.\-0 
+\end{DoxyVersion}
+\begin{DoxyDate}{Date}
+04/05/17 Updated to N\-C\-C\-A Coding standard Revision History \-: Initial Version 08/12/16 
+\end{DoxyDate}
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000002}{Todo}]
+\begin{DoxyItemize}
+\item 
+\end{DoxyItemize}\end{DoxyRefDesc}
+
+
+\subsection{Function Documentation}
+\hypertarget{MathHelpers_8cuh_a9e940177924516937ce79892653e50fd}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!clamp@{clamp}}
+\index{clamp@{clamp}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{clamp}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float clamp (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-val, }
+\item[{const int \&}]{\-\_\-low, }
+\item[{const int \&}]{\-\_\-hi}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a9e940177924516937ce79892653e50fd}
+
+
+clamp Clamps an integer between two values 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-val} & Value to clamp \\
+\hline
+{\em \-\_\-low} & Lower limit of the clamp \\
+\hline
+{\em \-\_\-hi} & Higher limit of the clamp \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Clamped value 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a2a072dabd84a1dfb096792d5eb0d7601}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!clamp@{clamp}}
+\index{clamp@{clamp}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{clamp}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float clamp (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-val, }
+\item[{const float \&}]{\-\_\-low, }
+\item[{const float \&}]{\-\_\-hi}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a2a072dabd84a1dfb096792d5eb0d7601}
+
+
+clamp Clamps a float between two values 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-val} & Value to clamp \\
+\hline
+{\em \-\_\-low} & Lower limit of the clamp \\
+\hline
+{\em \-\_\-hi} & Higher limit of the clamp \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Clamped value 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a1f38a602055e97b6ea06e2b2da3e6772}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!clamp@{clamp}}
+\index{clamp@{clamp}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{clamp}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 clamp (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-val, }
+\item[{const float \&}]{\-\_\-low, }
+\item[{const float \&}]{\-\_\-hi}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a1f38a602055e97b6ea06e2b2da3e6772}
+
+
+clamp Clamps a vector between two values 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-val} & Vector to clamp \\
+\hline
+{\em \-\_\-low} & Lower limit of the clamp \\
+\hline
+{\em \-\_\-hi} & Higher limit of the clamp \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Clamped vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a70bbccab5c43317c98743fcbb16f1fe9}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!cross@{cross}}
+\index{cross@{cross}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{cross}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 cross (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-a, }
+\item[{const float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a70bbccab5c43317c98743fcbb16f1fe9}
+
+
+cross Vector cross product 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a02992387188f814d8d426432e9dc40e8}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!distance@{distance}}
+\index{distance@{distance}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{distance}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float distance (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-v}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a02992387188f814d8d426432e9dc40e8}
+
+
+distance Calculates and returns the length of a given vector 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-v} & Vector to check \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Length of the vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_adb5b67ae0abd3db51000d69d0d0d9b85}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!distance\-Squared@{distance\-Squared}}
+\index{distance\-Squared@{distance\-Squared}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{distance\-Squared}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float distance\-Squared (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-v}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_adb5b67ae0abd3db51000d69d0d0d9b85}
+
+
+distance\-Squared Gets the squared distance of a given vector 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-v} & Vector to get the squared distance from \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Squared length 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_ab32ad31d03f2fc9d78ae15ae00571950}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!dot@{dot}}
+\index{dot@{dot}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{dot}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float dot (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-a, }
+\item[{const float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_ab32ad31d03f2fc9d78ae15ae00571950}
+
+
+dot Dot product 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Result of the dot product 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a58869102c1eb50c1e1476fcee48a240b}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!lerp@{lerp}}
+\index{lerp@{lerp}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{lerp}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float lerp (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-a, }
+\item[{const float \&}]{\-\_\-b, }
+\item[{const float \&}]{\-\_\-w}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a58869102c1eb50c1e1476fcee48a240b}
+
+
+lerp Calculate the linear interpolation between the two given values 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & Value a \\
+\hline
+{\em \-\_\-b} & Value b \\
+\hline
+{\em \-\_\-w} & Alpha \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Interpolated value 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_ab63a29e23d6a3a7f99f537d1f73bc659}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!max@{max}}
+\index{max@{max}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{max}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 max (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-a, }
+\item[{const float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_ab63a29e23d6a3a7f99f537d1f73bc659}
+
+
+max Returns a component-\/wise max vector from two vectors 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Vector with maximum components from the two given vectors 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a78cf7ac0b1a34e13feb284871f698604}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!min\-\_\-min@{min\-\_\-min}}
+\index{min\-\_\-min@{min\-\_\-min}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{min\-\_\-min}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- int min\-\_\-min (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-a, }
+\item[{const int \&}]{\-\_\-b, }
+\item[{const int \&}]{\-\_\-c}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a78cf7ac0b1a34e13feb284871f698604}
+Based on the Cuda\-Tracer\-Lib by Hannes Hergeth (\href{https://github.com/hhergeth/CudaTracerLib}{\tt https\-://github.\-com/hhergeth/\-Cuda\-Tracer\-Lib}) \hypertarget{MathHelpers_8cuh_ab505c6170599adb7d8cd7c983da3b0ad}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!normalize@{normalize}}
+\index{normalize@{normalize}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{normalize}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 normalize (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-a}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_ab505c6170599adb7d8cd7c983da3b0ad}
+
+
+normalize Normalizes a given vector 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & Vector to normalize \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Vector with the same direction as \-\_\-a but length of 1 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a6c4b60926b6de2cc4677b88a0eb38592}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$@{operator$\ast$}}
+\index{operator$\ast$@{operator$\ast$}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 operator$\ast$ (
+\begin{DoxyParamCaption}
+\item[{const {\bf mat4} \&}]{\-\_\-a, }
+\item[{const float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a6c4b60926b6de2cc4677b88a0eb38592}
+
+
+operator$\ast$ Matrix-\/\-Vector multiplication, used for normal map calculations 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & Matrix component \\
+\hline
+{\em \-\_\-b} & Vector component \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_ac85bdc63747d2660f8239b6ffb07ac68}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$@{operator$\ast$}}
+\index{operator$\ast$@{operator$\ast$}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 operator$\ast$ (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-a, }
+\item[{const float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_ac85bdc63747d2660f8239b6ffb07ac68}
+
+
+operator$\ast$ Vector-\/\-Vector multiplication 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a7fb5ca8f0fa9f285c63371ec6b96f44e}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$@{operator$\ast$}}
+\index{operator$\ast$@{operator$\ast$}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 operator$\ast$ (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-a, }
+\item[{const float \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a7fb5ca8f0fa9f285c63371ec6b96f44e}
+
+
+operator$\ast$ Vector-\/\-Float multiplication 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Float multiplier \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a8e5e570ecc2fd4b44ea25472f0f995d2}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$@{operator$\ast$}}
+\index{operator$\ast$@{operator$\ast$}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 operator$\ast$ (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-a, }
+\item[{const float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a8e5e570ecc2fd4b44ea25472f0f995d2}
+
+
+operator$\ast$ Float-\/\-Vector multiplication 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Vector multiplier \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a8b844332829230fc87333cd82cbb6a03}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$@{operator$\ast$}}
+\index{operator$\ast$@{operator$\ast$}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float2 operator$\ast$ (
+\begin{DoxyParamCaption}
+\item[{const float2 \&}]{\-\_\-a, }
+\item[{const float2 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a8b844332829230fc87333cd82cbb6a03}
+
+
+operator$\ast$ Vector-\/\-Vector multiplication 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_aea83e7300751487dd17c6bc918e326d4}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$@{operator$\ast$}}
+\index{operator$\ast$@{operator$\ast$}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float2 operator$\ast$ (
+\begin{DoxyParamCaption}
+\item[{const float2 \&}]{\-\_\-a, }
+\item[{const float \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_aea83e7300751487dd17c6bc918e326d4}
+
+
+operator$\ast$ Vector-\/\-Float multiplication 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Float multiplier \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a9a67ff307ea6af26e06754d0db14c8bc}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$@{operator$\ast$}}
+\index{operator$\ast$@{operator$\ast$}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float2 operator$\ast$ (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-a, }
+\item[{const float2 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a9a67ff307ea6af26e06754d0db14c8bc}
+
+
+operator$\ast$ Float-\/\-Vector multiplication 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & Float \\
+\hline
+{\em \-\_\-b} & Vector multiplier \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_ad74d65299664baf9e31b9fd5b80ffaaf}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$=@{operator$\ast$=}}
+\index{operator$\ast$=@{operator$\ast$=}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$=}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- void operator$\ast$= (
+\begin{DoxyParamCaption}
+\item[{float4 \&}]{\-\_\-a, }
+\item[{const float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_ad74d65299664baf9e31b9fd5b80ffaaf}
+
+
+operator$\ast$= Vector-\/\-Vector multiplication 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\hypertarget{MathHelpers_8cuh_a4b0908aeb68c540e1d8eab24be0457f2}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$=@{operator$\ast$=}}
+\index{operator$\ast$=@{operator$\ast$=}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$=}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- void operator$\ast$= (
+\begin{DoxyParamCaption}
+\item[{float4 \&}]{\-\_\-a, }
+\item[{const float \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a4b0908aeb68c540e1d8eab24be0457f2}
+
+
+operator+= Vector-\/\-Float addition 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Float to add to vector components \\
+\hline
+\end{DoxyParams}
+\hypertarget{MathHelpers_8cuh_afaff943e572e0afdb79e12072d04603b}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$=@{operator$\ast$=}}
+\index{operator$\ast$=@{operator$\ast$=}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$=}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- void operator$\ast$= (
+\begin{DoxyParamCaption}
+\item[{float2 \&}]{\-\_\-a, }
+\item[{const float2 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_afaff943e572e0afdb79e12072d04603b}
+
+
+operator$\ast$= Vector-\/\-Vector multiplication 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\hypertarget{MathHelpers_8cuh_af0cf6e6b14ba2dc47b261f4706e9930a}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator$\ast$=@{operator$\ast$=}}
+\index{operator$\ast$=@{operator$\ast$=}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator$\ast$=}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- void operator$\ast$= (
+\begin{DoxyParamCaption}
+\item[{float2 \&}]{\-\_\-a, }
+\item[{const float \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_af0cf6e6b14ba2dc47b261f4706e9930a}
+
+
+operator$\ast$= Vector-\/\-Float multiplication 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Float multiplier \\
+\hline
+\end{DoxyParams}
+\hypertarget{MathHelpers_8cuh_a6c05ec280b580976b827526db2241e83}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator+@{operator+}}
+\index{operator+@{operator+}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator+}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 operator+ (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-a, }
+\item[{const float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a6c05ec280b580976b827526db2241e83}
+
+
+operator+ Vector-\/\-Vector addition 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a48abcf7bba893357551375e9438d6f3b}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator+@{operator+}}
+\index{operator+@{operator+}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator+}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float2 operator+ (
+\begin{DoxyParamCaption}
+\item[{const float2 \&}]{\-\_\-a, }
+\item[{const float2 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a48abcf7bba893357551375e9438d6f3b}
+
+
+operator+ Vector-\/\-Vector addition 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_aebfed131f08629907ecd235839a55955}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator+=@{operator+=}}
+\index{operator+=@{operator+=}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator+=}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- void operator+= (
+\begin{DoxyParamCaption}
+\item[{float4 \&}]{\-\_\-a, }
+\item[{const float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_aebfed131f08629907ecd235839a55955}
+
+
+operator+= Vector-\/\-Vector addition 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\hypertarget{MathHelpers_8cuh_ac99554ab5f9a33bda703e865f7843f62}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator+=@{operator+=}}
+\index{operator+=@{operator+=}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator+=}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- void operator+= (
+\begin{DoxyParamCaption}
+\item[{float2 \&}]{\-\_\-a, }
+\item[{const float2 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_ac99554ab5f9a33bda703e865f7843f62}
+
+
+operator+= Vector-\/\-Vector addition 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\hypertarget{MathHelpers_8cuh_a7dc2dab63123e6b57bd81d3105e3bc89}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator-\/@{operator-\/}}
+\index{operator-\/@{operator-\/}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator-\/}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 operator-\/ (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-a, }
+\item[{const float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a7dc2dab63123e6b57bd81d3105e3bc89}
+
+
+operator-\/ Vector-\/\-Vector subtraction 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a679e7ae0603882bbc3410dedfa37ed52}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator-\/@{operator-\/}}
+\index{operator-\/@{operator-\/}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator-\/}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float2 operator-\/ (
+\begin{DoxyParamCaption}
+\item[{const float2 \&}]{\-\_\-a, }
+\item[{const float2 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a679e7ae0603882bbc3410dedfa37ed52}
+
+
+operator-\/ Vector-\/\-Vector subtraction 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_afb9acd59ace59f5399422dfc0961e8e8}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator/@{operator/}}
+\index{operator/@{operator/}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator/}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 operator/ (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-a, }
+\item[{float4 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_afb9acd59ace59f5399422dfc0961e8e8}
+
+
+operator/ Float-\/\-Vector division 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & Float \\
+\hline
+{\em \-\_\-b} & Vector divisor \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_af24dd0cf2f2fb216ba4187fdae04e520}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator/@{operator/}}
+\index{operator/@{operator/}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator/}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float2 operator/ (
+\begin{DoxyParamCaption}
+\item[{const float \&}]{\-\_\-a, }
+\item[{float2 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_af24dd0cf2f2fb216ba4187fdae04e520}
+
+
+operator/ Float-\/\-Vector divison 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & Float \\
+\hline
+{\em \-\_\-b} & Vector divisor \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_aa0079d65f459311e3a405303341117a6}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator/=@{operator/=}}
+\index{operator/=@{operator/=}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator/=}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- void operator/= (
+\begin{DoxyParamCaption}
+\item[{float4 \&}]{\-\_\-a, }
+\item[{const float \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_aa0079d65f459311e3a405303341117a6}
+
+
+operator/= Vector-\/\-Float division 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Divisor float \\
+\hline
+\end{DoxyParams}
+\hypertarget{MathHelpers_8cuh_adf398ce3423b85758d94a34cafc99c9a}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator/=@{operator/=}}
+\index{operator/=@{operator/=}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator/=}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- void operator/= (
+\begin{DoxyParamCaption}
+\item[{float2 \&}]{\-\_\-a, }
+\item[{const float \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_adf398ce3423b85758d94a34cafc99c9a}
+
+
+operator/= Vector-\/\-Vector divison 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Vector divisor \\
+\hline
+\end{DoxyParams}
+\hypertarget{MathHelpers_8cuh_a32ff41e712ed04ea8b45f8a3915d74c4}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!operator/=@{operator/=}}
+\index{operator/=@{operator/=}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{operator/=}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- void operator/= (
+\begin{DoxyParamCaption}
+\item[{float2 \&}]{\-\_\-a, }
+\item[{const float2 \&}]{\-\_\-b}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a32ff41e712ed04ea8b45f8a3915d74c4}
+
+
+operator/= Vector-\/\-Vector division 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & First vector \\
+\hline
+{\em \-\_\-b} & Second vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}
+\hypertarget{MathHelpers_8cuh_a6d88746ea92fc75d76dbabf90bf189f9}{\index{Math\-Helpers.\-cuh@{Math\-Helpers.\-cuh}!powf@{powf}}
+\index{powf@{powf}!MathHelpers.cuh@{Math\-Helpers.\-cuh}}
+\subsubsection[{powf}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 powf (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-a, }
+\item[{const float \&}]{\-\_\-pow}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{MathHelpers_8cuh_a6d88746ea92fc75d76dbabf90bf189f9}
+
+
+powf Calculate a vector to a given power 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & Vector whose components to raise \\
+\hline
+{\em \-\_\-pow} & Power to raise the vector's components to \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting vector 
+\end{DoxyReturn}

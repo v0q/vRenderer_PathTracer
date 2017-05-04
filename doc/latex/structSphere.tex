@@ -1,0 +1,66 @@
+\hypertarget{structSphere}{\section{Sphere Struct Reference}
+\label{structSphere}\index{Sphere@{Sphere}}
+}
+
+
+\hyperlink{structSphere}{Sphere} Simple sphere structure, used for the example sphere, cornell box scene and few others.  
+
+
+
+
+{\ttfamily \#include $<$Path\-Tracer.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float \hyperlink{structSphere_aff7f40563a36da274224cce2df67c5bb}{intersect} (const \hyperlink{structRay}{Ray} $\ast$\-\_\-r) const 
+\begin{DoxyCompactList}\small\item\em intersect Check if a given ray intersects with the sphere \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{structSphere_a2476da8402053c022436054f108bf8aa}{float \hyperlink{structSphere_a2476da8402053c022436054f108bf8aa}{m\-\_\-r}}\label{structSphere_a2476da8402053c022436054f108bf8aa}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-r Radius of the sphere \end{DoxyCompactList}\item 
+\hypertarget{structSphere_a2ab691669ddac359fa0b5ea7b219af26}{float4 \hyperlink{structSphere_a2ab691669ddac359fa0b5ea7b219af26}{m\-\_\-pos}}\label{structSphere_a2ab691669ddac359fa0b5ea7b219af26}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-pos Position of the sphere \end{DoxyCompactList}\item 
+\hypertarget{structSphere_ad64c90d5b23a0af4f9e3bc7d9fce9da4}{float4 \hyperlink{structSphere_ad64c90d5b23a0af4f9e3bc7d9fce9da4}{m\-\_\-emission}}\label{structSphere_ad64c90d5b23a0af4f9e3bc7d9fce9da4}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-emission Emission of the sphere \end{DoxyCompactList}\item 
+\hypertarget{structSphere_aa763efd3f99c9660f450b1925affc014}{float4 \hyperlink{structSphere_aa763efd3f99c9660f450b1925affc014}{m\-\_\-col}}\label{structSphere_aa763efd3f99c9660f450b1925affc014}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-col Colour of the sphere \end{DoxyCompactList}\item 
+\hypertarget{structSphere_a4b7464c09b9fe172751c5689e8f85561}{Refl\-\_\-t \hyperlink{structSphere_a4b7464c09b9fe172751c5689e8f85561}{m\-\_\-refl}}\label{structSphere_a4b7464c09b9fe172751c5689e8f85561}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-refl Reflective type of the sphere \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{structSphere}{Sphere} Simple sphere structure, used for the example sphere, cornell box scene and few others. 
+
+\subsection{Member Function Documentation}
+\hypertarget{structSphere_aff7f40563a36da274224cce2df67c5bb}{\index{Sphere@{Sphere}!intersect@{intersect}}
+\index{intersect@{intersect}!Sphere@{Sphere}}
+\subsubsection[{intersect}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float Sphere\-::intersect (
+\begin{DoxyParamCaption}
+\item[{const {\bf Ray} $\ast$}]{\-\_\-r}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{structSphere_aff7f40563a36da274224cce2df67c5bb}
+
+
+intersect Check if a given ray intersects with the sphere 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-r} & \hyperlink{structRay}{Ray} to check against \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Distance to the intersection if there's on 
+\end{DoxyReturn}
+
+
+The documentation for this struct was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+cl/include/\hyperlink{PathTracer_8h}{Path\-Tracer.\-h}\item 
+cuda/src/\hyperlink{PathTracer_8cu}{Path\-Tracer.\-cu}\end{DoxyCompactItemize}

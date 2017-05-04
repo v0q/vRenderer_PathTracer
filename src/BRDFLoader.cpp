@@ -1,3 +1,8 @@
+///
+/// \file BRDFLoader.cpp
+/// \brief Loads MERL BRDF binary data
+///
+
 #include <fstream>
 #include <iostream>
 
@@ -37,6 +42,7 @@ float* vBRDFLoader::loadBinary(const std::string &_brdfFile)
 		vals[i*3 + 2] = brdf[i*3 + 2];
 	}
 
+	// Clean the double buffer and return the floating point data
 	delete [] brdf;
 	file.close();
 

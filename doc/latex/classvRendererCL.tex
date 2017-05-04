@@ -1,0 +1,310 @@
+\hypertarget{classvRendererCL}{\section{v\-Renderer\-C\-L Class Reference}
+\label{classvRendererCL}\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}}
+}
+
+
+The \hyperlink{classvRendererCL}{v\-Renderer\-C\-L} class Open\-C\-L implementation of the renderer.  
+
+
+
+
+{\ttfamily \#include $<$v\-Renderer\-C\-L.\-h$>$}
+
+Inheritance diagram for v\-Renderer\-C\-L\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classvRendererCL}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classvRendererCL_a2cc108d7d1b229d5e7ee864e4ba887fb}{\hyperlink{classvRendererCL_a2cc108d7d1b229d5e7ee864e4ba887fb}{v\-Renderer\-C\-L} ()}\label{classvRendererCL_a2cc108d7d1b229d5e7ee864e4ba887fb}
+
+\begin{DoxyCompactList}\small\item\em \hyperlink{classvRendererCL}{v\-Renderer\-C\-L} Default ctor \end{DoxyCompactList}\item 
+\hypertarget{classvRendererCL_a30d5cceb0fe2a0592707730a8c61ddf2}{\hyperlink{classvRendererCL_a30d5cceb0fe2a0592707730a8c61ddf2}{$\sim$v\-Renderer\-C\-L} ()}\label{classvRendererCL_a30d5cceb0fe2a0592707730a8c61ddf2}
+
+\begin{DoxyCompactList}\small\item\em $\sim$v\-Renderer\-C\-L Default dtor \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCL_a01207b7fea56df11fc2af4cb87cad7e4}{init} (const unsigned int \&\-\_\-w, const unsigned int \&\-\_\-h) override
+\begin{DoxyCompactList}\small\item\em init Creates the Open\-C\-L/\-Open\-G\-L interop context and initialises buffers that are needed at the beginning. Compiles the trace kernels \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCL_a124b31960cb2e8cfe821acf888e712a9}{register\-Texture\-Buffer} (G\-Luint \&\-\_\-texture) override
+\begin{DoxyCompactList}\small\item\em register\-Texture\-Buffer Register the Open\-G\-L texture for Open\-C\-L interop \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCL_a663d4055fdcc26820c769a3ed11a7cfd}{register\-Depth\-Buffer} (G\-Luint \&\-\_\-depth\-Texture) override
+\begin{DoxyCompactList}\small\item\em register\-Depth\-Buffer Register the Open\-G\-L depth texture for Open\-C\-L interop, not implemented for now \end{DoxyCompactList}\item 
+\hypertarget{classvRendererCL_a7bc6f37f611bc3d356ca25c6e2cd200b}{void \hyperlink{classvRendererCL_a7bc6f37f611bc3d356ca25c6e2cd200b}{render} () override}\label{classvRendererCL_a7bc6f37f611bc3d356ca25c6e2cd200b}
+
+\begin{DoxyCompactList}\small\item\em render Render function, passes the G\-P\-U buffers and arguments to the kernel and reserves the needed Open\-G\-L resources and frees them once done \end{DoxyCompactList}\item 
+\hypertarget{classvRendererCL_a8b72cc2f7d637774e285105437af33d1}{void \hyperlink{classvRendererCL_a8b72cc2f7d637774e285105437af33d1}{clean\-Up} () override}\label{classvRendererCL_a8b72cc2f7d637774e285105437af33d1}
+
+\begin{DoxyCompactList}\small\item\em clean\-Up Clears and frees the allocated memory and buffers \end{DoxyCompactList}\item 
+\hypertarget{classvRendererCL_a9f8885e7a31fb62fdd32304ac422b56b}{void \hyperlink{classvRendererCL_a9f8885e7a31fb62fdd32304ac422b56b}{update\-Camera} () override}\label{classvRendererCL_a9f8885e7a31fb62fdd32304ac422b56b}
+
+\begin{DoxyCompactList}\small\item\em update\-Camera Consumes the updates from the virtual camera and passes the data to the G\-P\-U \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCL_a06033a095680d83224fa3d12b703d213}{init\-Mesh} (const \hyperlink{structvMeshData}{v\-Mesh\-Data} \&\-\_\-mesh\-Data) override
+\begin{DoxyCompactList}\small\item\em init\-Mesh Takes in 3d mesh data and the \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure, packs and copies the data to the G\-P\-U \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCL_a4df104a5f4a9e19db7d9c8678ada7cd6}{load\-H\-D\-R} (const Imf\-::\-Rgba $\ast$\-\_\-colours, const unsigned int \&\-\_\-w, const unsigned int \&\-\_\-h) override
+\begin{DoxyCompactList}\small\item\em load\-H\-D\-R Loads an E\-X\-R pixelbuffer to the G\-P\-U \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCL_aeb2feac32793ba1ab9c74ff3abf9ff78}{load\-Texture} (const Q\-Image \&\-\_\-texture, const float \&\-\_\-gamma, const unsigned int \&\-\_\-type) override
+\begin{DoxyCompactList}\small\item\em load\-Texture Loads a texture to the G\-P\-U, performs \char`\"{}inverse gamma correction\char`\"{} if needed as gamma correction is applied at the end of each trace step \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCL_ad08264f1738f5a2effdef21fc3852758}{use\-B\-R\-D\-F} (const bool \&\-\_\-new\-Val) override
+\begin{DoxyCompactList}\small\item\em use\-B\-R\-D\-F Passes the data to the tracer, whether to use the loaded B\-R\-D\-F data \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCL_ace3572b0e58f9ef81ad3853a719d8537}{use\-Example\-Sphere} (const bool \&\-\_\-new\-Val) override
+\begin{DoxyCompactList}\small\item\em use\-Example\-Sphere Passes the info to the tracer, whether to use the example sphere \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCL_ae9991460d59a4a86cc19c436a98cd346}{use\-Cornell\-Box} (const bool \&\-\_\-new\-Val) override
+\begin{DoxyCompactList}\small\item\em use\-Cornell\-Box Passes the info to the tracer, whether to use the cornell box scene or H\-D\-R\-I environment map \end{DoxyCompactList}\item 
+\hypertarget{classvRendererCL_aeee2cef9e03af6095ea0b8237d2ab184}{void \hyperlink{classvRendererCL_aeee2cef9e03af6095ea0b8237d2ab184}{clear\-Buffer} () override}\label{classvRendererCL_aeee2cef9e03af6095ea0b8237d2ab184}
+
+\begin{DoxyCompactList}\small\item\em clear\-Buffer Clears the colour buffer, used when something changes in the scene \end{DoxyCompactList}\item 
+bool \hyperlink{classvRendererCL_a80988c343d250965cc184695fafc7a10}{load\-B\-R\-D\-F} (const float $\ast$\-\_\-brdf) override
+\begin{DoxyCompactList}\small\item\em load\-B\-R\-D\-F Loads the B\-R\-D\-F data to the G\-P\-U \end{DoxyCompactList}\item 
+unsigned int \hyperlink{classvRendererCL_a30e02c917778a288dd83a7a29882d030}{get\-Frame\-Count} () const override
+\begin{DoxyCompactList}\small\item\em get\-Frame\-Count Get the number of frames the current trace has performed \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classvRendererCL}{v\-Renderer\-C\-L} class Open\-C\-L implementation of the renderer. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classvRendererCL_a30e02c917778a288dd83a7a29882d030}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!get\-Frame\-Count@{get\-Frame\-Count}}
+\index{get\-Frame\-Count@{get\-Frame\-Count}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{get\-Frame\-Count}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int v\-Renderer\-C\-L\-::get\-Frame\-Count (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_a30e02c917778a288dd83a7a29882d030}
+
+
+get\-Frame\-Count Get the number of frames the current trace has performed 
+
+\begin{DoxyReturn}{Returns}
+The number of frames 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{classvRenderer_a623eb6b3f67b6b22137783de6c788e49}{v\-Renderer}.
+
+\hypertarget{classvRendererCL_a01207b7fea56df11fc2af4cb87cad7e4}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!init@{init}}
+\index{init@{init}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{init}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-C\-L\-::init (
+\begin{DoxyParamCaption}
+\item[{const unsigned int \&}]{\-\_\-w, }
+\item[{const unsigned int \&}]{\-\_\-h}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_a01207b7fea56df11fc2af4cb87cad7e4}
+
+
+init Creates the Open\-C\-L/\-Open\-G\-L interop context and initialises buffers that are needed at the beginning. Compiles the trace kernels 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-w} & Width of the screen \\
+\hline
+{\em \-\_\-h} & Height of the screen \\
+\hline
+\end{DoxyParams}
+Get and create Open\-C\-L/\-Open\-G\-L interop context
+
+Implements \hyperlink{classvRenderer_aded5e62557a8e73c5ba81ef2dae422b3}{v\-Renderer}.
+
+\hypertarget{classvRendererCL_a06033a095680d83224fa3d12b703d213}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!init\-Mesh@{init\-Mesh}}
+\index{init\-Mesh@{init\-Mesh}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{init\-Mesh}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-C\-L\-::init\-Mesh (
+\begin{DoxyParamCaption}
+\item[{const {\bf v\-Mesh\-Data} \&}]{\-\_\-mesh\-Data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_a06033a095680d83224fa3d12b703d213}
+
+
+init\-Mesh Takes in 3d mesh data and the \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure, packs and copies the data to the G\-P\-U 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-sbvh\-Data} & Structure containing the needed data \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_aa8e0dd2ed5b56dc3b10a3035d9678557}{v\-Renderer}.
+
+\hypertarget{classvRendererCL_a80988c343d250965cc184695fafc7a10}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!load\-B\-R\-D\-F@{load\-B\-R\-D\-F}}
+\index{load\-B\-R\-D\-F@{load\-B\-R\-D\-F}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{load\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}bool v\-Renderer\-C\-L\-::load\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const float $\ast$}]{\-\_\-brdf}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_a80988c343d250965cc184695fafc7a10}
+
+
+load\-B\-R\-D\-F Loads the B\-R\-D\-F data to the G\-P\-U 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-brdf} & B\-R\-D\-F data read from a binary file \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the data was loaded correctly 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{classvRenderer_a5ef0c07cbcc1d5bbdfd7fe290de700c5}{v\-Renderer}.
+
+\hypertarget{classvRendererCL_a4df104a5f4a9e19db7d9c8678ada7cd6}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!load\-H\-D\-R@{load\-H\-D\-R}}
+\index{load\-H\-D\-R@{load\-H\-D\-R}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{load\-H\-D\-R}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-C\-L\-::load\-H\-D\-R (
+\begin{DoxyParamCaption}
+\item[{const Imf\-::\-Rgba $\ast$}]{\-\_\-colours, }
+\item[{const unsigned int \&}]{\-\_\-w, }
+\item[{const unsigned int \&}]{\-\_\-h}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_a4df104a5f4a9e19db7d9c8678ada7cd6}
+
+
+load\-H\-D\-R Loads an E\-X\-R pixelbuffer to the G\-P\-U 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-pixel\-Buffer} & Loaded pixelbuffer \\
+\hline
+{\em \-\_\-w} & Width of the H\-D\-R\-I map \\
+\hline
+{\em \-\_\-h} & Height of the H\-D\-R\-I map \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_aac0b1a8021d071e0816de34995488f6b}{v\-Renderer}.
+
+\hypertarget{classvRendererCL_aeb2feac32793ba1ab9c74ff3abf9ff78}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!load\-Texture@{load\-Texture}}
+\index{load\-Texture@{load\-Texture}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{load\-Texture}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-C\-L\-::load\-Texture (
+\begin{DoxyParamCaption}
+\item[{const Q\-Image \&}]{\-\_\-texture, }
+\item[{const float \&}]{\-\_\-gamma, }
+\item[{const unsigned int \&}]{\-\_\-type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_aeb2feac32793ba1ab9c74ff3abf9ff78}
+
+
+load\-Texture Loads a texture to the G\-P\-U, performs \char`\"{}inverse gamma correction\char`\"{} if needed as gamma correction is applied at the end of each trace step 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-texture} & Q\-Image to read the texture data from \\
+\hline
+{\em \-\_\-gamma} & Gamma value of the texture \\
+\hline
+{\em \-\_\-type} & Type of the texture, 0 = Diffuse, 1 = Normal, 2 = Specular \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_a904bc18544cfe877fc7e33d12d449c05}{v\-Renderer}.
+
+\hypertarget{classvRendererCL_a663d4055fdcc26820c769a3ed11a7cfd}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!register\-Depth\-Buffer@{register\-Depth\-Buffer}}
+\index{register\-Depth\-Buffer@{register\-Depth\-Buffer}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{register\-Depth\-Buffer}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-C\-L\-::register\-Depth\-Buffer (
+\begin{DoxyParamCaption}
+\item[{G\-Luint \&}]{\-\_\-depth\-Texture}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_a663d4055fdcc26820c769a3ed11a7cfd}
+
+
+register\-Depth\-Buffer Register the Open\-G\-L depth texture for Open\-C\-L interop, not implemented for now 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-depth\-Texture} & Open\-G\-L depth texture object \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_a9ffabf6f4fcceac59ad192ef78c4f1b5}{v\-Renderer}.
+
+\hypertarget{classvRendererCL_a124b31960cb2e8cfe821acf888e712a9}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!register\-Texture\-Buffer@{register\-Texture\-Buffer}}
+\index{register\-Texture\-Buffer@{register\-Texture\-Buffer}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{register\-Texture\-Buffer}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-C\-L\-::register\-Texture\-Buffer (
+\begin{DoxyParamCaption}
+\item[{G\-Luint \&}]{\-\_\-texture}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_a124b31960cb2e8cfe821acf888e712a9}
+
+
+register\-Texture\-Buffer Register the Open\-G\-L texture for Open\-C\-L interop 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-texture} & Open\-G\-L texture object \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_adb2aafca5b39b1e6c9b8cf04a7bf4f84}{v\-Renderer}.
+
+\hypertarget{classvRendererCL_ad08264f1738f5a2effdef21fc3852758}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!use\-B\-R\-D\-F@{use\-B\-R\-D\-F}}
+\index{use\-B\-R\-D\-F@{use\-B\-R\-D\-F}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{use\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-C\-L\-::use\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_ad08264f1738f5a2effdef21fc3852758}
+
+
+use\-B\-R\-D\-F Passes the data to the tracer, whether to use the loaded B\-R\-D\-F data 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Whether to use the loaded B\-R\-D\-F data \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_af2d6b7f027ea76018a83b3c11177c9cf}{v\-Renderer}.
+
+\hypertarget{classvRendererCL_ae9991460d59a4a86cc19c436a98cd346}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!use\-Cornell\-Box@{use\-Cornell\-Box}}
+\index{use\-Cornell\-Box@{use\-Cornell\-Box}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{use\-Cornell\-Box}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-C\-L\-::use\-Cornell\-Box (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_ae9991460d59a4a86cc19c436a98cd346}
+
+
+use\-Cornell\-Box Passes the info to the tracer, whether to use the cornell box scene or H\-D\-R\-I environment map 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Whether to use cornell box or not \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_ad5664d5c12c8869f94f9a65d4d3b2cb9}{v\-Renderer}.
+
+\hypertarget{classvRendererCL_ace3572b0e58f9ef81ad3853a719d8537}{\index{v\-Renderer\-C\-L@{v\-Renderer\-C\-L}!use\-Example\-Sphere@{use\-Example\-Sphere}}
+\index{use\-Example\-Sphere@{use\-Example\-Sphere}!vRendererCL@{v\-Renderer\-C\-L}}
+\subsubsection[{use\-Example\-Sphere}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-C\-L\-::use\-Example\-Sphere (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCL_ace3572b0e58f9ef81ad3853a719d8537}
+
+
+use\-Example\-Sphere Passes the info to the tracer, whether to use the example sphere 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Whether to use the example sphere \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_ac4e01b762661e82813c8909d1c7a47c3}{v\-Renderer}.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{vRendererCL_8h}{v\-Renderer\-C\-L.\-h}\item 
+src/\hyperlink{vRendererCL_8cpp}{v\-Renderer\-C\-L.\-cpp}\end{DoxyCompactItemize}

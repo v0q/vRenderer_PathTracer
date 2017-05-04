@@ -1,3 +1,14 @@
+///
+/// \file RayIntersection.cuh
+/// \brief Ray-XX intersection functions
+/// \authors Teemu Lindborg
+/// \version 1.0
+/// \date 04/05/17 Updated to NCCA Coding standard
+/// Revision History :
+/// Initial Version 08/12/16
+/// \todo -
+///
+
 #pragma once
 
 #include <float.h>
@@ -6,10 +17,26 @@
 #include "PathTracer.cuh"
 #include "MathHelpers.cuh"
 
-typedef struct Ray {
+///
+/// \brief Ray Simple structure for a ray
+///
+typedef struct Ray
+{
+	///
+	/// \brief m_origin Origin of the current ray
+	///
 	float4 m_origin;
+
+	///
+	/// \brief m_dir Direction of the ray
+	///
 	float4 m_dir;
 
+	///
+	/// \brief Ray Default ctor for a ray
+	/// \param _o Origin of the ray
+	/// \param _d Direction of the ray
+	///
 	__device__ Ray(float4 _o, float4 _d) : m_origin(_o), m_dir(_d) {}
 } Ray;
 
@@ -81,66 +108,4 @@ __device__ float4 intersectTriangle(const float4 &_v1, const float4 &_v2, const 
 
 	// No hit, no win
 	return make_float4(0.f, 0.f, 0.f, 0.f);
-}
-
-///
-/// \brief intersect
-/// \param _ray One axis direction component stored in x and origin in y
-/// \param _limits One axis bottom component stored in x and top in y
-/// \return False if no intersection was found and we can exit, true if we need to continue
-///
-inline __device__ bool intersectNearAndFar(const float2 &_ray, const float2 &_limits, float &_tNear, float &_tFar)
-{
-	// box intersection routine
-	if(_ray.x == 0.f)
-	{
-		if(_ray.y < _limits.x)
-			return false;					    \
-		if(_ray.y > _limits.y)
-			return false;
-	}
-	else
-	{
-		float t1 = (_limits.x - _ray.y) / _ray.x;
-		float t2 = (_limits.y - _ray.y) / _ray.x;
-		if(t1 > t2)
-		{
-			float tmp = t1;
-			t1 = t2;
-			t2 = tmp;
-		}
-		if(t1 > _tNear)
-			_tNear = t1;
-		if(t2 < _tFar)
-			_tFar = t2;
-		if(_tNear > _tFar)
-			return false;
-		if(_tFar < 0.f)
-			return false;
-	}
-
-	return true;
-}
-
-__device__ bool intersectCFBVH(const Ray *_ray, const float3 &_bottom, const float3 &_top)
-{
-	float Tnear = -FLT_MAX;
-	float Tfar = FLT_MAX;
-
-	// X
-	if(!intersectNearAndFar(make_float2(_ray->m_dir.x, _ray->m_origin.x),
-													make_float2(_bottom.x, _top.x), Tnear, Tfar))
-		return false;
-
-	// Y
-	if(!intersectNearAndFar(make_float2(_ray->m_dir.y, _ray->m_origin.y),
-													make_float2(_bottom.y, _top.y), Tnear, Tfar))
-		return false;
-
-	// Z
-	if(!intersectNearAndFar(make_float2(_ray->m_dir.z, _ray->m_origin.z),
-													make_float2(_bottom.z, _top.z), Tnear, Tfar))
-		return false;
-
-	return true;
 }

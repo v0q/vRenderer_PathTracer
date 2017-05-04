@@ -1,3 +1,8 @@
+///
+/// \file Camera.cpp
+/// \brief Implements the Camera class
+///
+
 #include <cmath>
 #include "Camera.h"
 
@@ -47,6 +52,7 @@ void Camera::setCameraMatrix()
 
 void Camera::pitch(const float &_angle)
 {
+	// Update the pitch and do some sanity checking/clamping and trigger the dirty flag
   m_pitch += _angle;
 	m_pitch = std::fabs(m_pitch) > M_PI_2 ? (m_pitch < 0 ? -M_PI_2 : M_PI_2) : m_pitch;
 	m_isDirty = true;
@@ -72,6 +78,7 @@ void Camera::changeFov(const float &_newFov)
 
 void Camera::consume()
 {
+	// Calculate the new forward vector from the yaw and pitch
 	float sy = std::sin(m_yaw);
 	float cy = std::cos(m_yaw);
   float sp = std::sin(m_pitch);

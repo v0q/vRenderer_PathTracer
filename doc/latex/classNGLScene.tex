@@ -1,0 +1,294 @@
+\hypertarget{classNGLScene}{\section{N\-G\-L\-Scene Class Reference}
+\label{classNGLScene}\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}}
+}
+
+
+our main glwindow widget for N\-G\-L applications all drawing elements are put in this file  
+
+
+
+
+{\ttfamily \#include $<$N\-G\-L\-Scene.\-h$>$}
+
+Inheritance diagram for N\-G\-L\-Scene\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classNGLScene}
+\end{center}
+\end{figure}
+\subsection*{Public Slots}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classNGLScene_aa484c5103aa3829f0495f13bc8fb8482}{void \hyperlink{classNGLScene_aa484c5103aa3829f0495f13bc8fb8482}{load\-Mesh} ()}\label{classNGLScene_aa484c5103aa3829f0495f13bc8fb8482}
+
+\begin{DoxyCompactList}\small\item\em load\-Mesh Loads a mesh, generates a \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure for it and passes the data the renderer \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_a954a5eb1691e9828aed8d180a42575eb}{void \hyperlink{classNGLScene_a954a5eb1691e9828aed8d180a42575eb}{load\-H\-D\-R} ()}\label{classNGLScene_a954a5eb1691e9828aed8d180a42575eb}
+
+\begin{DoxyCompactList}\small\item\em load\-H\-D\-R Loads an E\-X\-R and passes the data to the renderer \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_a6efc515d291011cd581480a4a4916e5c}{void \hyperlink{classNGLScene_a6efc515d291011cd581480a4a4916e5c}{load\-B\-R\-D\-F} ()}\label{classNGLScene_a6efc515d291011cd581480a4a4916e5c}
+
+\begin{DoxyCompactList}\small\item\em load\-B\-R\-D\-F Loads M\-E\-R\-L B\-R\-D\-F data and passes it to the renderer \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_abee07cadf7d9342fa40e68576130b2ad}{use\-B\-R\-D\-F} (const bool \&\-\_\-val)
+\begin{DoxyCompactList}\small\item\em use\-B\-R\-D\-F Passes an U\-I signal to the renderer whether to use the B\-R\-D\-F data or not \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_a2e02406936e4cbd1756301836533e476}{use\-Example\-Sphere} (const bool \&\-\_\-val)
+\begin{DoxyCompactList}\small\item\em use\-Example\-Sphere Passes an U\-I signal to the renderer whether to use an example sphere \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_aa6b13cd9be96a0fb83224eca63ca9ca1}{use\-Cornell\-Env} (const bool \&\-\_\-val)
+\begin{DoxyCompactList}\small\item\em use\-Cornell\-Env Passes an U\-I signal to the renderer whether to use the Cornell box or an H\-D\-R\-I environment \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_a17174c3763736bc8e5de55eb551e91dd}{void \hyperlink{classNGLScene_a17174c3763736bc8e5de55eb551e91dd}{load\-Diffuse} ()}\label{classNGLScene_a17174c3763736bc8e5de55eb551e91dd}
+
+\begin{DoxyCompactList}\small\item\em load\-Diffuse Pass through function to load in a diffuse texture \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_a9e19c5d383822133d99d2c5359406ee8}{void \hyperlink{classNGLScene_a9e19c5d383822133d99d2c5359406ee8}{load\-Normal} ()}\label{classNGLScene_a9e19c5d383822133d99d2c5359406ee8}
+
+\begin{DoxyCompactList}\small\item\em load\-Normal Pass through function to load in a normal texture \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_a660fd684af6638405e2acefbd85c5508}{void \hyperlink{classNGLScene_a660fd684af6638405e2acefbd85c5508}{load\-Specular} ()}\label{classNGLScene_a660fd684af6638405e2acefbd85c5508}
+
+\begin{DoxyCompactList}\small\item\em load\-Specular Pass through function to load in a specular texture \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_ae4242aaaa2dc60172a46d463621bb8a2}{change\-Fov} (const int \&\-\_\-new\-Fov)
+\begin{DoxyCompactList}\small\item\em change\-Fov Updates the F\-O\-V from the U\-I to the renderer \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_a20182f83391c960705b3de402b064386}{change\-Fresnel\-Coef} (const int \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em change\-Fresnel\-Coef Updates the fresnel coef from the U\-I to the renderer \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_ae4c42b19a25e4b43b804202c79c89bc2}{change\-Fresnel\-Power} (const int \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em change\-Fresnel\-Power Updates the fresnel power from the U\-I to the renderer \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_a51c28cc0b7e022828003de95f1ea5523}{toggle\-F\-X\-A\-A} (const bool \&\-\_\-enabled)
+\begin{DoxyCompactList}\small\item\em toggle\-F\-X\-A\-A Enable/disable F\-X\-A\-A based on the U\-I input \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_aebb9ebf6d1523bb0669da8c84113c943}{fxaa\-Sharpness} (const int \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em fxaa\-Sharpness Updates the F\-X\-A\-A sharpness shader uniform \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_aa45b262a9ee4669f842a9ebf3716d338}{fxaa\-Subpix\-Quality} (const int \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em fxaa\-Subpix\-Quality Updates the F\-X\-A\-A subpixel quality shader uniform \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_afeaf7b8feeedbed5ead3db706a07c9b6}{fxaa\-Edge\-Threshold} (const int \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em fxaa\-Edge\-Threshold Updates the F\-X\-A\-A edge threshold shader uniform \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classNGLScene_ab7b1e32434f2a2c2f0dd1ece6661ca79}{void \hyperlink{classNGLScene_ab7b1e32434f2a2c2f0dd1ece6661ca79}{mesh\-Loaded} (const Q\-String \&)}\label{classNGLScene_ab7b1e32434f2a2c2f0dd1ece6661ca79}
+
+\begin{DoxyCompactList}\small\item\em mesh\-Loaded Signals the U\-I that a mesh has been loaded successfully \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_acaf032b837c09feaf534779a216923cd}{void \hyperlink{classNGLScene_acaf032b837c09feaf534779a216923cd}{texture\-Loaded} (const Q\-String \&, const unsigned int \&)}\label{classNGLScene_acaf032b837c09feaf534779a216923cd}
+
+\begin{DoxyCompactList}\small\item\em texture\-Loaded Signals the U\-I that a texture has been loaded successfully \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_a219b32b4e420ecf8510b282e39f6c954}{void \hyperlink{classNGLScene_a219b32b4e420ecf8510b282e39f6c954}{brdf\-Loaded} (const Q\-String \&)}\label{classNGLScene_a219b32b4e420ecf8510b282e39f6c954}
+
+\begin{DoxyCompactList}\small\item\em brdf\-Loaded Signals the U\-I that M\-E\-R\-L B\-R\-D\-F data has been loaded successfully \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_ac31e02ed631b1d67aa1d43d31bb8e4fe}{void \hyperlink{classNGLScene_ac31e02ed631b1d67aa1d43d31bb8e4fe}{H\-D\-R\-I\-Loaded} (const Q\-String \&)}\label{classNGLScene_ac31e02ed631b1d67aa1d43d31bb8e4fe}
+
+\begin{DoxyCompactList}\small\item\em H\-D\-R\-I\-Loaded Signals the U\-I that a H\-D\-R\-I map has been loaded successfully. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classNGLScene_a15c28d86bb9083dee9fa92b6941b76f1}{N\-G\-L\-Scene} (Q\-Widget $\ast$\-\_\-parent=nullptr)
+\begin{DoxyCompactList}\small\item\em ctor for our N\-G\-L drawing class \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_abda05d130945833bfbb6bad8d619f7f5}{\hyperlink{classNGLScene_abda05d130945833bfbb6bad8d619f7f5}{$\sim$\-N\-G\-L\-Scene} ()}\label{classNGLScene_abda05d130945833bfbb6bad8d619f7f5}
+
+\begin{DoxyCompactList}\small\item\em dtor must close down ngl and release Open\-G\-L resources \end{DoxyCompactList}\item 
+void \hyperlink{classNGLScene_aab2b866db534d286a56cc2240ed98790}{initialize\-G\-L} ()
+\begin{DoxyCompactList}\small\item\em the initialize class is called once when the window is created and we have a valid G\-L context \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_a37bec65bfba7b7a717d803d369221e2d}{void \hyperlink{classNGLScene_a37bec65bfba7b7a717d803d369221e2d}{paint\-G\-L} ()}\label{classNGLScene_a37bec65bfba7b7a717d803d369221e2d}
+
+\begin{DoxyCompactList}\small\item\em this is called everytime we want to draw the scene \end{DoxyCompactList}\item 
+\hypertarget{classNGLScene_ac228e4d41afa023733b163d2128c78fb}{void {\bfseries change\-Render\-Channel} ()}\label{classNGLScene_ac228e4d41afa023733b163d2128c78fb}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+our main glwindow widget for N\-G\-L applications all drawing elements are put in this file 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classNGLScene_a15c28d86bb9083dee9fa92b6941b76f1}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!N\-G\-L\-Scene@{N\-G\-L\-Scene}}
+\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{N\-G\-L\-Scene}]{\setlength{\rightskip}{0pt plus 5cm}N\-G\-L\-Scene\-::\-N\-G\-L\-Scene (
+\begin{DoxyParamCaption}
+\item[{Q\-Widget $\ast$}]{\-\_\-parent = {\ttfamily nullptr}}
+\end{DoxyParamCaption}
+)}}\label{classNGLScene_a15c28d86bb9083dee9fa92b6941b76f1}
+
+
+ctor for our N\-G\-L drawing class 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em parent} & the parent window to the class \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classNGLScene_ae4242aaaa2dc60172a46d463621bb8a2}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!change\-Fov@{change\-Fov}}
+\index{change\-Fov@{change\-Fov}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{change\-Fov}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::change\-Fov (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Fov}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classNGLScene_ae4242aaaa2dc60172a46d463621bb8a2}
+
+
+change\-Fov Updates the F\-O\-V from the U\-I to the renderer 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Fov} & New field of view to be used \\
+\hline
+\end{DoxyParams}
+\hypertarget{classNGLScene_a20182f83391c960705b3de402b064386}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!change\-Fresnel\-Coef@{change\-Fresnel\-Coef}}
+\index{change\-Fresnel\-Coef@{change\-Fresnel\-Coef}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{change\-Fresnel\-Coef}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::change\-Fresnel\-Coef (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classNGLScene_a20182f83391c960705b3de402b064386}
+
+
+change\-Fresnel\-Coef Updates the fresnel coef from the U\-I to the renderer 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New fresnel coef \\
+\hline
+\end{DoxyParams}
+\hypertarget{classNGLScene_ae4c42b19a25e4b43b804202c79c89bc2}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!change\-Fresnel\-Power@{change\-Fresnel\-Power}}
+\index{change\-Fresnel\-Power@{change\-Fresnel\-Power}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{change\-Fresnel\-Power}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::change\-Fresnel\-Power (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classNGLScene_ae4c42b19a25e4b43b804202c79c89bc2}
+
+
+change\-Fresnel\-Power Updates the fresnel power from the U\-I to the renderer 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New fresnel power \\
+\hline
+\end{DoxyParams}
+\hypertarget{classNGLScene_afeaf7b8feeedbed5ead3db706a07c9b6}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!fxaa\-Edge\-Threshold@{fxaa\-Edge\-Threshold}}
+\index{fxaa\-Edge\-Threshold@{fxaa\-Edge\-Threshold}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{fxaa\-Edge\-Threshold}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::fxaa\-Edge\-Threshold (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [slot]}}}\label{classNGLScene_afeaf7b8feeedbed5ead3db706a07c9b6}
+
+
+fxaa\-Edge\-Threshold Updates the F\-X\-A\-A edge threshold shader uniform 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New F\-X\-A\-A edge threshold value \\
+\hline
+\end{DoxyParams}
+\hypertarget{classNGLScene_aebb9ebf6d1523bb0669da8c84113c943}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!fxaa\-Sharpness@{fxaa\-Sharpness}}
+\index{fxaa\-Sharpness@{fxaa\-Sharpness}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{fxaa\-Sharpness}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::fxaa\-Sharpness (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [slot]}}}\label{classNGLScene_aebb9ebf6d1523bb0669da8c84113c943}
+
+
+fxaa\-Sharpness Updates the F\-X\-A\-A sharpness shader uniform 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New F\-X\-A\-A sharpness value \\
+\hline
+\end{DoxyParams}
+\hypertarget{classNGLScene_aa45b262a9ee4669f842a9ebf3716d338}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!fxaa\-Subpix\-Quality@{fxaa\-Subpix\-Quality}}
+\index{fxaa\-Subpix\-Quality@{fxaa\-Subpix\-Quality}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{fxaa\-Subpix\-Quality}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::fxaa\-Subpix\-Quality (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [slot]}}}\label{classNGLScene_aa45b262a9ee4669f842a9ebf3716d338}
+
+
+fxaa\-Subpix\-Quality Updates the F\-X\-A\-A subpixel quality shader uniform 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New F\-X\-A\-A subpixel quality value \\
+\hline
+\end{DoxyParams}
+\hypertarget{classNGLScene_aab2b866db534d286a56cc2240ed98790}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!initialize\-G\-L@{initialize\-G\-L}}
+\index{initialize\-G\-L@{initialize\-G\-L}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{initialize\-G\-L}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::initialize\-G\-L (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classNGLScene_aab2b866db534d286a56cc2240ed98790}
+
+
+the initialize class is called once when the window is created and we have a valid G\-L context 
+
+use this to setup any default G\-L stuff Load in the normal screen quad and F\-X\-A\-A shaders \hypertarget{classNGLScene_a51c28cc0b7e022828003de95f1ea5523}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!toggle\-F\-X\-A\-A@{toggle\-F\-X\-A\-A}}
+\index{toggle\-F\-X\-A\-A@{toggle\-F\-X\-A\-A}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{toggle\-F\-X\-A\-A}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::toggle\-F\-X\-A\-A (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-enabled}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [slot]}}}\label{classNGLScene_a51c28cc0b7e022828003de95f1ea5523}
+
+
+toggle\-F\-X\-A\-A Enable/disable F\-X\-A\-A based on the U\-I input 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-enabled} & Whether to use F\-X\-A\-A or not \\
+\hline
+\end{DoxyParams}
+\hypertarget{classNGLScene_abee07cadf7d9342fa40e68576130b2ad}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!use\-B\-R\-D\-F@{use\-B\-R\-D\-F}}
+\index{use\-B\-R\-D\-F@{use\-B\-R\-D\-F}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{use\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::use\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classNGLScene_abee07cadf7d9342fa40e68576130b2ad}
+
+
+use\-B\-R\-D\-F Passes an U\-I signal to the renderer whether to use the B\-R\-D\-F data or not 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-val} & Whether to use B\-R\-D\-F or not \\
+\hline
+\end{DoxyParams}
+\hypertarget{classNGLScene_aa6b13cd9be96a0fb83224eca63ca9ca1}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!use\-Cornell\-Env@{use\-Cornell\-Env}}
+\index{use\-Cornell\-Env@{use\-Cornell\-Env}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{use\-Cornell\-Env}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::use\-Cornell\-Env (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classNGLScene_aa6b13cd9be96a0fb83224eca63ca9ca1}
+
+
+use\-Cornell\-Env Passes an U\-I signal to the renderer whether to use the Cornell box or an H\-D\-R\-I environment 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-val} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classNGLScene_a2e02406936e4cbd1756301836533e476}{\index{N\-G\-L\-Scene@{N\-G\-L\-Scene}!use\-Example\-Sphere@{use\-Example\-Sphere}}
+\index{use\-Example\-Sphere@{use\-Example\-Sphere}!NGLScene@{N\-G\-L\-Scene}}
+\subsubsection[{use\-Example\-Sphere}]{\setlength{\rightskip}{0pt plus 5cm}void N\-G\-L\-Scene\-::use\-Example\-Sphere (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classNGLScene_a2e02406936e4cbd1756301836533e476}
+
+
+use\-Example\-Sphere Passes an U\-I signal to the renderer whether to use an example sphere 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-val} & Whether to use the example shere or not \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{NGLScene_8h}{N\-G\-L\-Scene.\-h}\item 
+moc/moc\-\_\-\-N\-G\-L\-Scene.\-cpp\item 
+src/\hyperlink{NGLScene_8cpp}{N\-G\-L\-Scene.\-cpp}\item 
+src/N\-G\-L\-Scene\-Mouse\-Controls.\-cpp\end{DoxyCompactItemize}

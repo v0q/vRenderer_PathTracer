@@ -1,0 +1,181 @@
+\hypertarget{classBVHNode}{\section{B\-V\-H\-Node Class Reference}
+\label{classBVHNode}\index{B\-V\-H\-Node@{B\-V\-H\-Node}}
+}
+
+
+The \hyperlink{classBVHNode}{B\-V\-H\-Node} class Abstract base class for the nodes.  
+
+
+
+
+{\ttfamily \#include $<$B\-V\-H\-Nodes.\-h$>$}
+
+Inheritance diagram for B\-V\-H\-Node\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classBVHNode}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classBVHNode_abb536bca7ddda5cd8a21d6246193f3a5}{\hyperlink{classBVHNode_abb536bca7ddda5cd8a21d6246193f3a5}{B\-V\-H\-Node} ()}\label{classBVHNode_abb536bca7ddda5cd8a21d6246193f3a5}
+
+\begin{DoxyCompactList}\small\item\em \hyperlink{classBVHNode}{B\-V\-H\-Node} Empty default ctor,. \end{DoxyCompactList}\item 
+\hypertarget{classBVHNode_a77faa5107236f51786cf3e4782d302ac}{virtual \hyperlink{classBVHNode_a77faa5107236f51786cf3e4782d302ac}{$\sim$\-B\-V\-H\-Node} ()}\label{classBVHNode_a77faa5107236f51786cf3e4782d302ac}
+
+\begin{DoxyCompactList}\small\item\em $\sim$\-B\-V\-H\-Node Default virtual dtor \end{DoxyCompactList}\item 
+virtual \hyperlink{classBVHNode}{B\-V\-H\-Node} $\ast$ \hyperlink{classBVHNode_acf8b2130dd63bd66e35f130f86c65400}{child\-Node} (const unsigned int \&\-\_\-index) const =0
+\begin{DoxyCompactList}\small\item\em child\-Node Virtual method to fetch child nodes of the current node \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classBVHNode_a9d6c31fcebf88cc4c128a2b3af1f4cbf}{is\-Leaf} () const =0
+\begin{DoxyCompactList}\small\item\em is\-Leaf Whether the current node is a leaf node or not \end{DoxyCompactList}\item 
+virtual unsigned int \hyperlink{classBVHNode_ae5ad50686b4c345c98d03f080afc403f}{num\-Child\-Nodes} () const =0
+\begin{DoxyCompactList}\small\item\em num\-Child\-Nodes Get the number of child nodes for the current node \end{DoxyCompactList}\item 
+virtual unsigned int \hyperlink{classBVHNode_a8a53277e44a407a75e32118ceb4fa425}{num\-Triangles} () const 
+\begin{DoxyCompactList}\small\item\em num\-Triangles Get the number of triangles in the current node \end{DoxyCompactList}\item 
+\hyperlink{classAABB}{A\-A\-B\-B} \hyperlink{classBVHNode_a6d818bf5517c223d8f7e3fdc9c1f3f37}{get\-Bounds} () const 
+\begin{DoxyCompactList}\small\item\em get\-Bounds Get the \hyperlink{classAABB}{A\-A\-B\-B} of the current node \end{DoxyCompactList}\item 
+unsigned int \hyperlink{classBVHNode_a5a35ddbaed7b4b4058571f7978938f28}{node\-Count} () const 
+\begin{DoxyCompactList}\small\item\em node\-Count Recursively calculate the nodes beneath the current node \end{DoxyCompactList}\item 
+float \hyperlink{classBVHNode_a2f6d380d0628de6245d6f364deb92460}{surface\-Area} () const 
+\begin{DoxyCompactList}\small\item\em surface\-Area Get the surface area of the nodes \hyperlink{classAABB}{A\-A\-B\-B} \end{DoxyCompactList}\item 
+\hypertarget{classBVHNode_a5cdee75dddb4cca21306cbe421772cbd}{void \hyperlink{classBVHNode_a5cdee75dddb4cca21306cbe421772cbd}{clean\-Up} ()}\label{classBVHNode_a5cdee75dddb4cca21306cbe421772cbd}
+
+\begin{DoxyCompactList}\small\item\em clean\-Up Recursively free the allocated memory \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classBVHNode_af56bc095197988eead3dfdb90c30e96e}{\hyperlink{classAABB}{A\-A\-B\-B} \hyperlink{classBVHNode_af56bc095197988eead3dfdb90c30e96e}{m\-\_\-bounds}}\label{classBVHNode_af56bc095197988eead3dfdb90c30e96e}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-bounds \hyperlink{classAABB}{A\-A\-B\-B} of the node \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classBVHNode}{B\-V\-H\-Node} class Abstract base class for the nodes. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classBVHNode_acf8b2130dd63bd66e35f130f86c65400}{\index{B\-V\-H\-Node@{B\-V\-H\-Node}!child\-Node@{child\-Node}}
+\index{child\-Node@{child\-Node}!BVHNode@{B\-V\-H\-Node}}
+\subsubsection[{child\-Node}]{\setlength{\rightskip}{0pt plus 5cm}virtual {\bf B\-V\-H\-Node}$\ast$ B\-V\-H\-Node\-::child\-Node (
+\begin{DoxyParamCaption}
+\item[{const unsigned int \&}]{\-\_\-index}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classBVHNode_acf8b2130dd63bd66e35f130f86c65400}
+
+
+child\-Node Virtual method to fetch child nodes of the current node 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-index} & Index of the child node to get \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Child node at given index 
+\end{DoxyReturn}
+
+
+Implemented in \hyperlink{classLeafNode_a5c8eac5f86f69e5cae6f41d902550d39}{Leaf\-Node}, and \hyperlink{classInnerNode_af4d76a6913d55b395b30f2ce244b882d}{Inner\-Node}.
+
+\hypertarget{classBVHNode_a6d818bf5517c223d8f7e3fdc9c1f3f37}{\index{B\-V\-H\-Node@{B\-V\-H\-Node}!get\-Bounds@{get\-Bounds}}
+\index{get\-Bounds@{get\-Bounds}!BVHNode@{B\-V\-H\-Node}}
+\subsubsection[{get\-Bounds}]{\setlength{\rightskip}{0pt plus 5cm}{\bf A\-A\-B\-B} B\-V\-H\-Node\-::get\-Bounds (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classBVHNode_a6d818bf5517c223d8f7e3fdc9c1f3f37}
+
+
+get\-Bounds Get the \hyperlink{classAABB}{A\-A\-B\-B} of the current node 
+
+\begin{DoxyReturn}{Returns}
+The aabb 
+\end{DoxyReturn}
+\hypertarget{classBVHNode_a9d6c31fcebf88cc4c128a2b3af1f4cbf}{\index{B\-V\-H\-Node@{B\-V\-H\-Node}!is\-Leaf@{is\-Leaf}}
+\index{is\-Leaf@{is\-Leaf}!BVHNode@{B\-V\-H\-Node}}
+\subsubsection[{is\-Leaf}]{\setlength{\rightskip}{0pt plus 5cm}virtual bool B\-V\-H\-Node\-::is\-Leaf (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classBVHNode_a9d6c31fcebf88cc4c128a2b3af1f4cbf}
+
+
+is\-Leaf Whether the current node is a leaf node or not 
+
+\begin{DoxyReturn}{Returns}
+True if a leaf node 
+\end{DoxyReturn}
+
+
+Implemented in \hyperlink{classLeafNode_a4971bdbac579dd2d7688aa8706a41ea1}{Leaf\-Node}, and \hyperlink{classInnerNode_a9132770448acf40a331114a350dbe249}{Inner\-Node}.
+
+\hypertarget{classBVHNode_a5a35ddbaed7b4b4058571f7978938f28}{\index{B\-V\-H\-Node@{B\-V\-H\-Node}!node\-Count@{node\-Count}}
+\index{node\-Count@{node\-Count}!BVHNode@{B\-V\-H\-Node}}
+\subsubsection[{node\-Count}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int B\-V\-H\-Node\-::node\-Count (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classBVHNode_a5a35ddbaed7b4b4058571f7978938f28}
+
+
+node\-Count Recursively calculate the nodes beneath the current node 
+
+\begin{DoxyReturn}{Returns}
+The number of nodes that are children to this node 
+\end{DoxyReturn}
+\hypertarget{classBVHNode_ae5ad50686b4c345c98d03f080afc403f}{\index{B\-V\-H\-Node@{B\-V\-H\-Node}!num\-Child\-Nodes@{num\-Child\-Nodes}}
+\index{num\-Child\-Nodes@{num\-Child\-Nodes}!BVHNode@{B\-V\-H\-Node}}
+\subsubsection[{num\-Child\-Nodes}]{\setlength{\rightskip}{0pt plus 5cm}virtual unsigned int B\-V\-H\-Node\-::num\-Child\-Nodes (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classBVHNode_ae5ad50686b4c345c98d03f080afc403f}
+
+
+num\-Child\-Nodes Get the number of child nodes for the current node 
+
+\begin{DoxyReturn}{Returns}
+Number of immediate child nodes 
+\end{DoxyReturn}
+
+
+Implemented in \hyperlink{classLeafNode_a897312601f3726f7d20b3d73959c111a}{Leaf\-Node}, and \hyperlink{classInnerNode_a685a9782d88772dfd2ac367025b65848}{Inner\-Node}.
+
+\hypertarget{classBVHNode_a8a53277e44a407a75e32118ceb4fa425}{\index{B\-V\-H\-Node@{B\-V\-H\-Node}!num\-Triangles@{num\-Triangles}}
+\index{num\-Triangles@{num\-Triangles}!BVHNode@{B\-V\-H\-Node}}
+\subsubsection[{num\-Triangles}]{\setlength{\rightskip}{0pt plus 5cm}virtual unsigned int B\-V\-H\-Node\-::num\-Triangles (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}}\label{classBVHNode_a8a53277e44a407a75e32118ceb4fa425}
+
+
+num\-Triangles Get the number of triangles in the current node 
+
+\begin{DoxyReturn}{Returns}
+Number of triangles 
+\end{DoxyReturn}
+
+
+Reimplemented in \hyperlink{classLeafNode_a8c138df453e78a56905e9066fb246f4f}{Leaf\-Node}.
+
+\hypertarget{classBVHNode_a2f6d380d0628de6245d6f364deb92460}{\index{B\-V\-H\-Node@{B\-V\-H\-Node}!surface\-Area@{surface\-Area}}
+\index{surface\-Area@{surface\-Area}!BVHNode@{B\-V\-H\-Node}}
+\subsubsection[{surface\-Area}]{\setlength{\rightskip}{0pt plus 5cm}float B\-V\-H\-Node\-::surface\-Area (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classBVHNode_a2f6d380d0628de6245d6f364deb92460}
+
+
+surface\-Area Get the surface area of the nodes \hyperlink{classAABB}{A\-A\-B\-B} 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{BVHNodes_8h}{B\-V\-H\-Nodes.\-h}\item 
+src/\hyperlink{BVHNodes_8cpp}{B\-V\-H\-Nodes.\-cpp}\end{DoxyCompactItemize}

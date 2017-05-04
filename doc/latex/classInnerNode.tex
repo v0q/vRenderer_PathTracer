@@ -1,0 +1,125 @@
+\hypertarget{classInnerNode}{\section{Inner\-Node Class Reference}
+\label{classInnerNode}\index{Inner\-Node@{Inner\-Node}}
+}
+
+
+The \hyperlink{classInnerNode}{Inner\-Node} class Inner node, e.\-g. a node with children.  
+
+
+
+
+{\ttfamily \#include $<$B\-V\-H\-Nodes.\-h$>$}
+
+Inheritance diagram for Inner\-Node\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classInnerNode}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classInnerNode_a7ebac6f83b9cc6235b257fdae8e93552}{Inner\-Node} (const \hyperlink{classAABB}{A\-A\-B\-B} \&\-\_\-bounds, \hyperlink{classBVHNode}{B\-V\-H\-Node} $\ast$\-\_\-left\-Child, \hyperlink{classBVHNode}{B\-V\-H\-Node} $\ast$\-\_\-right\-Child)
+\begin{DoxyCompactList}\small\item\em \hyperlink{classInnerNode}{Inner\-Node} Default dtor for the inner node, inner node consists of left and right children. \end{DoxyCompactList}\item 
+bool \hyperlink{classInnerNode_a9132770448acf40a331114a350dbe249}{is\-Leaf} () const override
+\begin{DoxyCompactList}\small\item\em is\-Leaf Inner node is never a leaf but needs to implement this to distinquish the abstract nodes from each other \end{DoxyCompactList}\item 
+unsigned int \hyperlink{classInnerNode_a685a9782d88772dfd2ac367025b65848}{num\-Child\-Nodes} () const override
+\begin{DoxyCompactList}\small\item\em num\-Child\-Nodes Number of child nodes, an inner node will always have two child nodes; left and right \end{DoxyCompactList}\item 
+\hyperlink{classBVHNode}{B\-V\-H\-Node} $\ast$ \hyperlink{classInnerNode_af4d76a6913d55b395b30f2ce244b882d}{child\-Node} (const unsigned int \&\-\_\-index) const override
+\begin{DoxyCompactList}\small\item\em child\-Node Get a child node of the current node \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classInnerNode}{Inner\-Node} class Inner node, e.\-g. a node with children. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classInnerNode_a7ebac6f83b9cc6235b257fdae8e93552}{\index{Inner\-Node@{Inner\-Node}!Inner\-Node@{Inner\-Node}}
+\index{Inner\-Node@{Inner\-Node}!InnerNode@{Inner\-Node}}
+\subsubsection[{Inner\-Node}]{\setlength{\rightskip}{0pt plus 5cm}Inner\-Node\-::\-Inner\-Node (
+\begin{DoxyParamCaption}
+\item[{const {\bf A\-A\-B\-B} \&}]{\-\_\-bounds, }
+\item[{{\bf B\-V\-H\-Node} $\ast$}]{\-\_\-left\-Child, }
+\item[{{\bf B\-V\-H\-Node} $\ast$}]{\-\_\-right\-Child}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classInnerNode_a7ebac6f83b9cc6235b257fdae8e93552}
+
+
+\hyperlink{classInnerNode}{Inner\-Node} Default dtor for the inner node, inner node consists of left and right children. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-bounds} & \hyperlink{classAABB}{A\-A\-B\-B} of the node \\
+\hline
+{\em \-\_\-left\-Child} & Left child node of the inner node \\
+\hline
+{\em \-\_\-right\-Child} & Right child node of the inner node \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classInnerNode_af4d76a6913d55b395b30f2ce244b882d}{\index{Inner\-Node@{Inner\-Node}!child\-Node@{child\-Node}}
+\index{child\-Node@{child\-Node}!InnerNode@{Inner\-Node}}
+\subsubsection[{child\-Node}]{\setlength{\rightskip}{0pt plus 5cm}{\bf B\-V\-H\-Node}$\ast$ Inner\-Node\-::child\-Node (
+\begin{DoxyParamCaption}
+\item[{const unsigned int \&}]{\-\_\-index}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classInnerNode_af4d76a6913d55b395b30f2ce244b882d}
+
+
+child\-Node Get a child node of the current node 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-index} & Index of the child wanted \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The child node 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{classBVHNode_acf8b2130dd63bd66e35f130f86c65400}{B\-V\-H\-Node}.
+
+\hypertarget{classInnerNode_a9132770448acf40a331114a350dbe249}{\index{Inner\-Node@{Inner\-Node}!is\-Leaf@{is\-Leaf}}
+\index{is\-Leaf@{is\-Leaf}!InnerNode@{Inner\-Node}}
+\subsubsection[{is\-Leaf}]{\setlength{\rightskip}{0pt plus 5cm}bool Inner\-Node\-::is\-Leaf (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classInnerNode_a9132770448acf40a331114a350dbe249}
+
+
+is\-Leaf Inner node is never a leaf but needs to implement this to distinquish the abstract nodes from each other 
+
+\begin{DoxyReturn}{Returns}
+False 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{classBVHNode_a9d6c31fcebf88cc4c128a2b3af1f4cbf}{B\-V\-H\-Node}.
+
+\hypertarget{classInnerNode_a685a9782d88772dfd2ac367025b65848}{\index{Inner\-Node@{Inner\-Node}!num\-Child\-Nodes@{num\-Child\-Nodes}}
+\index{num\-Child\-Nodes@{num\-Child\-Nodes}!InnerNode@{Inner\-Node}}
+\subsubsection[{num\-Child\-Nodes}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int Inner\-Node\-::num\-Child\-Nodes (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classInnerNode_a685a9782d88772dfd2ac367025b65848}
+
+
+num\-Child\-Nodes Number of child nodes, an inner node will always have two child nodes; left and right 
+
+\begin{DoxyReturn}{Returns}
+2 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{classBVHNode_ae5ad50686b4c345c98d03f080afc403f}{B\-V\-H\-Node}.
+
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{BVHNodes_8h}{B\-V\-H\-Nodes.\-h}\end{DoxyCompactItemize}

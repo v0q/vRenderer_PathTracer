@@ -1,3 +1,8 @@
+///
+/// \file NGLScene.cpp
+/// \brief Implements the NGLScene, OpenGL and Cuda/OpenCL interop etc
+///
+
 #include <QMouseEvent>
 #include <QFileDialog>
 #include <QImageReader>
@@ -12,7 +17,7 @@
 #include <OpenEXR/ImfRgbaFile.h>
 #include <OpenEXR/ImathBox.h>
 
-#include <OpenImageIO/imageio.h>
+//#include <OpenImageIO/imageio.h>
 //#include <OpenColorIO/OpenColorIO.h>
 
 #include "NGLScene.h"
@@ -20,7 +25,6 @@
 
 #include "MeshLoader.h"
 #include "BRDFLoader.h"
-#include "hdrloader.h"
 
 #ifdef __VRENDERER_CUDA__
 	#include "vRendererCuda.h"
@@ -35,15 +39,10 @@ NGLScene::NGLScene(QWidget *_parent) :
 	m_modelPos(ngl::Vec3(0.0f, 0.0f, 0.0f)),
   m_fxaaEnabled(0),
 	m_renderChannel(0),
-	m_yaw(0.f),
-	m_pitch(0.f),
 	m_fxaaSharpness(0.5f),
 	m_fxaaSubpixQuality(0.75f),
-	m_fxaaEdgeThreshold(0.166f),
-	m_brdf(nullptr)
+	m_fxaaEdgeThreshold(0.166f)
 {
-  // re-size the widget to that of the parent (in this case the GLFrame passed in on construction)
-	m_renderTexture = false;
 	m_fpsTimer = startTimer(0);
 	m_fps = 0;
 	m_frames = 0;
@@ -54,9 +53,14 @@ NGLScene::NGLScene(QWidget *_parent) :
 
 NGLScene::~NGLScene()
 {
+	// Cleanup, renderer is deleted automatically because of smart pointers
 	delete m_virtualCamera;
   glDeleteBuffers(1, &m_vbo);
-  std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
+	glDeleteVertexArrays(1, &m_vao);
+	glDeleteTextures(1, &m_texture);
+	glDeleteTextures(1, &m_depthTexture);
+
+	std::cout << "Shutting down NGL, removing VAO's and Shaders\n";
 }
 
 void NGLScene::resizeGL(int _w , int _h)
@@ -73,22 +77,26 @@ void NGLScene::initializeGL()
   // this everything will crash
   ngl::NGLInit::instance();
 
+	// Create/initialise the renderer based on which one's selected
 #ifdef __VRENDERER_CUDA__
   m_renderer.reset(new vRendererCuda);
 #elif __VRENDERER_OPENCL__
   m_renderer.reset(new vRendererCL);
 #endif
 
+	// Initialise the renderer and connect our virtual camera to it
 	m_renderer->init((unsigned int)width(), (unsigned int)height());
 	m_renderer->setCamera(m_virtualCamera);
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
+	// No need to do depth testing or multisampling as we're only drawing a texture to a screen quad
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_MULTISAMPLE);
 
 	ngl::ShaderLib *shader = ngl::ShaderLib::instance();
 
+	/// Load in the normal screen quad and FXAA shaders
 	// Regular screen quad
 	{
 		shader->createShaderProgram("Screen Quad");
@@ -129,9 +137,7 @@ void NGLScene::initializeGL()
 
 	shader->use("Screen Quad");
 
-	glGenVertexArrays(1, &m_vao);
-	glBindVertexArray(m_vao);
-
+	// Screen quad data
 	float vertices[] = {
 		// First triangle
 		-1.0f,  1.0f,
@@ -152,15 +158,9 @@ void NGLScene::initializeGL()
 		1.0f, 1.0f
 	};
 
-//	OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-
-//	const char *display = config->getDefaultDisplay();
-//	const char *view = config->getDefaultView(display);
-//	const char *transform = config->getDisplayColorSpaceName(display, view);
-
-//	OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR, transform);
-
-//	std::cout << display << " " << view << " " << transform << "\n";
+	// Generate the VAO, VBO and textures
+	glGenVertexArrays(1, &m_vao);
+	glBindVertexArray(m_vao);
 
 	glGenBuffers(1, &m_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
@@ -192,6 +192,7 @@ void NGLScene::initializeGL()
 	// Create texture data (4-component unsigned byte)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
+	// Register the texture and depth texture with the renderer
   m_renderer->registerTextureBuffer(m_texture);
 	m_renderer->registerDepthBuffer(m_depthTexture);
 
@@ -201,29 +202,7 @@ void NGLScene::initializeGL()
 	m_text.reset(new ngl::Text(QFont("Arial", 12)));
 	m_text->setScreenSize(width(), height());
 
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/cube.obj"));
-//  m_renderer->initMesh(vMeshLoader::loadMesh("models/icosahedron.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/dragon_vrip_res2.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/happy_buddha.obj"));
-	m_renderer->initMesh(vMeshLoader::loadMesh("models/matt.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_mask.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/adam_head.obj"));
-//	m_renderer->initMesh(vMeshLoader::loadMesh("models/sebastian_head.obj"));
-
-//	HDRLoaderResult result;
-//	if(!HDRLoader::load("hdr/Arches_E_PineTree_3k.hdr", result))
-//	{
-//		std::cerr << "Failed to load the HDR. Exiting...\n";
-//		exit(0);
-//	}
-
-//	m_renderer->initHDR(result.cols, result.width, result.height);
-//	m_renderer->loadBRDF(vBRDFLoader::loadBinary("brdf/alum-bronze.binary"));
-//	m_renderer->loadBRDF(vBRDFLoader::loadBinary("brdf/red-fabric.binary"));
-//	m_renderer->loadBRDF(vBRDFLoader::loadBinary("brdf/red-metallic-paint.binary"));
-//	m_renderer->loadBRDF(vBRDFLoader::loadBinary("brdf/cherry-235.binary"));
-//	m_renderer->loadBRDF(vBRDFLoader::loadBinary("brdf/yellow-matte-plastic.binary"));
-
+	// Load in an initial HDRI map using OpenEXR
 	Imf::Rgba *pixelBuffer;
 	try
 	{
@@ -241,6 +220,7 @@ void NGLScene::initializeGL()
 		in.setFrameBuffer(pixelBuffer - dx - dy * dim.x, 1, dim.x);
 		in.readPixels(win.min.y, win.max.y);
 
+		// Send the HDRI data to the renderer and signal the UI
 		m_renderer->loadHDR(pixelBuffer, dim.x, dim.y);
 		emit(HDRILoaded("hdr/Arches_E_PineTree_3k.exr"));
 	}
@@ -253,6 +233,7 @@ void NGLScene::initializeGL()
 
 void NGLScene::timerEvent(QTimerEvent *_event)
 {
+	// Update the FPS timer and call update()
 	if(_event->timerId() == m_fpsTimer)
 	{
 		if(m_timer.elapsed() > 1000.0)
@@ -267,20 +248,22 @@ void NGLScene::timerEvent(QTimerEvent *_event)
 
 void NGLScene::paintGL()
 {
-	static float t = 0;
-	t += 0.1f;
-  // clear the screen and depth buffer
+	// Clear the screen and depth buffer
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0,0,m_win.width,m_win.height);
 
+	// Time the path trace
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
+	// Perform a path trace step
 	m_renderer->render();
 
 	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 
+	// Get an instance to the shaderlib
 	ngl::ShaderLib *shader = ngl::ShaderLib::instance();
 
+	// Whether to use FXAA or not
 	switch(m_fxaaEnabled)
 	{
 		case 0:
@@ -292,6 +275,7 @@ void NGLScene::paintGL()
 		break;
 	}
 
+	// Bind the VAO and VBO and draw the screen quad with the output of from the renderer
 	glBindVertexArray(m_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 
@@ -304,6 +288,7 @@ void NGLScene::paintGL()
 	glVertexAttribPointer(posLocation, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glVertexAttribPointer(uvLocation, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid *)(12*sizeof(float)));
 
+	// Bind the textures to the shader
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_texture);
 	shader->setRegisteredUniform1i("u_ptResult", 0);
@@ -316,6 +301,7 @@ void NGLScene::paintGL()
 	shader->setRegisteredUniform2f("u_screenDim", width(), height());
 	shader->setRegisteredUniform2f("u_invScreenDim", 1.f/width(), 1.f/height());
 
+	// Set FXAA uniforms
 	if(m_fxaaEnabled)
 	{
 		shader->setRegisteredUniform1f("u_SubPixQuality", m_fxaaSubpixQuality);
@@ -323,6 +309,7 @@ void NGLScene::paintGL()
 		shader->setRegisteredUniform1f("u_Sharpness", m_fxaaSharpness);
 	}
 
+	// Draw the screen quad
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	// Clean up
@@ -333,11 +320,6 @@ void NGLScene::paintGL()
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
-	if(m_renderTexture) {
-		// TODO
-		m_renderTexture = false;
-	}
 
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
 	// Render "shadow" first for better visibility against bright backgrounds
@@ -362,22 +344,34 @@ void NGLScene::paintGL()
 
 void NGLScene::loadMesh()
 {
-  QString location = QFileDialog::getOpenFileName(this, tr("Load mesh"), NULL, tr("3d models (*.obj *.ply)"));
+	// Open a file prompt and try to load the mesh
+	QString location = QFileDialog::getOpenFileName(this, tr("Load mesh"), NULL, tr("3d models (*.obj *.ply *.fbx)"));
 	if(!location.isEmpty())
 	{
 		vMeshData mesh = vMeshLoader::loadMesh(location.toStdString());
-		m_renderer->initMesh(mesh);
-		m_renderer->clearBuffer();
 
-		emit meshLoaded(mesh.m_name);
+		// For now the implementation has limitation where the tree traversal/GPU data building is not handled correctly if there's only one node
+		if(mesh.m_bvh.getNodeCount() > 1)
+		{
+			m_renderer->initMesh(mesh);
+			m_renderer->clearBuffer();
+
+			// Clean up
+			emit meshLoaded(mesh.m_name);
+		}
+
+		// Clean up the data from the CPU
+		mesh.m_bvh.getRoot()->cleanUp();
 	}
 }
 
 void NGLScene::loadHDR()
 {
+	// Open a file prompt and try to load an EXR
 	QString location = QFileDialog::getOpenFileName(this, tr("Load texture"), NULL, tr("EXR-files (*.exr)"));
 	if(!location.isEmpty())
 	{
+		// Load the EXR and send the data to the renderer
 		Imf::Rgba *pixelBuffer;
 		try
 		{
@@ -397,6 +391,7 @@ void NGLScene::loadHDR()
 
 			m_renderer->loadHDR(pixelBuffer, dim.x, dim.y);
 			m_renderer->clearBuffer();
+			emit(HDRILoaded(location));
 		}
 		catch (Iex::BaseExc &e)
 		{
@@ -407,9 +402,11 @@ void NGLScene::loadHDR()
 
 void NGLScene::loadTexture(const unsigned int &_type)
 {
+	// Open a file prompt and try to load a texture
 	QString location = QFileDialog::getOpenFileName(this, tr("Load texture"), NULL, tr("Image files (*.jpg *.jpeg *.tif *.tiff *.png)"));
 	if(!location.isEmpty())
 	{
+		// Read the image using QImage and send the data to the renderer
 		QImageReader reader(location);
 		QImage texture(location);
 		if(texture.isNull())
@@ -418,29 +415,24 @@ void NGLScene::loadTexture(const unsigned int &_type)
 		}
 		else
 		{
+			// Load the texture to the GPU and clear the colour buffer, also signal the UI
 			m_renderer->loadTexture(texture, reader.gamma(), _type);
+			m_renderer->clearBuffer();
+			emit textureLoaded(location, _type);
 		}
-
-		m_renderer->clearBuffer();
-		emit textureLoaded(location, _type);
 	}
 }
 
 void NGLScene::loadBRDF()
 {
+	// Open a file prompt and try to load MERL BRDF data
 	QString location = QFileDialog::getOpenFileName(this, tr("Load BRDF Binary"), NULL, tr("Binary-files (*.binary)"));
 	if(!location.isEmpty())
 	{
-		if(m_brdf)
+		// Send the data to the renderer and clear the colour buffer if it was successful, also signal the UI
+		if(m_renderer->loadBRDF(vBRDFLoader::loadBinary(location.toStdString())))
 		{
-			delete [] m_brdf;
-		}
-
-		if((m_brdf = vBRDFLoader::loadBinary(location.toStdString())))
-		{
-			m_renderer->loadBRDF(m_brdf);
 			m_renderer->clearBuffer();
-
 			emit brdfLoaded(location);
 		}
 	}

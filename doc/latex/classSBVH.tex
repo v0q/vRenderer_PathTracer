@@ -1,0 +1,107 @@
+\hypertarget{classSBVH}{\section{S\-B\-V\-H Class Reference}
+\label{classSBVH}\index{S\-B\-V\-H@{S\-B\-V\-H}}
+}
+
+
+The \hyperlink{classSBVH}{S\-B\-V\-H} class The class builds the acceleration structure when given a vector of triangles and vertices.  
+
+
+
+
+{\ttfamily \#include $<$S\-B\-V\-H.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classSBVH_ae0fdf31d3d402ea09c63d261977f4192}{S\-B\-V\-H} (\hyperlink{structvHTriangle}{v\-H\-Triangle} $\ast$\-\_\-triangles, \hyperlink{structvHVert}{v\-H\-Vert} $\ast$\-\_\-verts, unsigned int \-\_\-num\-Tris)
+\begin{DoxyCompactList}\small\item\em \hyperlink{classSBVH}{S\-B\-V\-H} Default ctor for the \hyperlink{classSBVH}{S\-B\-V\-H}, calculates the \hyperlink{classAABB}{A\-A\-B\-B} for the root node and builds the triangle reference vector and starts building the acceleration structure from the root. \end{DoxyCompactList}\item 
+\hyperlink{classBVHNode}{B\-V\-H\-Node} $\ast$ \hyperlink{classSBVH_a7d65b77c45768401d3f7740698f01164}{get\-Root} () const 
+\begin{DoxyCompactList}\small\item\em get\-Root Get the root node \end{DoxyCompactList}\item 
+unsigned int \hyperlink{classSBVH_af7a06b4c346366f15b15730f10346c10}{get\-Tri\-Index} (const unsigned int \&\-\_\-i) const 
+\begin{DoxyCompactList}\small\item\em get\-Tri\-Index Get the index of a triangle from the triangle reference stack \end{DoxyCompactList}\item 
+unsigned int \hyperlink{classSBVH_ac30b20f84eebea2a929e2f201936e62f}{get\-Node\-Count} ()
+\begin{DoxyCompactList}\small\item\em get\-Node\-Count Get the number of nodes in the final acceleration structure \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classSBVH}{S\-B\-V\-H} class The class builds the acceleration structure when given a vector of triangles and vertices. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classSBVH_ae0fdf31d3d402ea09c63d261977f4192}{\index{S\-B\-V\-H@{S\-B\-V\-H}!S\-B\-V\-H@{S\-B\-V\-H}}
+\index{S\-B\-V\-H@{S\-B\-V\-H}!SBVH@{S\-B\-V\-H}}
+\subsubsection[{S\-B\-V\-H}]{\setlength{\rightskip}{0pt plus 5cm}S\-B\-V\-H\-::\-S\-B\-V\-H (
+\begin{DoxyParamCaption}
+\item[{{\bf v\-H\-Triangle} $\ast$}]{\-\_\-triangles, }
+\item[{{\bf v\-H\-Vert} $\ast$}]{\-\_\-verts, }
+\item[{unsigned int}]{\-\_\-num\-Tris}
+\end{DoxyParamCaption}
+)}}\label{classSBVH_ae0fdf31d3d402ea09c63d261977f4192}
+
+
+\hyperlink{classSBVH}{S\-B\-V\-H} Default ctor for the \hyperlink{classSBVH}{S\-B\-V\-H}, calculates the \hyperlink{classAABB}{A\-A\-B\-B} for the root node and builds the triangle reference vector and starts building the acceleration structure from the root. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-triangles} & Triangles of the mesh \\
+\hline
+{\em \-\_\-verts} & Vertices of the mesh \\
+\hline
+{\em \-\_\-num\-Tris} & Number of triangles in the mesh \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classSBVH_ac30b20f84eebea2a929e2f201936e62f}{\index{S\-B\-V\-H@{S\-B\-V\-H}!get\-Node\-Count@{get\-Node\-Count}}
+\index{get\-Node\-Count@{get\-Node\-Count}!SBVH@{S\-B\-V\-H}}
+\subsubsection[{get\-Node\-Count}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int S\-B\-V\-H\-::get\-Node\-Count (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classSBVH_ac30b20f84eebea2a929e2f201936e62f}
+
+
+get\-Node\-Count Get the number of nodes in the final acceleration structure 
+
+\begin{DoxyReturn}{Returns}
+Number of nodes in the structure 
+\end{DoxyReturn}
+\hypertarget{classSBVH_a7d65b77c45768401d3f7740698f01164}{\index{S\-B\-V\-H@{S\-B\-V\-H}!get\-Root@{get\-Root}}
+\index{get\-Root@{get\-Root}!SBVH@{S\-B\-V\-H}}
+\subsubsection[{get\-Root}]{\setlength{\rightskip}{0pt plus 5cm}{\bf B\-V\-H\-Node}$\ast$ S\-B\-V\-H\-::get\-Root (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classSBVH_a7d65b77c45768401d3f7740698f01164}
+
+
+get\-Root Get the root node 
+
+\begin{DoxyReturn}{Returns}
+The root node 
+\end{DoxyReturn}
+\hypertarget{classSBVH_af7a06b4c346366f15b15730f10346c10}{\index{S\-B\-V\-H@{S\-B\-V\-H}!get\-Tri\-Index@{get\-Tri\-Index}}
+\index{get\-Tri\-Index@{get\-Tri\-Index}!SBVH@{S\-B\-V\-H}}
+\subsubsection[{get\-Tri\-Index}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int S\-B\-V\-H\-::get\-Tri\-Index (
+\begin{DoxyParamCaption}
+\item[{const unsigned int \&}]{\-\_\-i}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classSBVH_af7a06b4c346366f15b15730f10346c10}
+
+
+get\-Tri\-Index Get the index of a triangle from the triangle reference stack 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-i} & Index to the reference stack \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Index of the triangle referenced 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{SBVH_8h}{S\-B\-V\-H.\-h}\item 
+src/S\-B\-V\-H.\-cpp\end{DoxyCompactItemize}

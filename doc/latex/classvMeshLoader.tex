@@ -1,0 +1,54 @@
+\hypertarget{classvMeshLoader}{\section{v\-Mesh\-Loader Class Reference}
+\label{classvMeshLoader}\index{v\-Mesh\-Loader@{v\-Mesh\-Loader}}
+}
+
+
+The \hyperlink{classvMeshLoader}{v\-Mesh\-Loader} class Mesh loader class that reads in a 3d model using assimp and generates the \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure.  
+
+
+
+
+{\ttfamily \#include $<$Mesh\-Loader.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classvMeshLoader_ab54fba0ea56588e6b17f82a5c760c35e}{\hyperlink{classvMeshLoader_ab54fba0ea56588e6b17f82a5c760c35e}{$\sim$v\-Mesh\-Loader} ()}\label{classvMeshLoader_ab54fba0ea56588e6b17f82a5c760c35e}
+
+\begin{DoxyCompactList}\small\item\em $\sim$v\-Mesh\-Loader Default dtor \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{structvMeshData}{v\-Mesh\-Data} \hyperlink{classvMeshLoader_aec9bf22ad29c757c73f071f6b0455b25}{load\-Mesh} (const std\-::string \&\-\_\-mesh)
+\begin{DoxyCompactList}\small\item\em load\-Mesh Loads the mesh and passes the data to the \hyperlink{classSBVH}{S\-B\-V\-H} builder \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classvMeshLoader}{v\-Mesh\-Loader} class Mesh loader class that reads in a 3d model using assimp and generates the \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classvMeshLoader_aec9bf22ad29c757c73f071f6b0455b25}{\index{v\-Mesh\-Loader@{v\-Mesh\-Loader}!load\-Mesh@{load\-Mesh}}
+\index{load\-Mesh@{load\-Mesh}!vMeshLoader@{v\-Mesh\-Loader}}
+\subsubsection[{load\-Mesh}]{\setlength{\rightskip}{0pt plus 5cm}{\bf v\-Mesh\-Data} v\-Mesh\-Loader\-::load\-Mesh (
+\begin{DoxyParamCaption}
+\item[{const std\-::string \&}]{\-\_\-mesh}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}}\label{classvMeshLoader_aec9bf22ad29c757c73f071f6b0455b25}
+
+
+load\-Mesh Loads the mesh and passes the data to the \hyperlink{classSBVH}{S\-B\-V\-H} builder 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-mesh} & Location of the 3d model \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Data structure containing the acceleration structure and the mesh data 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{MeshLoader_8h}{Mesh\-Loader.\-h}\item 
+src/\hyperlink{MeshLoader_8cpp}{Mesh\-Loader.\-cpp}\end{DoxyCompactItemize}

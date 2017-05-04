@@ -1,0 +1,310 @@
+\hypertarget{classvRendererCuda}{\section{v\-Renderer\-Cuda Class Reference}
+\label{classvRendererCuda}\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}}
+}
+
+
+The \hyperlink{classvRendererCuda}{v\-Renderer\-Cuda} class Cuda implementation of the renderer.  
+
+
+
+
+{\ttfamily \#include $<$v\-Renderer\-Cuda.\-h$>$}
+
+Inheritance diagram for v\-Renderer\-Cuda\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classvRendererCuda}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classvRendererCuda_ab221aa7875d1a7ec689e64e771bbde4c}{\hyperlink{classvRendererCuda_ab221aa7875d1a7ec689e64e771bbde4c}{v\-Renderer\-Cuda} ()}\label{classvRendererCuda_ab221aa7875d1a7ec689e64e771bbde4c}
+
+\begin{DoxyCompactList}\small\item\em \hyperlink{classvRendererCuda}{v\-Renderer\-Cuda} Default ctor \end{DoxyCompactList}\item 
+\hypertarget{classvRendererCuda_a16481f8b297fbe0e74dfb6e93b6b4047}{\hyperlink{classvRendererCuda_a16481f8b297fbe0e74dfb6e93b6b4047}{$\sim$v\-Renderer\-Cuda} ()}\label{classvRendererCuda_a16481f8b297fbe0e74dfb6e93b6b4047}
+
+\begin{DoxyCompactList}\small\item\em $\sim$v\-Renderer\-Cuda Default dtor, calls the cleanup routine \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCuda_a1f6382acd2ad665c724c65a535ed86d1}{init} (const unsigned int \&\-\_\-w, const unsigned int \&\-\_\-h) override
+\begin{DoxyCompactList}\small\item\em init \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCuda_aee52063dd808dd194ceb81f54935f099}{register\-Texture\-Buffer} (G\-Luint \&\-\_\-texture) override
+\begin{DoxyCompactList}\small\item\em register\-Texture\-Buffer Register the Open\-G\-L texture for Cuda interop \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCuda_a3374740da969eb673531d99da8a2b2fd}{register\-Depth\-Buffer} (G\-Luint \&\-\_\-depth\-Texture) override
+\begin{DoxyCompactList}\small\item\em register\-Depth\-Buffer Register the Open\-G\-L depth texture for Cuda interop \end{DoxyCompactList}\item 
+\hypertarget{classvRendererCuda_a8a4f054aadca6b47f885d92f3d8460c3}{void \hyperlink{classvRendererCuda_a8a4f054aadca6b47f885d92f3d8460c3}{render} () override}\label{classvRendererCuda_a8a4f054aadca6b47f885d92f3d8460c3}
+
+\begin{DoxyCompactList}\small\item\em render Render function, passes the G\-P\-U buffers and arguments to the kernel and reserves the needed Open\-G\-L resources and frees them once done \end{DoxyCompactList}\item 
+\hypertarget{classvRendererCuda_afa14d96fa05a162a51f8d644cdd1ed1f}{void \hyperlink{classvRendererCuda_afa14d96fa05a162a51f8d644cdd1ed1f}{clean\-Up} () override}\label{classvRendererCuda_afa14d96fa05a162a51f8d644cdd1ed1f}
+
+\begin{DoxyCompactList}\small\item\em clean\-Up Clears and frees the allocated memory and buffers \end{DoxyCompactList}\item 
+\hypertarget{classvRendererCuda_a07f5dc38a31d3d165192e85543fb1781}{void \hyperlink{classvRendererCuda_a07f5dc38a31d3d165192e85543fb1781}{update\-Camera} () override}\label{classvRendererCuda_a07f5dc38a31d3d165192e85543fb1781}
+
+\begin{DoxyCompactList}\small\item\em update\-Camera Consumes the updates from the virtual camera and passes the data to the G\-P\-U \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCuda_aaad1a6c4a4ada9bbbbce2db3cfb02f32}{init\-Mesh} (const \hyperlink{structvMeshData}{v\-Mesh\-Data} \&\-\_\-mesh\-Data) override
+\begin{DoxyCompactList}\small\item\em init\-Mesh Takes in 3d mesh data and the \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure, packs and copies the data to the G\-P\-U \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCuda_a0994f4f68ad6973f6e80664714eb44e8}{load\-H\-D\-R} (const Imf\-::\-Rgba $\ast$\-\_\-colours, const unsigned int \&\-\_\-w, const unsigned int \&\-\_\-h) override
+\begin{DoxyCompactList}\small\item\em load\-H\-D\-R Loads an E\-X\-R pixelbuffer to the G\-P\-U \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCuda_a1eca8504cfb3287725cef2bbca08180f}{load\-Texture} (const Q\-Image \&\-\_\-texture, const float \&\-\_\-gamma, const unsigned int \&\-\_\-type) override
+\begin{DoxyCompactList}\small\item\em load\-Texture Loads a texture to the G\-P\-U, performs \char`\"{}inverse gamma correction\char`\"{} if needed as gamma correction is applied at the end of each trace step \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCuda_a8bc09351a8cd99d86d36963e430025d7}{use\-B\-R\-D\-F} (const bool \&\-\_\-new\-Val) override
+\begin{DoxyCompactList}\small\item\em use\-B\-R\-D\-F Passes the data to the tracer, whether to use the loaded B\-R\-D\-F data \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCuda_ab552724c473de30893fe9dc21ee2c961}{use\-Example\-Sphere} (const bool \&\-\_\-new\-Val) override
+\begin{DoxyCompactList}\small\item\em use\-Example\-Sphere Passes the info to the tracer, whether to use the example sphere \end{DoxyCompactList}\item 
+void \hyperlink{classvRendererCuda_a40978e8a1b32dbad5b683b0f097d9c60}{use\-Cornell\-Box} (const bool \&\-\_\-new\-Val) override
+\begin{DoxyCompactList}\small\item\em use\-Cornell\-Box Passes the info to the tracer, whether to use the cornell box scene or H\-D\-R\-I environment map \end{DoxyCompactList}\item 
+\hypertarget{classvRendererCuda_a1fd902cd1f41af0baca67bb50b88226c}{void \hyperlink{classvRendererCuda_a1fd902cd1f41af0baca67bb50b88226c}{clear\-Buffer} () override}\label{classvRendererCuda_a1fd902cd1f41af0baca67bb50b88226c}
+
+\begin{DoxyCompactList}\small\item\em clear\-Buffer Clears the colour buffer, used when something changes in the scene \end{DoxyCompactList}\item 
+bool \hyperlink{classvRendererCuda_a77eb1673efa671d9a21353fe22f576d7}{load\-B\-R\-D\-F} (const float $\ast$\-\_\-brdf) override
+\begin{DoxyCompactList}\small\item\em load\-B\-R\-D\-F Loads the B\-R\-D\-F data to the G\-P\-U \end{DoxyCompactList}\item 
+unsigned int \hyperlink{classvRendererCuda_a59adae8a97ef2a63fc542f64d4686f37}{get\-Frame\-Count} () const override
+\begin{DoxyCompactList}\small\item\em get\-Frame\-Count Get the number of frames the current trace has performed \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classvRendererCuda}{v\-Renderer\-Cuda} class Cuda implementation of the renderer. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classvRendererCuda_a59adae8a97ef2a63fc542f64d4686f37}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!get\-Frame\-Count@{get\-Frame\-Count}}
+\index{get\-Frame\-Count@{get\-Frame\-Count}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{get\-Frame\-Count}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int v\-Renderer\-Cuda\-::get\-Frame\-Count (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_a59adae8a97ef2a63fc542f64d4686f37}
+
+
+get\-Frame\-Count Get the number of frames the current trace has performed 
+
+\begin{DoxyReturn}{Returns}
+The number of frames 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{classvRenderer_a623eb6b3f67b6b22137783de6c788e49}{v\-Renderer}.
+
+\hypertarget{classvRendererCuda_a1f6382acd2ad665c724c65a535ed86d1}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!init@{init}}
+\index{init@{init}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{init}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-Cuda\-::init (
+\begin{DoxyParamCaption}
+\item[{const unsigned int \&}]{\-\_\-w, }
+\item[{const unsigned int \&}]{\-\_\-h}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_a1f6382acd2ad665c724c65a535ed86d1}
+
+
+init 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-w} & \\
+\hline
+{\em \-\_\-h} & \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_aded5e62557a8e73c5ba81ef2dae422b3}{v\-Renderer}.
+
+\hypertarget{classvRendererCuda_aaad1a6c4a4ada9bbbbce2db3cfb02f32}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!init\-Mesh@{init\-Mesh}}
+\index{init\-Mesh@{init\-Mesh}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{init\-Mesh}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-Cuda\-::init\-Mesh (
+\begin{DoxyParamCaption}
+\item[{const {\bf v\-Mesh\-Data} \&}]{\-\_\-mesh\-Data}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_aaad1a6c4a4ada9bbbbce2db3cfb02f32}
+
+
+init\-Mesh Takes in 3d mesh data and the \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure, packs and copies the data to the G\-P\-U 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-sbvh\-Data} & Structure containing the needed data \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_aa8e0dd2ed5b56dc3b10a3035d9678557}{v\-Renderer}.
+
+\hypertarget{classvRendererCuda_a77eb1673efa671d9a21353fe22f576d7}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!load\-B\-R\-D\-F@{load\-B\-R\-D\-F}}
+\index{load\-B\-R\-D\-F@{load\-B\-R\-D\-F}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{load\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}bool v\-Renderer\-Cuda\-::load\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const float $\ast$}]{\-\_\-brdf}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_a77eb1673efa671d9a21353fe22f576d7}
+
+
+load\-B\-R\-D\-F Loads the B\-R\-D\-F data to the G\-P\-U 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-brdf} & B\-R\-D\-F data read from a binary file \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the data was loaded correctly 
+\end{DoxyReturn}
+
+
+Implements \hyperlink{classvRenderer_a5ef0c07cbcc1d5bbdfd7fe290de700c5}{v\-Renderer}.
+
+\hypertarget{classvRendererCuda_a0994f4f68ad6973f6e80664714eb44e8}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!load\-H\-D\-R@{load\-H\-D\-R}}
+\index{load\-H\-D\-R@{load\-H\-D\-R}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{load\-H\-D\-R}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-Cuda\-::load\-H\-D\-R (
+\begin{DoxyParamCaption}
+\item[{const Imf\-::\-Rgba $\ast$}]{\-\_\-colours, }
+\item[{const unsigned int \&}]{\-\_\-w, }
+\item[{const unsigned int \&}]{\-\_\-h}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_a0994f4f68ad6973f6e80664714eb44e8}
+
+
+load\-H\-D\-R Loads an E\-X\-R pixelbuffer to the G\-P\-U 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-pixel\-Buffer} & Loaded pixelbuffer \\
+\hline
+{\em \-\_\-w} & Width of the H\-D\-R\-I map \\
+\hline
+{\em \-\_\-h} & Height of the H\-D\-R\-I map \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_aac0b1a8021d071e0816de34995488f6b}{v\-Renderer}.
+
+\hypertarget{classvRendererCuda_a1eca8504cfb3287725cef2bbca08180f}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!load\-Texture@{load\-Texture}}
+\index{load\-Texture@{load\-Texture}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{load\-Texture}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-Cuda\-::load\-Texture (
+\begin{DoxyParamCaption}
+\item[{const Q\-Image \&}]{\-\_\-texture, }
+\item[{const float \&}]{\-\_\-gamma, }
+\item[{const unsigned int \&}]{\-\_\-type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_a1eca8504cfb3287725cef2bbca08180f}
+
+
+load\-Texture Loads a texture to the G\-P\-U, performs \char`\"{}inverse gamma correction\char`\"{} if needed as gamma correction is applied at the end of each trace step 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-texture} & Q\-Image to read the texture data from \\
+\hline
+{\em \-\_\-gamma} & Gamma value of the texture \\
+\hline
+{\em \-\_\-type} & Type of the texture, 0 = Diffuse, 1 = Normal, 2 = Specular \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_a904bc18544cfe877fc7e33d12d449c05}{v\-Renderer}.
+
+\hypertarget{classvRendererCuda_a3374740da969eb673531d99da8a2b2fd}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!register\-Depth\-Buffer@{register\-Depth\-Buffer}}
+\index{register\-Depth\-Buffer@{register\-Depth\-Buffer}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{register\-Depth\-Buffer}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-Cuda\-::register\-Depth\-Buffer (
+\begin{DoxyParamCaption}
+\item[{G\-Luint \&}]{\-\_\-depth\-Texture}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_a3374740da969eb673531d99da8a2b2fd}
+
+
+register\-Depth\-Buffer Register the Open\-G\-L depth texture for Cuda interop 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-depth\-Texture} & Open\-G\-L depth texture object \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_a9ffabf6f4fcceac59ad192ef78c4f1b5}{v\-Renderer}.
+
+\hypertarget{classvRendererCuda_aee52063dd808dd194ceb81f54935f099}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!register\-Texture\-Buffer@{register\-Texture\-Buffer}}
+\index{register\-Texture\-Buffer@{register\-Texture\-Buffer}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{register\-Texture\-Buffer}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-Cuda\-::register\-Texture\-Buffer (
+\begin{DoxyParamCaption}
+\item[{G\-Luint \&}]{\-\_\-texture}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_aee52063dd808dd194ceb81f54935f099}
+
+
+register\-Texture\-Buffer Register the Open\-G\-L texture for Cuda interop 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-texture} & Open\-G\-L texture object \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_adb2aafca5b39b1e6c9b8cf04a7bf4f84}{v\-Renderer}.
+
+\hypertarget{classvRendererCuda_a8bc09351a8cd99d86d36963e430025d7}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!use\-B\-R\-D\-F@{use\-B\-R\-D\-F}}
+\index{use\-B\-R\-D\-F@{use\-B\-R\-D\-F}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{use\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-Cuda\-::use\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_a8bc09351a8cd99d86d36963e430025d7}
+
+
+use\-B\-R\-D\-F Passes the data to the tracer, whether to use the loaded B\-R\-D\-F data 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Whether to use the loaded B\-R\-D\-F data \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_af2d6b7f027ea76018a83b3c11177c9cf}{v\-Renderer}.
+
+\hypertarget{classvRendererCuda_a40978e8a1b32dbad5b683b0f097d9c60}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!use\-Cornell\-Box@{use\-Cornell\-Box}}
+\index{use\-Cornell\-Box@{use\-Cornell\-Box}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{use\-Cornell\-Box}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-Cuda\-::use\-Cornell\-Box (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_a40978e8a1b32dbad5b683b0f097d9c60}
+
+
+use\-Cornell\-Box Passes the info to the tracer, whether to use the cornell box scene or H\-D\-R\-I environment map 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Whether to use cornell box or not \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_ad5664d5c12c8869f94f9a65d4d3b2cb9}{v\-Renderer}.
+
+\hypertarget{classvRendererCuda_ab552724c473de30893fe9dc21ee2c961}{\index{v\-Renderer\-Cuda@{v\-Renderer\-Cuda}!use\-Example\-Sphere@{use\-Example\-Sphere}}
+\index{use\-Example\-Sphere@{use\-Example\-Sphere}!vRendererCuda@{v\-Renderer\-Cuda}}
+\subsubsection[{use\-Example\-Sphere}]{\setlength{\rightskip}{0pt plus 5cm}void v\-Renderer\-Cuda\-::use\-Example\-Sphere (
+\begin{DoxyParamCaption}
+\item[{const bool \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}}\label{classvRendererCuda_ab552724c473de30893fe9dc21ee2c961}
+
+
+use\-Example\-Sphere Passes the info to the tracer, whether to use the example sphere 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Whether to use the example sphere \\
+\hline
+\end{DoxyParams}
+
+
+Implements \hyperlink{classvRenderer_ac4e01b762661e82813c8909d1c7a47c3}{v\-Renderer}.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{vRendererCuda_8h}{v\-Renderer\-Cuda.\-h}\item 
+src/\hyperlink{vRendererCuda_8cpp}{v\-Renderer\-Cuda.\-cpp}\end{DoxyCompactItemize}

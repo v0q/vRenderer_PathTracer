@@ -1,0 +1,68 @@
+\hypertarget{structvMeshData}{\section{v\-Mesh\-Data Struct Reference}
+\label{structvMeshData}\index{v\-Mesh\-Data@{v\-Mesh\-Data}}
+}
+
+
+Simple structure to hold the data needed by the G\-P\-U.  
+
+
+
+
+{\ttfamily \#include $<$Mesh\-Loader.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structvMeshData_a1e9694b28cbc64feac060f1786bd9ec5}{v\-Mesh\-Data} (const std\-::vector$<$ \hyperlink{structvHTriangle}{v\-H\-Triangle} $>$ \&\-\_\-tris, const std\-::vector$<$ \hyperlink{structvHVert}{v\-H\-Vert} $>$ \&\-\_\-verts, const \hyperlink{classSBVH}{S\-B\-V\-H} \&\-\_\-bvh, const Q\-String \&\-\_\-name)
+\begin{DoxyCompactList}\small\item\em \hyperlink{structvMeshData}{v\-Mesh\-Data} Simple dtor that sets the member variables correctly \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{structvMeshData_a9b71b0f933387ec2d4a551cbf649ba6a}{std\-::vector$<$ \hyperlink{structvHTriangle}{v\-H\-Triangle} $>$ \hyperlink{structvMeshData_a9b71b0f933387ec2d4a551cbf649ba6a}{m\-\_\-triangles}}\label{structvMeshData_a9b71b0f933387ec2d4a551cbf649ba6a}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-triangles Triangles of the mesh \end{DoxyCompactList}\item 
+\hypertarget{structvMeshData_a580438b3578af1943217d2dddd2f60bf}{std\-::vector$<$ \hyperlink{structvHVert}{v\-H\-Vert} $>$ \hyperlink{structvMeshData_a580438b3578af1943217d2dddd2f60bf}{m\-\_\-vertices}}\label{structvMeshData_a580438b3578af1943217d2dddd2f60bf}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-vertices Vertices of the mesh \end{DoxyCompactList}\item 
+\hypertarget{structvMeshData_a0e3db8fa9921c618ce54d477d24bd316}{\hyperlink{classSBVH}{S\-B\-V\-H} \hyperlink{structvMeshData_a0e3db8fa9921c618ce54d477d24bd316}{m\-\_\-bvh}}\label{structvMeshData_a0e3db8fa9921c618ce54d477d24bd316}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-bvh Generated acceleration structure \end{DoxyCompactList}\item 
+\hypertarget{structvMeshData_a84cab94917191b88a3888dd60cfd9e88}{Q\-String \hyperlink{structvMeshData_a84cab94917191b88a3888dd60cfd9e88}{m\-\_\-name}}\label{structvMeshData_a84cab94917191b88a3888dd60cfd9e88}
+
+\begin{DoxyCompactList}\small\item\em m\-\_\-name Name of the mesh \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Simple structure to hold the data needed by the G\-P\-U. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{structvMeshData_a1e9694b28cbc64feac060f1786bd9ec5}{\index{v\-Mesh\-Data@{v\-Mesh\-Data}!v\-Mesh\-Data@{v\-Mesh\-Data}}
+\index{v\-Mesh\-Data@{v\-Mesh\-Data}!vMeshData@{v\-Mesh\-Data}}
+\subsubsection[{v\-Mesh\-Data}]{\setlength{\rightskip}{0pt plus 5cm}v\-Mesh\-Data\-::v\-Mesh\-Data (
+\begin{DoxyParamCaption}
+\item[{const std\-::vector$<$ {\bf v\-H\-Triangle} $>$ \&}]{\-\_\-tris, }
+\item[{const std\-::vector$<$ {\bf v\-H\-Vert} $>$ \&}]{\-\_\-verts, }
+\item[{const {\bf S\-B\-V\-H} \&}]{\-\_\-bvh, }
+\item[{const Q\-String \&}]{\-\_\-name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{structvMeshData_a1e9694b28cbc64feac060f1786bd9ec5}
+
+
+\hyperlink{structvMeshData}{v\-Mesh\-Data} Simple dtor that sets the member variables correctly 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-tris} & Triangles \\
+\hline
+{\em \-\_\-verts} & Vertices \\
+\hline
+{\em \-\_\-bvh} & \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure \\
+\hline
+{\em \-\_\-name} & Name of the mesh \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this struct was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{MeshLoader_8h}{Mesh\-Loader.\-h}\end{DoxyCompactItemize}

@@ -15,6 +15,7 @@ constexpr unsigned int kQuickSortMinSize = 16;
 SBVH::SBVH(vHTriangle *_triangles, vHVert *_verts, unsigned int _numTris) :
 	m_triangles(_triangles),
 	m_vertices(_verts),
+	m_nodes(0),
 	m_triangleCount(_numTris)
 {
 	// Init the root node
@@ -98,11 +99,13 @@ BVHNode *SBVH::buildNode(const NodeSpec &_nodeSpec)
 
 	m_totalObjectOverlap += overlap.surfaceArea();
 
+	// If the overlap of from the object split doesn't exceed the threshold, there's no need to even look at spatial splits
 	if(overlap.surfaceArea() > m_overlapThreshold)
 	{
 		spatialSplitCandidate = spatialSplit(_nodeSpec, firstTriRefIndex, nodeCost);
 	}
 
+	// If the cost of tracing the current node is less than the cost of object and spatial splits, we'll just create a leaf node
 	if(leafCost < objectSplitCandidate.m_cost && leafCost < spatialSplitCandidate.m_cost)
 	{
 		return createLeaf(_nodeSpec);
@@ -110,18 +113,22 @@ BVHNode *SBVH::buildNode(const NodeSpec &_nodeSpec)
 
 	NodeSpec leftSpec;
 	NodeSpec rightSpec;
+
+	// Perform spatial split if it's the cheapest option
 	if(spatialSplitCandidate.m_cost < objectSplitCandidate.m_cost)
 	{
 		referenceUnsplit(leftSpec, rightSpec, _nodeSpec, spatialSplitCandidate);
 	}
 	else
 	{
+		// If no object split was found create a leaf
 		if(objectSplitCandidate.m_splitAxis == -1)
 		{
 			return createLeaf(_nodeSpec);
 		}
 		else
 		{
+			// Perform object split
 			sortTriRefStack(objectSplitCandidate.m_splitAxis, firstTriRefIndex, m_triangleRefStack.size());
 			leftSpec.m_bb = objectSplitCandidate.m_leftSplit;
 			leftSpec.m_numTris = objectSplitCandidate.m_leftTris;
@@ -130,14 +137,17 @@ BVHNode *SBVH::buildNode(const NodeSpec &_nodeSpec)
 		}
 	}
 
+	// Recursively build the child nodes
 	BVHNode *rightChild = buildNode(rightSpec);
 	BVHNode *leftChild = buildNode(leftSpec);
 
+	m_nodes++;
 	return new InnerNode(_nodeSpec.m_bb, leftChild, rightChild);
 }
 
 BVHNode* SBVH::createLeaf(const NodeSpec &_nodeSpec)
 {
+	// Remove the triangles contained by the leaf node from the reference stack
 	for(unsigned int i = 0; i < _nodeSpec.m_numTris; ++i)
 	{
 		m_triIndices.push_back(m_triangleRefStack.back().m_triIdx);
@@ -155,6 +165,8 @@ BVHNode* SBVH::createLeaf(const NodeSpec &_nodeSpec)
 		_nodeSpec.m_bb.printBounds();
 	#endif
 #endif
+
+	m_nodes++;
 
 	return leaf;
 }
@@ -222,6 +234,7 @@ SBVH::SpatialSplit SBVH::spatialSplit(const NodeSpec &_nodeSpec, const unsigned 
 	candidate.m_splitPosition = FLT_MAX;
 	candidate.m_axis = -1;
 
+	// Get the best axis for the split
 	float axisW[3] = {_nodeSpec.m_bb.maxBounds().m_x - _nodeSpec.m_bb.minBounds().m_x,
 										_nodeSpec.m_bb.maxBounds().m_y - _nodeSpec.m_bb.minBounds().m_y,
 										_nodeSpec.m_bb.maxBounds().m_z - _nodeSpec.m_bb.minBounds().m_z};
@@ -229,6 +242,7 @@ SBVH::SpatialSplit SBVH::spatialSplit(const NodeSpec &_nodeSpec, const unsigned 
 	candidate.m_axis = axisW[0] > axisW[1] && axisW[0] > axisW[2] ? 0 :
 										 (axisW[1] > axisW[2] && axisW[1] > axisW[0] ? 1 : 2);
 
+	// Get the "origin" of the axis
 	float axisOrig = _nodeSpec.m_bb.minBounds().m_openGL[candidate.m_axis];
 	float binWidth = axisW[candidate.m_axis] / kSpatialBins;
 	float binInvWidth = 1.f / binWidth;
@@ -243,10 +257,12 @@ SBVH::SpatialSplit SBVH::spatialSplit(const NodeSpec &_nodeSpec, const unsigned 
 		m_bins[i].m_bounds.setMaxBoundsComponent(candidate.m_axis, axisOrig + binWidth*(i+1));
 	}
 
+	// Loop through the triangles in the node spec
 	for(size_t i = 0; i < _nodeSpec.m_numTris; ++i)
 	{
 		const TriangleRef &tri = m_triangleRefStack[_firstTriRefIndex + i];
 		TriangleRef triRef = tri;
+		// Get the bins that the triangle intersects with
 		unsigned int firstBinId = vUtilities::clamp(binInvWidth * (triRef.m_bb.minBounds().m_openGL[candidate.m_axis] - axisOrig), 0, kSpatialBins - 1);
 		unsigned int lastBinId = vUtilities::clamp(binInvWidth * (triRef.m_bb.maxBounds().m_openGL[candidate.m_axis] - axisOrig), firstBinId, kSpatialBins - 1);
 
@@ -259,22 +275,16 @@ SBVH::SpatialSplit SBVH::spatialSplit(const NodeSpec &_nodeSpec, const unsigned 
 			TriangleRef leftSplitRef;
 			TriangleRef rightSplitRef;
 
+			// Perform splitting of the reference
 			splitReference(leftSplitRef, rightSplitRef, triRef, candidate.m_axis, splitPosition);
 
 			m_bins[j].m_bounds.extendBB(leftSplitRef.m_bb);
 			triRef = rightSplitRef;
 		}
+		// Update the bin details
 		m_bins[lastBinId].m_bounds.extendBB(triRef.m_bb);
 		m_bins[firstBinId].m_entries++;
 		m_bins[lastBinId].m_exits++;
-	}
-
-	int totEntries = 0;
-	int totExits = 0;
-	for(size_t i = 0; i < kSpatialBins; ++i)
-	{
-		totEntries += m_bins[i].m_entries;
-		totExits += m_bins[i].m_exits;
 	}
 
 	// Sweep from left
@@ -311,34 +321,41 @@ SBVH::SpatialSplit SBVH::spatialSplit(const NodeSpec &_nodeSpec, const unsigned 
 
 	m_totalSpatialOverlap += overlap;
 
-//#ifdef BVH_DEBUG
-//	#ifdef BVH_DEBUG_SPATIAL_SPLITS
-//		std::cout << "Best spatial split candidate:\n";
-//		std::cout << "  Axis: " << (candidate.m_axis == 0 ? 'X' : (candidate.m_axis == 1 ? 'Y' : 'Z')) << "\n";
-//		std::cout << "  Cost: " << candidate.m_cost << "\n";
-//		std::cout << "  Split pos: " << candidate.m_splitPosition << "\n";
-//	#endif
-//#endif
+#ifdef BVH_DEBUG
+	#ifdef BVH_DEBUG_SPATIAL_SPLITS
+		std::cout << "Best spatial split candidate:\n";
+		std::cout << "  Axis: " << (candidate.m_axis == 0 ? 'X' : (candidate.m_axis == 1 ? 'Y' : 'Z')) << "\n";
+		std::cout << "  Cost: " << candidate.m_cost << "\n";
+		std::cout << "  Split pos: " << candidate.m_splitPosition << "\n";
+	#endif
+#endif
 
 	return candidate;
 }
 
+///
+/// Implementation of this section is adapted from implementation is partly adapted from https://github.com/straaljager/GPU-path-tracing-tutorial-4/blob/master/SplitBVHBuilder.cpp
+///
 void SBVH::referenceUnsplit(NodeSpec &o_leftSpec, NodeSpec &o_rightSpec, const NodeSpec &_nodeSpec, const SpatialSplit &_spatialSplitCandidate)
 {
+	// Get the first index
 	int leftStart = m_triangleRefStack.size() - _nodeSpec.m_numTris;
 	int leftEnd = leftStart;
 	int rightStart = m_triangleRefStack.size();
 
 	o_leftSpec.m_bb = o_rightSpec.m_bb = AABB();
 
+	// Find whether the the triangle reference is fully inside either side of the split
 	for(int i = leftEnd; i < rightStart; ++i)
 	{
 		const TriangleRef &tri = m_triangleRefStack[i];
+		// Triangle is fully on the left side of the split
 		if(tri.m_bb.maxBounds().m_openGL[_spatialSplitCandidate.m_axis] <= _spatialSplitCandidate.m_splitPosition)
 		{
 			o_leftSpec.m_bb.extendBB(tri.m_bb);
 			vUtilities::swap(m_triangleRefStack[i], m_triangleRefStack[leftEnd++]);
 		}
+		// Triangle is fully on the right side of the split
 		else if(tri.m_bb.minBounds().m_openGL[_spatialSplitCandidate.m_axis] >= _spatialSplitCandidate.m_splitPosition)
 		{
 			o_rightSpec.m_bb.extendBB(tri.m_bb);
@@ -346,6 +363,7 @@ void SBVH::referenceUnsplit(NodeSpec &o_leftSpec, NodeSpec &o_rightSpec, const N
 		}
 	}
 
+	// Loop through the references and find if splitting or duplicating the reference makes sense
 	while(leftEnd < rightStart)
 	{
 		TriangleRef leftRef;
@@ -364,6 +382,7 @@ void SBVH::referenceUnsplit(NodeSpec &o_leftSpec, NodeSpec &o_rightSpec, const N
 		duplicateLeft.extendBB(leftRef.m_bb);
 		duplicateRight.extendBB(rightRef.m_bb);
 
+		// Calculate the cost of performing the split
 		float lac = kTriangleCost * (leftEnd - leftStart);
 		float rac = kTriangleCost * (m_triangleRefStack.size() - rightStart);
 		float lbc = kTriangleCost * (leftEnd - leftStart + 1);
@@ -400,6 +419,7 @@ void SBVH::referenceUnsplit(NodeSpec &o_leftSpec, NodeSpec &o_rightSpec, const N
 
 void SBVH::splitReference(TriangleRef &o_leftSplitRef, TriangleRef &o_rightSplitRef, const TriangleRef &_triRef, const int &_axis, const float &_splitPosition)
 {
+	// Split the reference
 	o_leftSplitRef.m_triIdx = o_rightSplitRef.m_triIdx = _triRef.m_triIdx;
 	o_leftSplitRef.m_bb = o_rightSplitRef.m_bb = AABB();
 
@@ -447,9 +467,8 @@ void SBVH::sortTriRefStack(const unsigned int &_axis, const unsigned int &_first
 		}
 	#endif
 #endif
-	/// The following section is adapted from :-
-	/// XXX [online].
-	/// [Accessed 2017]. Available from: https://github.com/hhergeth/CudaTracerLib/blob/master/Engine/SceneBuilder/SplitBVHBuilder.cpp.
+	/// The following section is adapted from the CudaTracerLib [online] by Hannes Hergeth.
+	/// [Accessed 2017]. Available from: https://github.com/hhergeth/CudaTracerLib/blob/master/Engine/SpatialStructures/BVH/SplitBVHBuilder.cpp.
 	int stack[kQuickSortStackSize];
 	int sp = 0;
 	int low = _first;
@@ -457,6 +476,7 @@ void SBVH::sortTriRefStack(const unsigned int &_axis, const unsigned int &_first
 
 	stack[sp++] = high;
 
+	// Quck sort
 	while(sp)
 	{
 		high = stack[--sp];
@@ -518,9 +538,8 @@ void SBVH::sortTriRefStack(const unsigned int &_axis, const unsigned int &_first
 
 void SBVH::insertionSort(const unsigned int &_axis, const unsigned int &_start, const unsigned int &_size)
 {
-	/// The following section is adapted from :-
-	/// XXX [online].
-	/// [Accessed 2017]. Available from: https://github.com/hhergeth/CudaTracerLib/blob/master/Engine/SceneBuilder/SplitBVHBuilder.cpp.
+	/// The following section is adapted from the CudaTracerLib [online] by Hannes Hergeth.
+	/// [Accessed 2017]. Available from: https://github.com/hhergeth/CudaTracerLib/blob/master/Engine/SpatialStructures/BVH/SplitBVHBuilder.cpp.
 	for(size_t i = 1; i < _size; ++i)
 	{
 		int j = _start + i - 1;

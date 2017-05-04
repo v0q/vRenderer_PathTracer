@@ -1,3 +1,8 @@
+///
+/// \file MeshLoader.cpp
+/// \brief Loads 3D models using Assimp
+///
+
 #include <iostream>
 #include <vector>
 
@@ -9,8 +14,8 @@
 
 vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 {
-  Assimp::Importer importer;
-//	const aiScene* scene = importer.ReadFile(_mesh.c_str(), aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
+	Assimp::Importer importer;
+
 	const aiScene* scene = importer.ReadFile(_mesh.c_str(), aiProcessPreset_TargetRealtime_MaxQuality);
 	if(!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
   {
@@ -24,6 +29,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 	std::vector<vHTriangle> triangles;
 	float scale = 1.f;
 
+	// Loop through the meshes, need to rework this to allow for loading of more than a single mesh
 	for(unsigned int i = 0; i < scene->mNumMeshes; ++i)
 	{
 		if(scene->mNumMeshes != 1)
@@ -43,6 +49,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
+			// Get the data needed by the tracer
 			const aiVector3t<float> vert = mesh->mVertices[j] * scale;
 			const aiVector3t<float> normal = mesh->mNormals[j];
 			vertices[j].m_vert = ngl::Vec3(vert.x, vert.y, vert.z);
@@ -60,16 +67,19 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 				vertices[j].m_v = 1.f - mesh->mTextureCoords[0][j].y;
 			}
 
+			// Calculate the center position of the mesh
 			center += vertices[j].m_vert;
 		}
 
 		center /= numVerts;
 
+		// Move each vertex so that the center of the mesh is located at the origin
 		for(unsigned int j = 0; j < numVerts; ++j)
 		{
 			vertices[j].m_vert -= center;
 		}
 
+		// Get the vertex indices of each triangle
 		for(unsigned int j = 0; j < numFaces; ++j)
 		{
 			const aiFace& face = mesh->mFaces[j];
@@ -80,6 +90,7 @@ vMeshData vMeshLoader::loadMesh(const std::string &_mesh)
 		}
 	}
 
+	// Construct the SBVH
 	SBVH bb(&triangles[0], &vertices[0], triangles.size());
 
   return vMeshData(triangles, vertices, bb, meshName);

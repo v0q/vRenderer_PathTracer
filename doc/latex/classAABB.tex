@@ -1,0 +1,232 @@
+\hypertarget{classAABB}{\section{A\-A\-B\-B Class Reference}
+\label{classAABB}\index{A\-A\-B\-B@{A\-A\-B\-B}}
+}
+
+
+The \hyperlink{classAABB}{A\-A\-B\-B} class, encapsulates a simple \hyperlink{classAABB}{A\-A\-B\-B} class to be used with building the acceleration structure for the path tracer.  
+
+
+
+
+{\ttfamily \#include $<$A\-A\-B\-B.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classAABB_a5f5baf6c533905aa1456b3a3eb57bab2}{\hyperlink{classAABB_a5f5baf6c533905aa1456b3a3eb57bab2}{A\-A\-B\-B} ()}\label{classAABB_a5f5baf6c533905aa1456b3a3eb57bab2}
+
+\begin{DoxyCompactList}\small\item\em \hyperlink{classAABB}{A\-A\-B\-B} Default Ctor, initialises the bounding box to F\-L\-T\-\_\-\-M\-A\-X. \end{DoxyCompactList}\item 
+\hyperlink{classAABB_aebc3dec2dcdc49208a136e03f30c18e4}{A\-A\-B\-B} (const ngl\-::\-Vec3 \&\-\_\-min, const ngl\-::\-Vec3 \&\-\_\-max)
+\begin{DoxyCompactList}\small\item\em \hyperlink{classAABB}{A\-A\-B\-B} Ctor using given min and max bounds. \end{DoxyCompactList}\item 
+void \hyperlink{classAABB_a688c90b12f49542da1df7b8e56cf7f0e}{extend\-B\-B} (const ngl\-::\-Vec3 \&\-\_\-vert)
+\begin{DoxyCompactList}\small\item\em extend\-B\-B Extends the bounding box to cover the given point \end{DoxyCompactList}\item 
+void \hyperlink{classAABB_a32895a3235621785fec386b7d0036faa}{extend\-B\-B} (const \hyperlink{classAABB}{A\-A\-B\-B} \&\-\_\-aabb)
+\begin{DoxyCompactList}\small\item\em extend\-B\-B Extends the bounding box to cover the another bounding box \end{DoxyCompactList}\item 
+void \hyperlink{classAABB_a18b1080e6e8b766628e6c1d13308706b}{intersect\-B\-B} (const \hyperlink{classAABB}{A\-A\-B\-B} \&\-\_\-aabb)
+\begin{DoxyCompactList}\small\item\em intersect\-B\-B Get the intersection between two bounding boxes \end{DoxyCompactList}\item 
+float \hyperlink{classAABB_ac377b6dc6c264aa80edea4725f098f9b}{surface\-Area} () const 
+\begin{DoxyCompactList}\small\item\em get\-Surface\-Area Calculates the surface area of the \hyperlink{classAABB}{A\-A\-B\-B} \end{DoxyCompactList}\item 
+void \hyperlink{classAABB_a357bd9e9ece6a77a2d7d6b92c881c214}{set\-Min\-Bounds\-Component} (const unsigned int \&\-\_\-e, const float \&\-\_\-val)
+\begin{DoxyCompactList}\small\item\em set\-Min\-Bounds\-Component Update a single component (X, Y, Z) of the minimum bounds \end{DoxyCompactList}\item 
+void \hyperlink{classAABB_a0b491a795548caa55ea4fe47c8a495db}{set\-Max\-Bounds\-Component} (const unsigned int \&\-\_\-e, const float \&\-\_\-val)
+\begin{DoxyCompactList}\small\item\em set\-Max\-Bounds\-Component Update a single component (X, Y, Z) of the maximum bounds \end{DoxyCompactList}\item 
+bool \hyperlink{classAABB_a42e70d9ad1af51776feb24e8c2e49208}{is\-Valid} () const 
+\begin{DoxyCompactList}\small\item\em is\-Valid Checks whether the bounds of the \hyperlink{classAABB}{A\-A\-B\-B} are valid, e.\-g. if mininimum bounds $<$ maximum bounds \end{DoxyCompactList}\item 
+ngl\-::\-Vec3 \hyperlink{classAABB_ab362ab2ada4f93f8cbda2caa270af853}{min\-Bounds} () const 
+\begin{DoxyCompactList}\small\item\em min\-Bounds Get the minimum bounds of the \hyperlink{classAABB}{A\-A\-B\-B} \end{DoxyCompactList}\item 
+ngl\-::\-Vec3 \hyperlink{classAABB_a78d80ad6405f8cf0d77b037ab602fb67}{max\-Bounds} () const 
+\begin{DoxyCompactList}\small\item\em max\-Bounds Get the maximum bounds of the \hyperlink{classAABB}{A\-A\-B\-B} \end{DoxyCompactList}\item 
+ngl\-::\-Vec3 \hyperlink{classAABB_ae5f76545e4c7be6e345fb13ffe541694}{get\-Centroid} () const 
+\begin{DoxyCompactList}\small\item\em get\-Centroid Get the centroid point of the \hyperlink{classAABB}{A\-A\-B\-B} \end{DoxyCompactList}\item 
+\hypertarget{classAABB_a5a04ca82adf699f362e91a7e4fc27af2}{void \hyperlink{classAABB_a5a04ca82adf699f362e91a7e4fc27af2}{print\-Bounds} () const }\label{classAABB_a5a04ca82adf699f362e91a7e4fc27af2}
+
+\begin{DoxyCompactList}\small\item\em print\-Bounds Prints the minimum and maximum bounds of the \hyperlink{classAABB}{A\-A\-B\-B}, used for debugging \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classAABB}{A\-A\-B\-B} class, encapsulates a simple \hyperlink{classAABB}{A\-A\-B\-B} class to be used with building the acceleration structure for the path tracer. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classAABB_aebc3dec2dcdc49208a136e03f30c18e4}{\index{A\-A\-B\-B@{A\-A\-B\-B}!A\-A\-B\-B@{A\-A\-B\-B}}
+\index{A\-A\-B\-B@{A\-A\-B\-B}!AABB@{A\-A\-B\-B}}
+\subsubsection[{A\-A\-B\-B}]{\setlength{\rightskip}{0pt plus 5cm}A\-A\-B\-B\-::\-A\-A\-B\-B (
+\begin{DoxyParamCaption}
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-min, }
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-max}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_aebc3dec2dcdc49208a136e03f30c18e4}
+
+
+\hyperlink{classAABB}{A\-A\-B\-B} Ctor using given min and max bounds. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-min} & Minimum bounds \\
+\hline
+{\em \-\_\-max} & Maximum bounds \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classAABB_a688c90b12f49542da1df7b8e56cf7f0e}{\index{A\-A\-B\-B@{A\-A\-B\-B}!extend\-B\-B@{extend\-B\-B}}
+\index{extend\-B\-B@{extend\-B\-B}!AABB@{A\-A\-B\-B}}
+\subsubsection[{extend\-B\-B}]{\setlength{\rightskip}{0pt plus 5cm}void A\-A\-B\-B\-::extend\-B\-B (
+\begin{DoxyParamCaption}
+\item[{const ngl\-::\-Vec3 \&}]{\-\_\-vert}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_a688c90b12f49542da1df7b8e56cf7f0e}
+
+
+extend\-B\-B Extends the bounding box to cover the given point 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-vert} & Point to used to extend the bounding box \\
+\hline
+\end{DoxyParams}
+\hypertarget{classAABB_a32895a3235621785fec386b7d0036faa}{\index{A\-A\-B\-B@{A\-A\-B\-B}!extend\-B\-B@{extend\-B\-B}}
+\index{extend\-B\-B@{extend\-B\-B}!AABB@{A\-A\-B\-B}}
+\subsubsection[{extend\-B\-B}]{\setlength{\rightskip}{0pt plus 5cm}void A\-A\-B\-B\-::extend\-B\-B (
+\begin{DoxyParamCaption}
+\item[{const {\bf A\-A\-B\-B} \&}]{\-\_\-aabb}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_a32895a3235621785fec386b7d0036faa}
+
+
+extend\-B\-B Extends the bounding box to cover the another bounding box 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-aabb} & \hyperlink{classAABB}{A\-A\-B\-B} to cover \\
+\hline
+\end{DoxyParams}
+\hypertarget{classAABB_ae5f76545e4c7be6e345fb13ffe541694}{\index{A\-A\-B\-B@{A\-A\-B\-B}!get\-Centroid@{get\-Centroid}}
+\index{get\-Centroid@{get\-Centroid}!AABB@{A\-A\-B\-B}}
+\subsubsection[{get\-Centroid}]{\setlength{\rightskip}{0pt plus 5cm}ngl\-::\-Vec3 A\-A\-B\-B\-::get\-Centroid (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_ae5f76545e4c7be6e345fb13ffe541694}
+
+
+get\-Centroid Get the centroid point of the \hyperlink{classAABB}{A\-A\-B\-B} 
+
+\begin{DoxyReturn}{Returns}
+The centroid point 
+\end{DoxyReturn}
+\hypertarget{classAABB_a18b1080e6e8b766628e6c1d13308706b}{\index{A\-A\-B\-B@{A\-A\-B\-B}!intersect\-B\-B@{intersect\-B\-B}}
+\index{intersect\-B\-B@{intersect\-B\-B}!AABB@{A\-A\-B\-B}}
+\subsubsection[{intersect\-B\-B}]{\setlength{\rightskip}{0pt plus 5cm}void A\-A\-B\-B\-::intersect\-B\-B (
+\begin{DoxyParamCaption}
+\item[{const {\bf A\-A\-B\-B} \&}]{\-\_\-aabb}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_a18b1080e6e8b766628e6c1d13308706b}
+
+
+intersect\-B\-B Get the intersection between two bounding boxes 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-aabb} & Bounding box to check the intersection against \\
+\hline
+\end{DoxyParams}
+\hypertarget{classAABB_a42e70d9ad1af51776feb24e8c2e49208}{\index{A\-A\-B\-B@{A\-A\-B\-B}!is\-Valid@{is\-Valid}}
+\index{is\-Valid@{is\-Valid}!AABB@{A\-A\-B\-B}}
+\subsubsection[{is\-Valid}]{\setlength{\rightskip}{0pt plus 5cm}bool A\-A\-B\-B\-::is\-Valid (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_a42e70d9ad1af51776feb24e8c2e49208}
+
+
+is\-Valid Checks whether the bounds of the \hyperlink{classAABB}{A\-A\-B\-B} are valid, e.\-g. if mininimum bounds $<$ maximum bounds 
+
+\begin{DoxyReturn}{Returns}
+Whether the \hyperlink{classAABB}{A\-A\-B\-B} is valid or not 
+\end{DoxyReturn}
+\hypertarget{classAABB_a78d80ad6405f8cf0d77b037ab602fb67}{\index{A\-A\-B\-B@{A\-A\-B\-B}!max\-Bounds@{max\-Bounds}}
+\index{max\-Bounds@{max\-Bounds}!AABB@{A\-A\-B\-B}}
+\subsubsection[{max\-Bounds}]{\setlength{\rightskip}{0pt plus 5cm}ngl\-::\-Vec3 A\-A\-B\-B\-::max\-Bounds (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_a78d80ad6405f8cf0d77b037ab602fb67}
+
+
+max\-Bounds Get the maximum bounds of the \hyperlink{classAABB}{A\-A\-B\-B} 
+
+\begin{DoxyReturn}{Returns}
+The maximum bounds 
+\end{DoxyReturn}
+\hypertarget{classAABB_ab362ab2ada4f93f8cbda2caa270af853}{\index{A\-A\-B\-B@{A\-A\-B\-B}!min\-Bounds@{min\-Bounds}}
+\index{min\-Bounds@{min\-Bounds}!AABB@{A\-A\-B\-B}}
+\subsubsection[{min\-Bounds}]{\setlength{\rightskip}{0pt plus 5cm}ngl\-::\-Vec3 A\-A\-B\-B\-::min\-Bounds (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_ab362ab2ada4f93f8cbda2caa270af853}
+
+
+min\-Bounds Get the minimum bounds of the \hyperlink{classAABB}{A\-A\-B\-B} 
+
+\begin{DoxyReturn}{Returns}
+The minimum bounds 
+\end{DoxyReturn}
+\hypertarget{classAABB_a0b491a795548caa55ea4fe47c8a495db}{\index{A\-A\-B\-B@{A\-A\-B\-B}!set\-Max\-Bounds\-Component@{set\-Max\-Bounds\-Component}}
+\index{set\-Max\-Bounds\-Component@{set\-Max\-Bounds\-Component}!AABB@{A\-A\-B\-B}}
+\subsubsection[{set\-Max\-Bounds\-Component}]{\setlength{\rightskip}{0pt plus 5cm}void A\-A\-B\-B\-::set\-Max\-Bounds\-Component (
+\begin{DoxyParamCaption}
+\item[{const unsigned int \&}]{\-\_\-e, }
+\item[{const float \&}]{\-\_\-val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_a0b491a795548caa55ea4fe47c8a495db}
+
+
+set\-Max\-Bounds\-Component Update a single component (X, Y, Z) of the maximum bounds 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-e} & Index of the component 0...3 (x..z) \\
+\hline
+{\em \-\_\-val} & New value for the component \\
+\hline
+\end{DoxyParams}
+\hypertarget{classAABB_a357bd9e9ece6a77a2d7d6b92c881c214}{\index{A\-A\-B\-B@{A\-A\-B\-B}!set\-Min\-Bounds\-Component@{set\-Min\-Bounds\-Component}}
+\index{set\-Min\-Bounds\-Component@{set\-Min\-Bounds\-Component}!AABB@{A\-A\-B\-B}}
+\subsubsection[{set\-Min\-Bounds\-Component}]{\setlength{\rightskip}{0pt plus 5cm}void A\-A\-B\-B\-::set\-Min\-Bounds\-Component (
+\begin{DoxyParamCaption}
+\item[{const unsigned int \&}]{\-\_\-e, }
+\item[{const float \&}]{\-\_\-val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_a357bd9e9ece6a77a2d7d6b92c881c214}
+
+
+set\-Min\-Bounds\-Component Update a single component (X, Y, Z) of the minimum bounds 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-e} & Index of the component 0...3 (x..z) \\
+\hline
+{\em \-\_\-val} & New value for the component \\
+\hline
+\end{DoxyParams}
+\hypertarget{classAABB_ac377b6dc6c264aa80edea4725f098f9b}{\index{A\-A\-B\-B@{A\-A\-B\-B}!surface\-Area@{surface\-Area}}
+\index{surface\-Area@{surface\-Area}!AABB@{A\-A\-B\-B}}
+\subsubsection[{surface\-Area}]{\setlength{\rightskip}{0pt plus 5cm}float A\-A\-B\-B\-::surface\-Area (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classAABB_ac377b6dc6c264aa80edea4725f098f9b}
+
+
+get\-Surface\-Area Calculates the surface area of the \hyperlink{classAABB}{A\-A\-B\-B} 
+
+\begin{DoxyReturn}{Returns}
+The surface area 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{AABB_8h}{A\-A\-B\-B.\-h}\end{DoxyCompactItemize}

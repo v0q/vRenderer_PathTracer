@@ -1,3 +1,8 @@
+///
+/// \file vRendererCuda.cpp
+/// \brief Implements the Cuda version of the renderer
+///
+
 #include "vRendererCuda.h"
 
 #include <chrono>
@@ -16,10 +21,7 @@ vRendererCuda::vRendererCuda() :
 	m_normal(nullptr),
 	m_specular(nullptr),
 	m_brdf(nullptr),
-  m_frame(1),
-	m_vertCount(0),
-	m_bvhNodeCount(0),
-	m_triIdxCount(0),
+	m_frame(1),
 	m_initialised(false)
 {
 	m_fresnelCoef = 0.1f;
@@ -41,18 +43,13 @@ void vRendererCuda::init(const unsigned int &_w, const unsigned int &_h)
 
   unsigned int sz = m_width*m_height;
 	validateCuda(cudaMalloc(&m_colorArray, sizeof(float4)*sz), "Malloc pixel buffer");
-//	validateCuda(cudaMalloc(&m_camera, sizeof(vCamera)), "Malloc camera origin buffer");
 
 	validateCuda(cudaMalloc(&m_vertices, 1), "Init vertex device pointer");
 	validateCuda(cudaMalloc(&m_normals, 1), "Init normals device pointer");
   validateCuda(cudaMalloc(&m_bvhData, 1), "Init BVH node device pointer");
 
-//	validateCuda(cudaMemcpy(m_camera, &cam, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera origin buffer");
-//	validateCuda(cudaMemcpy(m_camdir, &camdir, sizeof(float4), cudaMemcpyHostToDevice), "Initialise camera direction buffer");
 	cu_fillFloat4(m_colorArray, make_float4(0.0f, 0.0f, 0.0f, 0.0f), sz);
 	validateCuda(cudaDeviceSynchronize(), "Init");
-
-//	cudaMemcpyToSymbol(kNumPlaneSetNormals, &BVH::m_numPlaneSetNormals, 1);
 
   m_initialised = true;
 }
@@ -116,6 +113,7 @@ void vRendererCuda::render()
 
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
+	// Map the texture and depth buffers from OpenGL
 	validateCuda(cudaGraphicsMapResources(1, &m_cudaGLTextureBuffer), "Map GL texture buffer");
 	validateCuda(cudaGraphicsSubResourceGetMappedArray(&m_cudaImgArray, m_cudaGLTextureBuffer, 0, 0), "Attach the mapped texture buffer to a cuda resource");
 
@@ -126,6 +124,7 @@ void vRendererCuda::render()
   wdsc.resType = cudaResourceTypeArray;
   wdsc.res.array.array = m_cudaImgArray;
 
+	// Create a cuda writeable surface for the texture
 	cudaSurfaceObject_t textureSurface;
 	validateCuda(cudaCreateSurfaceObject(&textureSurface, &wdsc), "Create a writeable cuda surface");
 
@@ -133,8 +132,11 @@ void vRendererCuda::render()
 	wdscd.resType = cudaResourceTypeArray;
 	wdscd.res.array.array = m_cudaDepthArray;
 
+	// Create a cuda writeable surface for the depth
 	cudaSurfaceObject_t depthSurface;
 	validateCuda(cudaCreateSurfaceObject(&depthSurface, &wdscd), "Create a writeable cuda surface");
+
+	// Main render call
 	cu_runRenderKernel(textureSurface,
 										 depthSurface,
 										 m_hdr,
@@ -152,6 +154,7 @@ void vRendererCuda::render()
 										 m_fresnelCoef,
 										 m_fresnelPow);
 
+	// Clean up and free the OpenGL buffers
 	validateCuda(cudaDestroySurfaceObject(textureSurface), "Clean up the surface");
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLTextureBuffer), "Free the mapped GL texture buffer");
 
@@ -159,7 +162,6 @@ void vRendererCuda::render()
 	validateCuda(cudaGraphicsUnmapResources(1, &m_cudaGLDepthBuffer), "Free the mapped GL depth buffer");
 
 	validateCuda(cudaStreamSynchronize(0), "Synchronize");
-//	exit(0);
 }
 
 void vRendererCuda::cleanUp()
@@ -174,11 +176,23 @@ void vRendererCuda::cleanUp()
       validateCuda(cudaFree(m_normals), "Clean up normals buffer");
 		if(m_bvhData)
 			validateCuda(cudaFree(m_bvhData), "Clean up BVH node buffer");
+		if(m_uvs)
+			validateCuda(cudaFree(m_uvs), "Clean up UV buffer");
+
 		if(m_hdr)
 			validateCuda(cudaFree(m_hdr), "Clean up HDR buffer");
+		if(m_diffuse)
+			validateCuda(cudaFree(m_diffuse), "Clean up diffuse memory");
+		if(m_normal)
+			validateCuda(cudaFree(m_normal), "Clean up normal memory");
+		if(m_specular)
+			validateCuda(cudaFree(m_specular), "Clean up specular memory");
+		if(m_brdf)
+			validateCuda(cudaFree(m_brdf), "Clean up BRDF buffer");
 
 		validateCuda(cudaFree(m_colorArray), "Clean up color buffer");
 		validateCuda(cudaGraphicsUnregisterResource(m_cudaGLTextureBuffer), "Unregister GL Texture");
+		validateCuda(cudaGraphicsUnregisterResource(m_cudaGLDepthBuffer), "Unregister GL Depth texture");
 
 		cu_cleanUp();
   }
@@ -233,6 +247,7 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 				{
 					unsigned int triInd = _meshData.m_bvh.getTriIndex(j);
 					const vHTriangle tri = _meshData.m_triangles[triInd];
+					// Get the triangle data and push it to their respective buffers
 					for(unsigned int k = 0; k < 3; ++k)
 					{
 						const ngl::Vec3 &vert = _meshData.m_vertices[tri.m_indices[k]].m_vert;
@@ -263,25 +278,43 @@ void vRendererCuda::initMesh(const vMeshData &_meshData)
 		bvhData[idx + 3] = make_float4(intAsFloat(indices[0]), intAsFloat(indices[1]), 0, 0);
 	}
 
+	// Cleanup old device buffers and allocate new ones
+	if(m_vertices)
+	{
+		validateCuda(cudaFree(m_vertices), "Delete old vertex buffer");
+	}
 	validateCuda(cudaMalloc(&m_vertices, verts.size()*sizeof(float4)), "Malloc vertex device pointer");
 	validateCuda(cudaMemcpy(m_vertices, &verts[0], verts.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy vertex data to gpu");
 
+	if(m_tangents)
+	{
+		validateCuda(cudaFree(m_tangents), "Delete old tangent buffer");
+	}
 	validateCuda(cudaMalloc(&m_tangents, tangents.size()*sizeof(float4)), "Malloc tangent device pointer");
 	validateCuda(cudaMemcpy(m_tangents, &tangents[0], tangents.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy tangent data to gpu");
 
+	if(m_uvs)
+	{
+		validateCuda(cudaFree(m_uvs), "Delete old uv buffer");
+	}
 	validateCuda(cudaMalloc(&m_uvs, uvs.size()*sizeof(float2)), "Malloc uv device pointer");
 	validateCuda(cudaMemcpy(m_uvs, &uvs[0], uvs.size()*sizeof(float2), cudaMemcpyHostToDevice), "Copy uv data to gpu");
 
+	if(m_normals)
+	{
+		validateCuda(cudaFree(m_normals), "Delete old normal buffer");
+	}
 	validateCuda(cudaMalloc(&m_normals, normals.size()*sizeof(float4)), "Malloc normals device pointer");
 	validateCuda(cudaMemcpy(m_normals, &normals[0], normals.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy normal data to gpu");
 
+	if(m_bvhData)
+	{
+		validateCuda(cudaFree(m_bvhData), "Delete old bvh node buffer");
+	}
 	validateCuda(cudaMalloc(&m_bvhData, bvhData.size()*sizeof(float4)), "Malloc BVH node device pointer");
   validateCuda(cudaMemcpy(m_bvhData, &bvhData[0], bvhData.size()*sizeof(float4), cudaMemcpyHostToDevice), "Copy bvh node data to gpu");
 
 	cu_meshInitialised();
-
-	m_vertCount = verts.size();
-  m_bvhNodeCount = bvhData.size();
 }
 
 void vRendererCuda::loadHDR(const Imf::Rgba *_colours, const unsigned int &_w, const unsigned int &_h)
@@ -335,6 +368,7 @@ void vRendererCuda::loadTexture(const QImage &_texture, const float &_gamma, con
 		}
 	}
 
+	// Load the texture data to the correct buffer
 	switch(_type)
 	{
 		case DIFFUSE:
@@ -376,18 +410,30 @@ void vRendererCuda::loadTexture(const QImage &_texture, const float &_gamma, con
 	delete [] dataAsFloats;
 }
 
-void vRendererCuda::loadBRDF(const float *_brdf)
+bool vRendererCuda::loadBRDF(const float *_brdf)
 {
-	if(m_brdf)
+	// If the brdf data is valid (e.g. not a nullptr), load it to the GPU
+	if(_brdf)
 	{
-		validateCuda(cudaFree(m_brdf), "Delete old brdf memory");
+		if(m_brdf)
+		{
+			validateCuda(cudaFree(m_brdf), "Delete old brdf memory");
+		}
+
+		unsigned int n = BRDF_SAMPLING_RES_THETA_H * BRDF_SAMPLING_RES_THETA_D * BRDF_SAMPLING_RES_PHI_D / 2;
+
+		// Copy brdf to GPU
+		validateCuda(cudaMalloc(&m_brdf, n * 3 * sizeof(float)), "BRDF texture memory allocation");
+		validateCuda(cudaMemcpy(m_brdf, _brdf, n * 3 * sizeof(float), cudaMemcpyHostToDevice), "Memcpy to brdf texture");
+		cu_bindBRDF(m_brdf);
+
+		delete [] _brdf;
+		return true;
 	}
-
-	unsigned int n = BRDF_SAMPLING_RES_THETA_H * BRDF_SAMPLING_RES_THETA_D * BRDF_SAMPLING_RES_PHI_D / 2;
-
-	validateCuda(cudaMalloc(&m_brdf, n * 3 * sizeof(float)), "BRDF texture memory allocation");
-	validateCuda(cudaMemcpy(m_brdf, _brdf, n * 3 * sizeof(float), cudaMemcpyHostToDevice), "Memcpy to brdf texture");
-	cu_bindBRDF(m_brdf);
+	else
+	{
+		return false;
+	}
 }
 
 void vRendererCuda::useExampleSphere(const bool &_newVal)

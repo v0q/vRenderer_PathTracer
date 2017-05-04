@@ -1,0 +1,304 @@
+\hypertarget{PathTracer_8cl}{\section{cl/src/\-Path\-Tracer.cl File Reference}
+\label{PathTracer_8cl}\index{cl/src/\-Path\-Tracer.\-cl@{cl/src/\-Path\-Tracer.\-cl}}
+}
+
+
+Device (Open\-C\-L) implementation of the path tracer. As the implementation is pretty much the same as the Cuda one. The documentation for most everything can be found under the cuda docs.  
+
+
+{\ttfamily \#include \char`\"{}cl/include/\-Path\-Tracer.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}cl/include/\-Ray\-Intersection.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}cl/include/\-Utilities.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{PathTracer_8cl_a8dc71902a3c956140d3533820b1ef731}{\#define {\bfseries B\-R\-D\-F\-\_\-\-S\-A\-M\-P\-L\-I\-N\-G\-\_\-\-R\-E\-S\-\_\-\-T\-H\-E\-T\-A\-\_\-\-H}~90}\label{PathTracer_8cl_a8dc71902a3c956140d3533820b1ef731}
+
+\item 
+\hypertarget{PathTracer_8cl_a91bb2b846851bbcfbf4d5e0040c867df}{\#define {\bfseries B\-R\-D\-F\-\_\-\-S\-A\-M\-P\-L\-I\-N\-G\-\_\-\-R\-E\-S\-\_\-\-T\-H\-E\-T\-A\-\_\-\-D}~90}\label{PathTracer_8cl_a91bb2b846851bbcfbf4d5e0040c867df}
+
+\item 
+\hypertarget{PathTracer_8cl_aa2ccfe1ed7a38e1147f3ede37fadc3cc}{\#define {\bfseries B\-R\-D\-F\-\_\-\-S\-A\-M\-P\-L\-I\-N\-G\-\_\-\-R\-E\-S\-\_\-\-P\-H\-I\-\_\-\-D}~360}\label{PathTracer_8cl_aa2ccfe1ed7a38e1147f3ede37fadc3cc}
+
+\item 
+\hypertarget{PathTracer_8cl_acf3f1b403789e38a95ccb2407c151be5}{\#define {\bfseries R\-E\-D\-\_\-\-S\-C\-A\-L\-E}~(1.\-0/1500.\-0)}\label{PathTracer_8cl_acf3f1b403789e38a95ccb2407c151be5}
+
+\item 
+\hypertarget{PathTracer_8cl_adcde58c7b09df0bb410fbabd1fddaf3c}{\#define {\bfseries G\-R\-E\-E\-N\-\_\-\-S\-C\-A\-L\-E}~(1.\-15/1500.\-0)}\label{PathTracer_8cl_adcde58c7b09df0bb410fbabd1fddaf3c}
+
+\item 
+\hypertarget{PathTracer_8cl_ab4be50e26575571331b47f2df98916a5}{\#define {\bfseries B\-L\-U\-E\-\_\-\-S\-C\-A\-L\-E}~(1.\-66/1500.\-0)}\label{PathTracer_8cl_ab4be50e26575571331b47f2df98916a5}
+
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structRay}{Ray} \hyperlink{PathTracer_8cl_a0f62dc685261380c888f930d3f04b813}{create\-Ray} (float4 \-\_\-o, float4 \-\_\-d)
+\begin{DoxyCompactList}\small\item\em create\-Ray Builds a ray given an origin and a direction \end{DoxyCompactList}\item 
+unsigned int \hyperlink{PathTracer_8cl_a96d1b38c698388294674aa643d3d26b2}{float\-As\-Int} (const float \-\_\-a)
+\begin{DoxyCompactList}\small\item\em float\-As\-Int Returns the bit-\/wise equal value as integer \end{DoxyCompactList}\item 
+bool \hyperlink{PathTracer_8cl_a329fb07255626c74d97267a19b2e6dce}{intersect\-Scene} (const \hyperlink{structRay}{Ray} $\ast$\-\_\-ray, \-\_\-\-\_\-global const float4 $\ast$\-\_\-vertices, \-\_\-\-\_\-global const float4 $\ast$\-\_\-normals, \-\_\-\-\_\-global const float4 $\ast$\-\_\-tangents, \-\_\-\-\_\-global const float4 $\ast$normal\-Mapvh\-Nodes, \-\_\-\-\_\-global const float2 $\ast$\-\_\-uvs, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-diffuse, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-normal, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-specular, bool \-\_\-has\-Diffuse\-Map, bool \-\_\-has\-Normal\-Map, bool \-\_\-has\-Specular\-Map, bool \-\_\-use\-Cornell\-Box, bool \-\_\-use\-Example\-Sphere, bool \-\_\-mesh\-Initialised, bool \-\_\-view\-B\-R\-D\-F, \hyperlink{structvHitData}{v\-Hit\-Data} $\ast$\-\_\-hit\-Data)
+\begin{DoxyCompactList}\small\item\em intersect\-Scene Check the intersections of a given ray with the scene, checks for the intersections with the triangle meshes and spheres \end{DoxyCompactList}\item 
+\hypertarget{PathTracer_8cl_a06667f67750cd42ea614e89817657f79}{int {\bfseries phi\-\_\-diff\-\_\-index} (float phi\-\_\-diff)}\label{PathTracer_8cl_a06667f67750cd42ea614e89817657f79}
+
+\item 
+\hypertarget{PathTracer_8cl_aee1dde35c1c9bb558ce06da59dd34b7e}{int {\bfseries theta\-\_\-half\-\_\-index} (float theta\-\_\-half)}\label{PathTracer_8cl_aee1dde35c1c9bb558ce06da59dd34b7e}
+
+\item 
+\hypertarget{PathTracer_8cl_a13e99c424c0d5f3621b36dad4549c95b}{int {\bfseries theta\-\_\-diff\-\_\-index} (float theta\-\_\-diff)}\label{PathTracer_8cl_a13e99c424c0d5f3621b36dad4549c95b}
+
+\item 
+\hypertarget{PathTracer_8cl_a2fbc21ce9eec28e072932dba078d3523}{float4 {\bfseries lookup\-B\-R\-D\-F} (\-\_\-\-\_\-global const float $\ast$normal\-Maprdf, const float4 \-\_\-reflected\-Dir, const float4 \-\_\-current\-Dir, const float4 \-\_\-normal, const float4 \-\_\-tangent)}\label{PathTracer_8cl_a2fbc21ce9eec28e072932dba078d3523}
+
+\item 
+float4 \hyperlink{PathTracer_8cl_a0f5c7ab05243deb2bd02999b5ad1d716}{trace} (const \hyperlink{structRay}{Ray} $\ast$\-\_\-camray, \-\_\-\-\_\-global const float4 $\ast$\-\_\-vertices, \-\_\-\-\_\-global const float4 $\ast$\-\_\-normals, \-\_\-\-\_\-global const float4 $\ast$\-\_\-tangents, \-\_\-\-\_\-global const float4 $\ast$normal\-Mapvh\-Nodes, \-\_\-\-\_\-global const float2 $\ast$\-\_\-uvs, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-hdr, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-diffuse, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-normal, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-specular, float \-\_\-fresnel\-Pow, float \-\_\-fresnel\-Coef, bool \-\_\-has\-Diffuse\-Map, bool \-\_\-has\-Normal\-Map, bool \-\_\-has\-Specular\-Map, bool \-\_\-use\-Cornell\-Box, bool \-\_\-use\-Example\-Sphere, bool \-\_\-mesh\-Initialised, bool \-\_\-view\-B\-R\-D\-F, bool \-\_\-has\-B\-R\-D\-F, \-\_\-\-\_\-global const float $\ast$normal\-Maprdf, unsigned int $\ast$\-\_\-seed0, unsigned int $\ast$\-\_\-seed1)
+\begin{DoxyCompactList}\small\item\em trace Performs ray bounces, checks for the intersections and does colour accumulation calculations based on the emission and colour data from the intersections \end{DoxyCompactList}\item 
+\hypertarget{PathTracer_8cl_aa38e4d4f2454ce31644167af3a6b1483}{\-\_\-\-\_\-kernel void {\bfseries render} (\-\_\-\-\_\-write\-\_\-only image2d\-\_\-t \-\_\-texture, \-\_\-\-\_\-global const float4 $\ast$\-\_\-vertices, \-\_\-\-\_\-global const float4 $\ast$\-\_\-normals, \-\_\-\-\_\-global const float4 $\ast$\-\_\-tangents, \-\_\-\-\_\-global const float4 $\ast$normal\-Mapvh\-Nodes, \-\_\-\-\_\-global const float2 $\ast$\-\_\-uvs, \-\_\-\-\_\-global const float $\ast$normal\-Maprdf, \-\_\-\-\_\-global float4 $\ast$\-\_\-colors, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-hdr, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-diffuse, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-normal, \-\_\-\-\_\-read\-\_\-only image2d\-\_\-t \-\_\-specular, float \-\_\-fresnel\-Pow, float \-\_\-fresnel\-Coef, unsigned int \-\_\-has\-Diffuse\-Map, unsigned int \-\_\-has\-Normal\-Map, unsigned int \-\_\-has\-Specular\-Map, unsigned int \-\_\-use\-Cornell\-Box, unsigned int \-\_\-use\-Example\-Sphere, unsigned int \-\_\-mesh\-Initialised, unsigned int \-\_\-view\-B\-R\-D\-F, unsigned int \-\_\-has\-B\-R\-D\-F, \hyperlink{structvCamera}{v\-Camera} \-\_\-cam, unsigned int \-\_\-w, unsigned int \-\_\-h, unsigned int \-\_\-frame, unsigned int \-\_\-time)}\label{PathTracer_8cl_aa38e4d4f2454ce31644167af3a6b1483}
+
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{PathTracer_8cl_a4058774024cb25b39c7ce3425b656479}{\-\_\-\-\_\-constant float {\bfseries inv\-Gamma} = 1.f/2.\-2f}\label{PathTracer_8cl_a4058774024cb25b39c7ce3425b656479}
+
+\item 
+\hypertarget{PathTracer_8cl_a3983269547766d6b0f419bc9e087b9de}{\-\_\-\-\_\-constant float {\bfseries inv\-Samps} = 1.f/2.f}\label{PathTracer_8cl_a3983269547766d6b0f419bc9e087b9de}
+
+\item 
+\hypertarget{PathTracer_8cl_a54f691129a0710a068d80cb38d668277}{\-\_\-\-\_\-constant unsigned int {\bfseries samps} = 2}\label{PathTracer_8cl_a54f691129a0710a068d80cb38d668277}
+
+\item 
+\-\_\-\-\_\-constant \hyperlink{structSphere}{Sphere} {\bfseries spheres} \mbox{[}$\,$\mbox{]}
+\item 
+\-\_\-\-\_\-constant \hyperlink{structSphere}{Sphere} {\bfseries cornell\-Box} \mbox{[}$\,$\mbox{]}
+\item 
+\hypertarget{PathTracer_8cl_ae5f24e46e2b92034a831fb57647afc4b}{\-\_\-\-\_\-constant \hyperlink{structSphere}{Sphere} {\bfseries example\-Sphere} = \{ 10.f, \{ 0.f, 0.f, 0.f, 0.f \},\{ 0.f, 0.f, 0.f, 0.f \}, \{ 1.f, 1.f, 1.f, 0.f \}, D\-I\-F\-F \}}\label{PathTracer_8cl_ae5f24e46e2b92034a831fb57647afc4b}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Device (Open\-C\-L) implementation of the path tracer. As the implementation is pretty much the same as the Cuda one. The documentation for most everything can be found under the cuda docs. 
+
+\subsection{Function Documentation}
+\hypertarget{PathTracer_8cl_a0f62dc685261380c888f930d3f04b813}{\index{Path\-Tracer.\-cl@{Path\-Tracer.\-cl}!create\-Ray@{create\-Ray}}
+\index{create\-Ray@{create\-Ray}!PathTracer.cl@{Path\-Tracer.\-cl}}
+\subsubsection[{create\-Ray}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Ray} create\-Ray (
+\begin{DoxyParamCaption}
+\item[{float4}]{\-\_\-o, }
+\item[{float4}]{\-\_\-d}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cl_a0f62dc685261380c888f930d3f04b813}
+
+
+create\-Ray Builds a ray given an origin and a direction 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-o} & Origin of the ray \\
+\hline
+{\em \-\_\-d} & Direction of the ray \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Resulting ray 
+\end{DoxyReturn}
+\hypertarget{PathTracer_8cl_a96d1b38c698388294674aa643d3d26b2}{\index{Path\-Tracer.\-cl@{Path\-Tracer.\-cl}!float\-As\-Int@{float\-As\-Int}}
+\index{float\-As\-Int@{float\-As\-Int}!PathTracer.cl@{Path\-Tracer.\-cl}}
+\subsubsection[{float\-As\-Int}]{\setlength{\rightskip}{0pt plus 5cm}unsigned int float\-As\-Int (
+\begin{DoxyParamCaption}
+\item[{const float}]{\-\_\-a}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cl_a96d1b38c698388294674aa643d3d26b2}
+
+
+float\-As\-Int Returns the bit-\/wise equal value as integer 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-a} & Float to conver \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Bit-\/wise equal value as an integer 
+\end{DoxyReturn}
+\hypertarget{PathTracer_8cl_a329fb07255626c74d97267a19b2e6dce}{\index{Path\-Tracer.\-cl@{Path\-Tracer.\-cl}!intersect\-Scene@{intersect\-Scene}}
+\index{intersect\-Scene@{intersect\-Scene}!PathTracer.cl@{Path\-Tracer.\-cl}}
+\subsubsection[{intersect\-Scene}]{\setlength{\rightskip}{0pt plus 5cm}bool intersect\-Scene (
+\begin{DoxyParamCaption}
+\item[{const {\bf Ray} $\ast$}]{\-\_\-ray, }
+\item[{\-\_\-\-\_\-global const float4 $\ast$}]{\-\_\-vertices, }
+\item[{\-\_\-\-\_\-global const float4 $\ast$}]{\-\_\-normals, }
+\item[{\-\_\-\-\_\-global const float4 $\ast$}]{\-\_\-tangents, }
+\item[{\-\_\-\-\_\-global const float4 $\ast$}]{\-\_\-bvh\-Nodes, }
+\item[{\-\_\-\-\_\-global const float2 $\ast$}]{\-\_\-uvs, }
+\item[{\-\_\-\-\_\-read\-\_\-only image2d\-\_\-t}]{\-\_\-diffuse, }
+\item[{\-\_\-\-\_\-read\-\_\-only image2d\-\_\-t}]{\-\_\-normal, }
+\item[{\-\_\-\-\_\-read\-\_\-only image2d\-\_\-t}]{\-\_\-specular, }
+\item[{bool}]{\-\_\-has\-Diffuse\-Map, }
+\item[{bool}]{\-\_\-has\-Normal\-Map, }
+\item[{bool}]{\-\_\-has\-Specular\-Map, }
+\item[{bool}]{\-\_\-use\-Cornell\-Box, }
+\item[{bool}]{\-\_\-use\-Example\-Sphere, }
+\item[{bool}]{\-\_\-mesh\-Initialised, }
+\item[{bool}]{\-\_\-view\-B\-R\-D\-F, }
+\item[{{\bf v\-Hit\-Data} $\ast$}]{\-\_\-hit\-Data}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cl_a329fb07255626c74d97267a19b2e6dce}
+
+
+intersect\-Scene Check the intersections of a given ray with the scene, checks for the intersections with the triangle meshes and spheres 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-ray} & \hyperlink{structRay}{Ray} to check intersections against \\
+\hline
+{\em \-\_\-vertices} & Vertices of a triangle mesh \\
+\hline
+{\em \-\_\-normals} & Normals of a triangle mesh \\
+\hline
+{\em \-\_\-tangents} & Tangents of a triangle mesh \\
+\hline
+{\em \-\_\-bvh\-Data} & \hyperlink{classSBVH}{S\-B\-V\-H} structure \\
+\hline
+{\em \-\_\-uvs} & U\-Vs of a triangle mesh \\
+\hline
+{\em \-\_\-diffuse} & Diffuse texture \\
+\hline
+{\em \-\_\-normal} & Normal texture \\
+\hline
+{\em \-\_\-specular} & Specular texture \\
+\hline
+{\em \-\_\-has\-Diffuse\-Map} & Does diffuse texture exist? \\
+\hline
+{\em \-\_\-has\-Normal\-Map} & Does normal texture exist? \\
+\hline
+{\em \-\_\-has\-Specular\-Map} & Does specular texture exist? \\
+\hline
+{\em \-\_\-use\-Cornell\-Box} & Should cornell box or H\-D\-R\-I environment be used \\
+\hline
+{\em \-\_\-use\-Example\-Sphere} & Should the example sphere be used \\
+\hline
+{\em \-\_\-mesh\-Initialised} & Has a mesh been initialised \\
+\hline
+{\em \-\_\-view\-B\-R\-D\-F} & Should B\-R\-D\-Fs be used \\
+\hline
+{\em \-\_\-hit\-Data} & Structure to store the hit results to \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if an intersection was found 
+\end{DoxyReturn}
+\hypertarget{PathTracer_8cl_a0f5c7ab05243deb2bd02999b5ad1d716}{\index{Path\-Tracer.\-cl@{Path\-Tracer.\-cl}!trace@{trace}}
+\index{trace@{trace}!PathTracer.cl@{Path\-Tracer.\-cl}}
+\subsubsection[{trace}]{\setlength{\rightskip}{0pt plus 5cm}float4 trace (
+\begin{DoxyParamCaption}
+\item[{const {\bf Ray} $\ast$}]{\-\_\-camray, }
+\item[{\-\_\-\-\_\-global const float4 $\ast$}]{\-\_\-vertices, }
+\item[{\-\_\-\-\_\-global const float4 $\ast$}]{\-\_\-normals, }
+\item[{\-\_\-\-\_\-global const float4 $\ast$}]{\-\_\-tangents, }
+\item[{\-\_\-\-\_\-global const float4 $\ast$}]{\-\_\-bvh\-Nodes, }
+\item[{\-\_\-\-\_\-global const float2 $\ast$}]{\-\_\-uvs, }
+\item[{\-\_\-\-\_\-read\-\_\-only image2d\-\_\-t}]{\-\_\-hdr, }
+\item[{\-\_\-\-\_\-read\-\_\-only image2d\-\_\-t}]{\-\_\-diffuse, }
+\item[{\-\_\-\-\_\-read\-\_\-only image2d\-\_\-t}]{\-\_\-normal, }
+\item[{\-\_\-\-\_\-read\-\_\-only image2d\-\_\-t}]{\-\_\-specular, }
+\item[{float}]{\-\_\-fresnel\-Pow, }
+\item[{float}]{\-\_\-fresnel\-Coef, }
+\item[{bool}]{\-\_\-has\-Diffuse\-Map, }
+\item[{bool}]{\-\_\-has\-Normal\-Map, }
+\item[{bool}]{\-\_\-has\-Specular\-Map, }
+\item[{bool}]{\-\_\-use\-Cornell\-Box, }
+\item[{bool}]{\-\_\-use\-Example\-Sphere, }
+\item[{bool}]{\-\_\-mesh\-Initialised, }
+\item[{bool}]{\-\_\-view\-B\-R\-D\-F, }
+\item[{bool}]{\-\_\-has\-B\-R\-D\-F, }
+\item[{\-\_\-\-\_\-global const float $\ast$}]{\-\_\-brdf, }
+\item[{unsigned int $\ast$}]{\-\_\-seed0, }
+\item[{unsigned int $\ast$}]{\-\_\-seed1}
+\end{DoxyParamCaption}
+)}}\label{PathTracer_8cl_a0f5c7ab05243deb2bd02999b5ad1d716}
+
+
+trace Performs ray bounces, checks for the intersections and does colour accumulation calculations based on the emission and colour data from the intersections 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-camray} & Initial ray for the trace \\
+\hline
+{\em \-\_\-vertices} & Vertices of a triangle mesh \\
+\hline
+{\em \-\_\-normals} & Normals of a triangle mesh \\
+\hline
+{\em \-\_\-tangents} & Tangents of a triangle mesh \\
+\hline
+{\em \-\_\-bvh\-Nodes} & \hyperlink{classSBVH}{S\-B\-V\-H} structure \\
+\hline
+{\em \-\_\-uvs} & U\-Vs of a triangle mesh \\
+\hline
+{\em \-\_\-hdr} & H\-D\-R\-I map \\
+\hline
+{\em \-\_\-diffuse} & Diffuse texture \\
+\hline
+{\em \-\_\-normal} & Normal texture \\
+\hline
+{\em \-\_\-specular} & Specular texture \\
+\hline
+{\em \-\_\-fresnel\-Pow} & Fresnel power \\
+\hline
+{\em \-\_\-fresnel\-Coef} & Fresnel coefficient \\
+\hline
+{\em \-\_\-has\-Diffuse\-Map} & Does diffuse texture exist? \\
+\hline
+{\em \-\_\-has\-Normal\-Map} & Does normal texture exist? \\
+\hline
+{\em \-\_\-has\-Specular\-Map} & Does specular texture exist? \\
+\hline
+{\em \-\_\-use\-Cornell\-Box} & Should cornell box or H\-D\-R\-I environment be used \\
+\hline
+{\em \-\_\-use\-Example\-Sphere} & Should the example sphere be used \\
+\hline
+{\em \-\_\-mesh\-Initialised} & Has a mesh been initialised \\
+\hline
+{\em \-\_\-view\-B\-R\-D\-F} & Should B\-R\-D\-Fs be used \\
+\hline
+{\em \-\_\-has\-B\-R\-D\-F} & Does B\-R\-D\-F table exist \\
+\hline
+{\em \-\_\-brdf} & B\-R\-D\-F table \\
+\hline
+{\em \-\_\-seed0} & First initial seed for rng \\
+\hline
+{\em \-\_\-seed1} & Second initial seed for rng \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Variable Documentation}
+\hypertarget{PathTracer_8cl_a31f3f434b7447198473191c794da0659}{\index{Path\-Tracer.\-cl@{Path\-Tracer.\-cl}!cornell\-Box@{cornell\-Box}}
+\index{cornell\-Box@{cornell\-Box}!PathTracer.cl@{Path\-Tracer.\-cl}}
+\subsubsection[{cornell\-Box}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-constant {\bf Sphere} cornell\-Box\mbox{[}$\,$\mbox{]}}}\label{PathTracer_8cl_a31f3f434b7447198473191c794da0659}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+=
+\{
+    \{ 160.f, \{ 0.f, 160.f + 49.f, 0.f, 0.f \}, \{ 4.f, 3.6f, 3.2f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, DIFF \}, 
+    \{ 1e5f, \{ 1e5f + 50.f, 0.f, 0.f, 0.f \}, \{ 0.075f, 0.025f, 0.025f, 0.f \}, \{ 0.75f, 0.25f, 0.25f, 0.f \}, 
+      DIFF \}, 
+    \{ 1e5f, \{ -1e5f - 50.f, 0.f, 0.f, 0.f \}, \{ 0.025f, 0.075f, 0.025f, 0.f \}, \{ 0.25f, 0.75f, 0.25f, 0.f \},
+       DIFF \}, 
+    \{ 1e5f, \{ 0.f, 0.f, -1e5f - 100.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, \{ 1.f, 1.f, 1.f, 0.f \}, DIFF \}, 
+    \{ 1e5f, \{ 0.f, 1e5f + 50.f, 0.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, \{ 1.f, 1.f, 1.f, 0.f \}, DIFF \}, 
+    \{ 1e5f, \{ 0.f, -1e5f - 50.f, 0.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, \{ 1.f, 1.f, 1.f, 0.f \}, DIFF \} 
+\}
+\end{DoxyCode}
+\hypertarget{PathTracer_8cl_aca5b8ab7e4ead122457254e2678c4f7e}{\index{Path\-Tracer.\-cl@{Path\-Tracer.\-cl}!spheres@{spheres}}
+\index{spheres@{spheres}!PathTracer.cl@{Path\-Tracer.\-cl}}
+\subsubsection[{spheres}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-constant {\bf Sphere} spheres\mbox{[}$\,$\mbox{]}}}\label{PathTracer_8cl_aca5b8ab7e4ead122457254e2678c4f7e}
+{\bfseries Initial value\-:}
+\begin{DoxyCode}
+=
+\{
+    \{ 3.5f, \{ 15.f, 0.f, 15.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, SPEC \}, 
+    \{ 3.5f, \{ 25.f, 0.f, 15.f, 0.f \}, \{ 0.f, 0.f, 0.f, 0.f \}, \{ 1.f, 1.f, 1.f, 0.f \}, DIFF \}, 
+\}
+\end{DoxyCode}

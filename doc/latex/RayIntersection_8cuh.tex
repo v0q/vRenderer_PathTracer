@@ -1,0 +1,77 @@
+\hypertarget{RayIntersection_8cuh}{\section{cuda/include/\-Ray\-Intersection.cuh File Reference}
+\label{RayIntersection_8cuh}\index{cuda/include/\-Ray\-Intersection.\-cuh@{cuda/include/\-Ray\-Intersection.\-cuh}}
+}
+
+
+Ray-\/\-X\-X intersection functions.  
+
+
+{\ttfamily \#include $<$float.\-h$>$}\\*
+{\ttfamily \#include $<$cuda.\-h$>$}\\*
+{\ttfamily \#include $<$cuda\-\_\-runtime.\-h$>$}\\*
+{\ttfamily \#include \char`\"{}Path\-Tracer.\-cuh\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}Math\-Helpers.\-cuh\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structRay}{Ray}
+\begin{DoxyCompactList}\small\item\em \hyperlink{structRay}{Ray} Simple structure for a ray. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{RayIntersection_8cuh_a4fc512e3e9c530910caef2d9d9d1bd18}{typedef struct \hyperlink{structRay}{Ray} \hyperlink{RayIntersection_8cuh_a4fc512e3e9c530910caef2d9d9d1bd18}{Ray}}\label{RayIntersection_8cuh_a4fc512e3e9c530910caef2d9d9d1bd18}
+
+\begin{DoxyCompactList}\small\item\em \hyperlink{structRay}{Ray} Simple structure for a ray. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\-\_\-\-\_\-device\-\_\-\-\_\- float4 \hyperlink{RayIntersection_8cuh_a86a2a10b030839e95d2fb1463aba4d4a}{intersect\-Triangle} (const float4 \&\-\_\-v1, const float4 \&\-\_\-v2, const float4 \&\-\_\-v3, const \hyperlink{structRay}{Ray} $\ast$\-\_\-ray)
+\begin{DoxyCompactList}\small\item\em intersect\-Triangle Calculate the ray-\/triangle intersection and barycentric coordinates for texturing. Based on the \char`\"{}\-Fast, Minimum Storage Ray/\-Triangle Intersection\char`\"{} by Tomas Akenine-\/\-Möller et al. Available at\-: \href{http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/code/raytri_tam.pdf,}{\tt http\-://fileadmin.\-cs.\-lth.\-se/cs/\-Personal/\-Tomas\-\_\-\-Akenine-\/\-Moller/code/raytri\-\_\-tam.\-pdf,} Supplemental source code available at\-: \href{http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/raytri/raytri.c}{\tt http\-://fileadmin.\-cs.\-lth.\-se/cs/\-Personal/\-Tomas\-\_\-\-Akenine-\/\-Moller/raytri/raytri.\-c} \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Ray-\/\-X\-X intersection functions. \begin{DoxyAuthor}{Authors}
+Teemu Lindborg 
+\end{DoxyAuthor}
+\begin{DoxyVersion}{Version}
+1.\-0 
+\end{DoxyVersion}
+\begin{DoxyDate}{Date}
+04/05/17 Updated to N\-C\-C\-A Coding standard Revision History \-: Initial Version 08/12/16 
+\end{DoxyDate}
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000004}{Todo}]
+\begin{DoxyItemize}
+\item 
+\end{DoxyItemize}\end{DoxyRefDesc}
+
+
+\subsection{Function Documentation}
+\hypertarget{RayIntersection_8cuh_a86a2a10b030839e95d2fb1463aba4d4a}{\index{Ray\-Intersection.\-cuh@{Ray\-Intersection.\-cuh}!intersect\-Triangle@{intersect\-Triangle}}
+\index{intersect\-Triangle@{intersect\-Triangle}!RayIntersection.cuh@{Ray\-Intersection.\-cuh}}
+\subsubsection[{intersect\-Triangle}]{\setlength{\rightskip}{0pt plus 5cm}\-\_\-\-\_\-device\-\_\-\-\_\- float4 intersect\-Triangle (
+\begin{DoxyParamCaption}
+\item[{const float4 \&}]{\-\_\-v1, }
+\item[{const float4 \&}]{\-\_\-v2, }
+\item[{const float4 \&}]{\-\_\-v3, }
+\item[{const {\bf Ray} $\ast$}]{\-\_\-ray}
+\end{DoxyParamCaption}
+)}}\label{RayIntersection_8cuh_a86a2a10b030839e95d2fb1463aba4d4a}
+
+
+intersect\-Triangle Calculate the ray-\/triangle intersection and barycentric coordinates for texturing. Based on the \char`\"{}\-Fast, Minimum Storage Ray/\-Triangle Intersection\char`\"{} by Tomas Akenine-\/\-Möller et al. Available at\-: \href{http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/code/raytri_tam.pdf,}{\tt http\-://fileadmin.\-cs.\-lth.\-se/cs/\-Personal/\-Tomas\-\_\-\-Akenine-\/\-Moller/code/raytri\-\_\-tam.\-pdf,} Supplemental source code available at\-: \href{http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/raytri/raytri.c}{\tt http\-://fileadmin.\-cs.\-lth.\-se/cs/\-Personal/\-Tomas\-\_\-\-Akenine-\/\-Moller/raytri/raytri.\-c} 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-v1} & Vertex 1 of the triangle \\
+\hline
+{\em \-\_\-v2} & Vertex 2 of the triangle \\
+\hline
+{\em \-\_\-v3} & Vertex 3 of the triangle \\
+\hline
+{\em \-\_\-ray} & \hyperlink{structRay}{Ray} to test the triangle against \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Distance to the triangle and barycentric coordinates if an intersection was found 
+\end{DoxyReturn}

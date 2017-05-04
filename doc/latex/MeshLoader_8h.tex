@@ -1,0 +1,40 @@
+\hypertarget{MeshLoader_8h}{\section{include/\-Mesh\-Loader.h File Reference}
+\label{MeshLoader_8h}\index{include/\-Mesh\-Loader.\-h@{include/\-Mesh\-Loader.\-h}}
+}
+
+
+Simple mesh loader, uses Assimp to load in a 3d model and passes the data to the \hyperlink{classSBVH}{S\-B\-V\-H} builder Finally returns the data to be passed to the G\-P\-U.  
+
+
+{\ttfamily \#include $<$Q\-String$>$}\\*
+{\ttfamily \#include $<$G\-L/glew.\-h$>$}\\*
+{\ttfamily \#include $<$assimp/scene.\-h$>$}\\*
+{\ttfamily \#include $<$string$>$}\\*
+{\ttfamily \#include \char`\"{}S\-B\-V\-H.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structvMeshData}{v\-Mesh\-Data}
+\begin{DoxyCompactList}\small\item\em Simple structure to hold the data needed by the G\-P\-U. \end{DoxyCompactList}\item 
+class \hyperlink{classvMeshLoader}{v\-Mesh\-Loader}
+\begin{DoxyCompactList}\small\item\em The \hyperlink{classvMeshLoader}{v\-Mesh\-Loader} class Mesh loader class that reads in a 3d model using assimp and generates the \hyperlink{classSBVH}{S\-B\-V\-H} acceleration structure. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{MeshLoader_8h_a91b154eaa95cb318c7fa07b108e5c4c6}{typedef struct \hyperlink{structvMeshData}{v\-Mesh\-Data} \hyperlink{MeshLoader_8h_a91b154eaa95cb318c7fa07b108e5c4c6}{v\-Mesh\-Data}}\label{MeshLoader_8h_a91b154eaa95cb318c7fa07b108e5c4c6}
+
+\begin{DoxyCompactList}\small\item\em Simple structure to hold the data needed by the G\-P\-U. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Simple mesh loader, uses Assimp to load in a 3d model and passes the data to the \hyperlink{classSBVH}{S\-B\-V\-H} builder Finally returns the data to be passed to the G\-P\-U. \begin{DoxyAuthor}{Authors}
+Teemu Lindborg 
+\end{DoxyAuthor}
+\begin{DoxyVersion}{Version}
+1.\-0 
+\end{DoxyVersion}
+\begin{DoxyDate}{Date}
+04/05/17 Updated to N\-C\-C\-A Coding standard Revision History \-: Initial Version 08/12/16 
+\end{DoxyDate}
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000010}{Todo}]Allow the loading of more than a single model \end{DoxyRefDesc}

@@ -1,0 +1,261 @@
+\hypertarget{classMainWindow}{\section{Main\-Window Class Reference}
+\label{classMainWindow}\index{Main\-Window@{Main\-Window}}
+}
+
+
+The \hyperlink{classMainWindow}{Main\-Window} class.  
+
+
+
+
+{\ttfamily \#include $<$mainwindow.\-h$>$}
+
+Inheritance diagram for Main\-Window\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classMainWindow}
+\end{center}
+\end{figure}
+\subsection*{Public Slots}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{classMainWindow_a8e0e73b8bba2c32a5f1a3c6a0ae5089d}{update\-U\-I\-Scene\-Tree} (const Q\-String \&\-\_\-mesh)
+\begin{DoxyCompactList}\small\item\em update\-U\-I\-Scene\-Tree Adds new meshes to the scene tree in the U\-I \end{DoxyCompactList}\item 
+void \hyperlink{classMainWindow_acf4fa9e3d00f6b0d368d6cf7868b618a}{update\-U\-I\-Texture} (const Q\-String \&\-\_\-texture, const unsigned int \&\-\_\-type)
+\begin{DoxyCompactList}\small\item\em update\-U\-I\-Texture Updates the path of a loaded texture to the U\-I \end{DoxyCompactList}\item 
+void \hyperlink{classMainWindow_a94c97346b7f1e4f0d35844e9d193a79c}{update\-U\-I\-B\-R\-D\-F} (const Q\-String \&\-\_\-brdf)
+\begin{DoxyCompactList}\small\item\em update\-U\-I\-B\-R\-D\-F Updates the path of a loaded B\-R\-D\-F to the U\-I \end{DoxyCompactList}\item 
+void \hyperlink{classMainWindow_ada92e077013a39ba4fffb39385b8f8d3}{update\-U\-I\-H\-D\-R\-I} (const Q\-String \&\-\_\-hdri)
+\begin{DoxyCompactList}\small\item\em update\-U\-I\-H\-D\-R\-I Updates the path of a loaded H\-D\-R\-I to the U\-I \end{DoxyCompactList}\item 
+void \hyperlink{classMainWindow_a3e635401d6f115c89799ccb4be12f4f2}{update\-U\-I\-F\-O\-V} (const int \&\-\_\-new\-Fov)
+\begin{DoxyCompactList}\small\item\em update\-U\-I\-F\-O\-V Updates the Field of View display in the U\-I \end{DoxyCompactList}\item 
+void \hyperlink{classMainWindow_aab6c5078d2405b7938278b53fc8b9c14}{update\-U\-I\-Fresnel\-Coef} (const int \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em update\-U\-I\-Fresnel\-Coef Updates the fresnel coefficient display in the U\-I \end{DoxyCompactList}\item 
+void \hyperlink{classMainWindow_aeee147386c4fe45b4982baa47bd1279f}{update\-U\-I\-Fresnel\-Pow} (const int \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em update\-U\-I\-Fresnel\-Pow Updates the fresnel power display in the U\-I \end{DoxyCompactList}\item 
+void \hyperlink{classMainWindow_a5d1e3243d8388757e82037391ffd677b}{update\-U\-I\-F\-X\-A\-A\-Softness} (const int \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em update\-U\-I\-F\-X\-A\-A\-Softness Updates the F\-X\-A\-A softness/sharpness display in the U\-I \end{DoxyCompactList}\item 
+void \hyperlink{classMainWindow_a6483ad1b0e680d1a1627295f76ce6f4a}{update\-U\-I\-F\-X\-A\-A\-Edge\-Threshold} (const int \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em update\-U\-I\-F\-X\-A\-A\-Edge\-Threshold Updates the F\-X\-A\-A edge threshold display in the U\-I \end{DoxyCompactList}\item 
+void \hyperlink{classMainWindow_ac5f09fce95033810b6fcb286547ad306}{update\-U\-I\-F\-X\-A\-A\-Subpix\-Quality} (const int \&\-\_\-new\-Val)
+\begin{DoxyCompactList}\small\item\em update\-U\-I\-F\-X\-A\-A\-Subpix\-Quality Updates the F\-X\-A\-A subpixel quality display in the U\-I \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classMainWindow_a93cfdcac35db98baf6a7d2c2738a2006}{Main\-Window} (Q\-Widget $\ast$\-\_\-parent=0)
+\begin{DoxyCompactList}\small\item\em \hyperlink{classMainWindow}{Main\-Window} Default ctor, allocates the scene and connects used signals and slots. \end{DoxyCompactList}\item 
+\hypertarget{classMainWindow_ae98d00a93bc118200eeef9f9bba1dba7}{\hyperlink{classMainWindow_ae98d00a93bc118200eeef9f9bba1dba7}{$\sim$\-Main\-Window} ()}\label{classMainWindow_ae98d00a93bc118200eeef9f9bba1dba7}
+
+\begin{DoxyCompactList}\small\item\em Default dtor, handles basic clean up. \end{DoxyCompactList}\item 
+void \hyperlink{classMainWindow_a96e417ae020ed57805409b2481a3d707}{key\-Press\-Event} (Q\-Key\-Event $\ast$\-\_\-event) override
+\begin{DoxyCompactList}\small\item\em key\-Press\-Event Handles simple keypress events, \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classMainWindow}{Main\-Window} class. 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classMainWindow_a93cfdcac35db98baf6a7d2c2738a2006}{\index{Main\-Window@{Main\-Window}!Main\-Window@{Main\-Window}}
+\index{Main\-Window@{Main\-Window}!MainWindow@{Main\-Window}}
+\subsubsection[{Main\-Window}]{\setlength{\rightskip}{0pt plus 5cm}Main\-Window\-::\-Main\-Window (
+\begin{DoxyParamCaption}
+\item[{Q\-Widget $\ast$}]{\-\_\-parent = {\ttfamily 0}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [explicit]}}}\label{classMainWindow_a93cfdcac35db98baf6a7d2c2738a2006}
+
+
+\hyperlink{classMainWindow}{Main\-Window} Default ctor, allocates the scene and connects used signals and slots. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-parent} & Parent widget, passed on to the Q\-Main\-Window \\
+\hline
+\end{DoxyParams}
+S\-I\-G\-N\-A\-L-\/\-S\-L\-O\-T connections 
+
+\subsection{Member Function Documentation}
+\hypertarget{classMainWindow_a96e417ae020ed57805409b2481a3d707}{\index{Main\-Window@{Main\-Window}!key\-Press\-Event@{key\-Press\-Event}}
+\index{key\-Press\-Event@{key\-Press\-Event}!MainWindow@{Main\-Window}}
+\subsubsection[{key\-Press\-Event}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::key\-Press\-Event (
+\begin{DoxyParamCaption}
+\item[{Q\-Key\-Event $\ast$}]{\-\_\-event}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [override]}}}\label{classMainWindow_a96e417ae020ed57805409b2481a3d707}
+
+
+key\-Press\-Event Handles simple keypress events, 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-event} & Event containing the keypress data \\
+\hline
+\end{DoxyParams}
+\hypertarget{classMainWindow_a94c97346b7f1e4f0d35844e9d193a79c}{\index{Main\-Window@{Main\-Window}!update\-U\-I\-B\-R\-D\-F@{update\-U\-I\-B\-R\-D\-F}}
+\index{update\-U\-I\-B\-R\-D\-F@{update\-U\-I\-B\-R\-D\-F}!MainWindow@{Main\-Window}}
+\subsubsection[{update\-U\-I\-B\-R\-D\-F}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::update\-U\-I\-B\-R\-D\-F (
+\begin{DoxyParamCaption}
+\item[{const Q\-String \&}]{\-\_\-brdf}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classMainWindow_a94c97346b7f1e4f0d35844e9d193a79c}
+
+
+update\-U\-I\-B\-R\-D\-F Updates the path of a loaded B\-R\-D\-F to the U\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-brdf} & Path to the loaded B\-R\-D\-F binary \\
+\hline
+\end{DoxyParams}
+\hypertarget{classMainWindow_a3e635401d6f115c89799ccb4be12f4f2}{\index{Main\-Window@{Main\-Window}!update\-U\-I\-F\-O\-V@{update\-U\-I\-F\-O\-V}}
+\index{update\-U\-I\-F\-O\-V@{update\-U\-I\-F\-O\-V}!MainWindow@{Main\-Window}}
+\subsubsection[{update\-U\-I\-F\-O\-V}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::update\-U\-I\-F\-O\-V (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Fov}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classMainWindow_a3e635401d6f115c89799ccb4be12f4f2}
+
+
+update\-U\-I\-F\-O\-V Updates the Field of View display in the U\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Fov} & Updated F\-O\-V value \\
+\hline
+\end{DoxyParams}
+\hypertarget{classMainWindow_aab6c5078d2405b7938278b53fc8b9c14}{\index{Main\-Window@{Main\-Window}!update\-U\-I\-Fresnel\-Coef@{update\-U\-I\-Fresnel\-Coef}}
+\index{update\-U\-I\-Fresnel\-Coef@{update\-U\-I\-Fresnel\-Coef}!MainWindow@{Main\-Window}}
+\subsubsection[{update\-U\-I\-Fresnel\-Coef}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::update\-U\-I\-Fresnel\-Coef (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classMainWindow_aab6c5078d2405b7938278b53fc8b9c14}
+
+
+update\-U\-I\-Fresnel\-Coef Updates the fresnel coefficient display in the U\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Updated fresnel coefficient \\
+\hline
+\end{DoxyParams}
+\hypertarget{classMainWindow_aeee147386c4fe45b4982baa47bd1279f}{\index{Main\-Window@{Main\-Window}!update\-U\-I\-Fresnel\-Pow@{update\-U\-I\-Fresnel\-Pow}}
+\index{update\-U\-I\-Fresnel\-Pow@{update\-U\-I\-Fresnel\-Pow}!MainWindow@{Main\-Window}}
+\subsubsection[{update\-U\-I\-Fresnel\-Pow}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::update\-U\-I\-Fresnel\-Pow (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classMainWindow_aeee147386c4fe45b4982baa47bd1279f}
+
+
+update\-U\-I\-Fresnel\-Pow Updates the fresnel power display in the U\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Updated fresnel power \\
+\hline
+\end{DoxyParams}
+\hypertarget{classMainWindow_a6483ad1b0e680d1a1627295f76ce6f4a}{\index{Main\-Window@{Main\-Window}!update\-U\-I\-F\-X\-A\-A\-Edge\-Threshold@{update\-U\-I\-F\-X\-A\-A\-Edge\-Threshold}}
+\index{update\-U\-I\-F\-X\-A\-A\-Edge\-Threshold@{update\-U\-I\-F\-X\-A\-A\-Edge\-Threshold}!MainWindow@{Main\-Window}}
+\subsubsection[{update\-U\-I\-F\-X\-A\-A\-Edge\-Threshold}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::update\-U\-I\-F\-X\-A\-A\-Edge\-Threshold (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classMainWindow_a6483ad1b0e680d1a1627295f76ce6f4a}
+
+
+update\-U\-I\-F\-X\-A\-A\-Edge\-Threshold Updates the F\-X\-A\-A edge threshold display in the U\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & New edge threshold \\
+\hline
+\end{DoxyParams}
+\hypertarget{classMainWindow_a5d1e3243d8388757e82037391ffd677b}{\index{Main\-Window@{Main\-Window}!update\-U\-I\-F\-X\-A\-A\-Softness@{update\-U\-I\-F\-X\-A\-A\-Softness}}
+\index{update\-U\-I\-F\-X\-A\-A\-Softness@{update\-U\-I\-F\-X\-A\-A\-Softness}!MainWindow@{Main\-Window}}
+\subsubsection[{update\-U\-I\-F\-X\-A\-A\-Softness}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::update\-U\-I\-F\-X\-A\-A\-Softness (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classMainWindow_a5d1e3243d8388757e82037391ffd677b}
+
+
+update\-U\-I\-F\-X\-A\-A\-Softness Updates the F\-X\-A\-A softness/sharpness display in the U\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Updated F\-X\-A\-A sharpness value \\
+\hline
+\end{DoxyParams}
+\hypertarget{classMainWindow_ac5f09fce95033810b6fcb286547ad306}{\index{Main\-Window@{Main\-Window}!update\-U\-I\-F\-X\-A\-A\-Subpix\-Quality@{update\-U\-I\-F\-X\-A\-A\-Subpix\-Quality}}
+\index{update\-U\-I\-F\-X\-A\-A\-Subpix\-Quality@{update\-U\-I\-F\-X\-A\-A\-Subpix\-Quality}!MainWindow@{Main\-Window}}
+\subsubsection[{update\-U\-I\-F\-X\-A\-A\-Subpix\-Quality}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::update\-U\-I\-F\-X\-A\-A\-Subpix\-Quality (
+\begin{DoxyParamCaption}
+\item[{const int \&}]{\-\_\-new\-Val}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classMainWindow_ac5f09fce95033810b6fcb286547ad306}
+
+
+update\-U\-I\-F\-X\-A\-A\-Subpix\-Quality Updates the F\-X\-A\-A subpixel quality display in the U\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-new\-Val} & Updated subpixel quality value \\
+\hline
+\end{DoxyParams}
+\hypertarget{classMainWindow_ada92e077013a39ba4fffb39385b8f8d3}{\index{Main\-Window@{Main\-Window}!update\-U\-I\-H\-D\-R\-I@{update\-U\-I\-H\-D\-R\-I}}
+\index{update\-U\-I\-H\-D\-R\-I@{update\-U\-I\-H\-D\-R\-I}!MainWindow@{Main\-Window}}
+\subsubsection[{update\-U\-I\-H\-D\-R\-I}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::update\-U\-I\-H\-D\-R\-I (
+\begin{DoxyParamCaption}
+\item[{const Q\-String \&}]{\-\_\-hdri}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classMainWindow_ada92e077013a39ba4fffb39385b8f8d3}
+
+
+update\-U\-I\-H\-D\-R\-I Updates the path of a loaded H\-D\-R\-I to the U\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-hdri} & Path to the loaded H\-D\-R\-I map \\
+\hline
+\end{DoxyParams}
+\hypertarget{classMainWindow_a8e0e73b8bba2c32a5f1a3c6a0ae5089d}{\index{Main\-Window@{Main\-Window}!update\-U\-I\-Scene\-Tree@{update\-U\-I\-Scene\-Tree}}
+\index{update\-U\-I\-Scene\-Tree@{update\-U\-I\-Scene\-Tree}!MainWindow@{Main\-Window}}
+\subsubsection[{update\-U\-I\-Scene\-Tree}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::update\-U\-I\-Scene\-Tree (
+\begin{DoxyParamCaption}
+\item[{const Q\-String \&}]{\-\_\-mesh}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classMainWindow_a8e0e73b8bba2c32a5f1a3c6a0ae5089d}
+
+
+update\-U\-I\-Scene\-Tree Adds new meshes to the scene tree in the U\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-mesh} & Name of the mesh \\
+\hline
+\end{DoxyParams}
+\hypertarget{classMainWindow_acf4fa9e3d00f6b0d368d6cf7868b618a}{\index{Main\-Window@{Main\-Window}!update\-U\-I\-Texture@{update\-U\-I\-Texture}}
+\index{update\-U\-I\-Texture@{update\-U\-I\-Texture}!MainWindow@{Main\-Window}}
+\subsubsection[{update\-U\-I\-Texture}]{\setlength{\rightskip}{0pt plus 5cm}void Main\-Window\-::update\-U\-I\-Texture (
+\begin{DoxyParamCaption}
+\item[{const Q\-String \&}]{\-\_\-texture, }
+\item[{const unsigned int \&}]{\-\_\-type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [slot]}}}\label{classMainWindow_acf4fa9e3d00f6b0d368d6cf7868b618a}
+
+
+update\-U\-I\-Texture Updates the path of a loaded texture to the U\-I 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \-\_\-texture} & Path to the loaded texture \\
+\hline
+{\em \-\_\-type} & Texture type, 0 = Diffuse, 1 = Normal, 2 = Specular \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+include/mainwindow.\-h\item 
+src/mainwindow.\-cpp\end{DoxyCompactItemize}
