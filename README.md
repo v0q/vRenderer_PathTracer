@@ -59,14 +59,12 @@ UI Elements:
 ## External assets
 # 3D models
 With this submission, I've included three different 3d models:
-- models/adam_head.obj
-- models/adam_mask.obj<br />
-are models from the Unity3D's Tech demo "Adam" (Available online at https://unity3d.com/pages/adam) and are used only for educational purposes.
-- models/dragon_vrip_res2.obj is a 3D scan from the Stanford University Computer Graphics Laboratory and is available online at http://graphics.stanford.edu/data/3Dscanrep/
+- models/adam_head.obj and models/adam_mask.obj - are models from the Unity3D's Tech demo "Adam" (Available online at https://unity3d.com/pages/adam) and are used only for educational purposes.
+- models/dragon_vrip_res2.obj - is a 3D scan from the Stanford University Computer Graphics Laboratory and is available online at http://graphics.stanford.edu/data/3Dscanrep/
 # Textures
 All of the textures inside the textures folder are also from the Unity3D's Tech demo "Adam"
 # HDRI maps
 Provided with the submission, I've included two different HDRI maps:
-- hdr/Arches_E_PineTree_3k.exr is from HDR Labs (Christian Bloch), available at http://www.hdrlabs.com/sibl/archive.html
-- hdr/cathedral02.exr is from a "26 Free HDRis" package by Joost Vanhoutte, available at https://gumroad.com/l/hdris2
+- hdr/Arches_E_PineTree_3k.exr - is from HDR Labs (Christian Bloch), available at http://www.hdrlabs.com/sibl/archive.html
+- hdr/cathedral02.exr - is from a "26 Free HDRis" package by Joost Vanhoutte, available at https://gumroad.com/l/hdris2
 
